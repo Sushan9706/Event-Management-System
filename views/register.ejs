@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - EMS</title>
+    <link rel="stylesheet" href="/stylesheets/register.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">EMS</div>
+        <nav>
+            <a href="#">Events</a>
+            <a href="/login" class="btn-login-nav">Login/Sign In</a>
+        </nav>
+    </header>
+
+    <main class="register-container">
+        <section class="welcome-text">
+            <h1>Create Account</h1>
+            <p>Join the premium community of event curators.</p>
+        </section>
+
+        <div class="register-card">
+            <form action="/register" method="POST">
+                <div class="input-group">
+                    <label for="username">USERNAME</label>
+                    <input type="text" id="username" name="username" placeholder="Hello world" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">EMAIL (NEW)</label>
+                    <input type="email" id="email" name="email" placeholder="abcd@gmail.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">PASSWORD</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="confirmPassword">CONFIRM PASSWORD</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="register-btn">
+                    Register <span>&rarr;</span>
+                </button>
+            </form>
+
+            <p class="login-link-text">
+                Already have an account? <a href="/login">Login</a>
+            </p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-left">
+            COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.
+        </div>
+        <div class="footer-right">
+            <a href="#">TERMS</a>
+            <a href="#">PRIVACY</a>
+        </div>
+    </footer>
+
+</body>
+</html>
