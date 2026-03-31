@@ -3,6 +3,14 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
+// 🔐 your additions
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const flash = require('connect-flash');
+
+// routes
+const indexRouter = require('./routes/index');
+
 const app = express();
 
 // Set view engine
@@ -15,14 +23,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Main route
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Event Management System - Home' });
+// 🔐 auth-related middlewares (your part)
+app.use(cookieParser());
+
+app.use(session({
+    secret: 'ems-secret',
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(flash());
+
+// make flash available in views
+app.use((req, res, next) => {
+    res.locals.error = req.flash('error');
+    next();
 });
 
-// Import and use routes (placeholders)
-// const eventRoutes = require('./routes/eventRoutes');
-// app.use('/events', eventRoutes);
+// Routes
+app.use('/', indexRouter);
+
+// Example for future routes
+// const authRoutes = require('./routes/authRoutes');
+// app.use('/auth', authRoutes);
+
 
 // 404 handler
 app.use((req, res) => {
