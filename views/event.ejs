@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global Architecture Summit 2026 – EMS</title>
+    <link rel="stylesheet" href="/css/event.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- ── Navbar ── -->
+    <header class="navbar">
+      <div class="logo">EMS</div>
+      <nav class="nav-links">
+        <a href="#" class="active">Events</a>
+        <a href="#">My Bookings</a>
+        <a href="#">Profile</a>
+      </nav>
+      <div class="nav-icons">
+        <button class="icon-btn" aria-label="Search">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Notifications">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        </button>
+        <div class="avatar">
+          <img
+            src="images/avatar.png"
+            alt="User"
+            onerror="this.style.display='none'"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="hero-bg">
+        <img
+          src="images/hero-spiral.png"
+          alt=""
+          class="hero-img"
+          onerror="this.style.display='none'"
+        />
+        <div class="hero-overlay"></div>
+      </div>
+      <div class="hero-content">
+        <span class="featured-badge">FEATURED EXPERIENCE</span>
+        <h1 class="hero-title">
+          Global Architecture<br />Summit <span class="year">2026</span>
+        </h1>
+      </div>
+    </section>
+
+    <!-- ── Main content ── -->
+    <div class="page-body">
+      <div class="content-col">
+        <!-- Meta cards -->
+        <div class="meta-cards">
+          <div class="meta-card">
+            <p class="meta-label">WHEN</p>
+            <p class="meta-value large">Oct 14–16</p>
+            <p class="meta-sub">09:00 AM – 06:00 PM</p>
+          </div>
+          <div class="meta-card">
+            <p class="meta-label">WHERE</p>
+            <p class="meta-value large">The Glass<br />Pavilion</p>
+            <p class="meta-sub">Tokyo, Japan</p>
+          </div>
+          <div class="meta-card">
+            <p class="meta-label">TIER</p>
+            <p class="meta-value large">Premium</p>
+            <p class="meta-sub">Access All Areas</p>
+          </div>
+        </div>
+
+        <!-- Vision section -->
+        <div class="vision">
+          <h2>The Vision for Tomorrow</h2>
+          <p>
+            The 2026 EMS Global Architecture Summit brings together visionaries,
+            lead architects, and urban planners from across the globe to
+            redefine the boundaries of structural integrity and aesthetic
+            innovation. This year's theme, "Fluidity and Form," explores how
+            sustainable materials can adapt to rapidly shifting urban
+            environments.
+          </p>
+          <p>
+            Join us for three days of immersive keynote sessions, hands-on
+            workshops with sustainable concrete alternatives, and networking
+            events set against the backdrop of Tokyo's most iconic modern
+            structures. Attendees will gain exclusive access to the preliminary
+            blueprints of the Sky-Garden Project, launching in late 2027.
+          </p>
+        </div>
+
+        <!-- Location -->
+        <div class="location-section">
+          <div class="location-header">
+            <h2>Location</h2>
+            <a href="#" class="get-directions">
+              Get Directions
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
+          </div>
+          <div class="map-container">
+            <img
+              src="images/map.png"
+              alt="Map of Tokyo, Japan"
+              class="map-img"
+              onerror="this.innerHTML=''"
+            />
+            <div class="map-pin">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="#1a1a2e"
+                stroke="white"
+                stroke-width="1.5"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" fill="white" stroke="none" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Booking sidebar ── -->
+      <aside class="booking-sidebar">
+        <p class="entry-label">STANDARD ENTRY</p>
+        <div class="price-row">
+          <span class="price">$850</span>
+          <span class="price-per">/ per guest</span>
+        </div>
+        <ul class="perks">
+          <li>
+            <span class="check-icon">✔</span>
+            Full access to all keynote sessions
+          </li>
+          <li>
+            <span class="check-icon">✔</span>
+            Lunch &amp; Evening Networking Mixers
+          </li>
+          <li>
+            <span class="check-icon">✔</span>
+            Digital Certification of Attendance
+          </li>
+        </ul>
+        <button class="book-btn">Book Now</button>
+        <p class="secure-note">
+          SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
+        </p>
+      </aside>
+    </div>
+
+    <!-- ── Footer ── -->
+    <footer class="footer">
+      <p>COPYRIGHT 2026 EMS MANAGEMENT</p>
+      <div class="footer-links">
+        <a href="#">PRIVACY POLICY</a>
+        <a href="#">TERMS OF SERVICE</a>
+        <a href="#">CONTACT</a>
+      </div>
+    </footer>
+  </body>
+</html>
