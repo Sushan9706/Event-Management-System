@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 
 // Update this line to include isAdmin
-const { isLoggedIn, isAdmin } = require('../middleware/auth');
+const { isLoggedIn, isAdmin } = require('../middlewares/auth');
 
 // Home Route (Protected)
 router.get('/', isLoggedIn, userController.getHome);
@@ -12,15 +12,15 @@ router.get('/', isLoggedIn, userController.getHome);
 router.get('/register', userController.getRegister);
 router.post('/register', userController.postRegister);
 
-// Login Routes
-router.get('/login', userController.getLogin);
-router.post('/login', userController.postLogin);
+// // Login Routes
+// router.get('/login', userController.getLogin);
+// router.post('/login', userController.postLogin);
 
 // Admin Dashboard (Protected by both Login and Admin check)
-router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
-    // Make sure you have an adminDashboard.ejs file in your views folder!
-    res.render('adminDashboard', { user: req.user });
-});
+// router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
+//     // Make sure you have an adminDashboard.ejs file in your views folder!
+//     res.render('adminDashboard', { user: req.user });
+// });
 
 // Logout Route
 router.get('/logout', userController.logout);
