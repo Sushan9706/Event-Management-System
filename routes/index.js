@@ -12,9 +12,9 @@ router.get('/', isLoggedIn, userController.getHome);
 router.get('/register', userController.getRegister);
 router.post('/register', userController.postRegister);
 
-// // Login Routes
-// router.get('/login', userController.getLogin);
-// router.post('/login', userController.postLogin);
+// Login Routes
+router.get('/login', userController.getLogin);
+router.post('/login', userController.postLogin);
 
 // Admin Dashboard (Protected by both Login and Admin check)
 // router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
