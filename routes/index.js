@@ -17,10 +17,10 @@ router.get('/login', userController.getLogin);
 router.post('/login', userController.postLogin);
 
 // Admin Dashboard (Protected by both Login and Admin check)
-// router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
-//     // Make sure you have an adminDashboard.ejs file in your views folder!
-//     res.render('adminDashboard', { user: req.user });
-// });
+router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
+    // Make sure you have an adminDashboard.ejs file in your views folder!
+    res.render('adminDashboard', { user: req.user });
+});
 
 // Logout Route
 router.get('/logout', userController.logout);
