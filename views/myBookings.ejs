@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - EMS</title>
+    <link rel="stylesheet" href="/css/manageBooking.css">
+    <link rel="stylesheet" href="/css/myBookings.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="nav-inner">
+            <div class="nav-logo">EMS</div>
+            <nav class="nav-links">
+                <a href="/events">Events</a>
+                <a href="/bookings/my-bookings" class="active">My Bookings</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="icon-btn" title="Search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </button>
+                <button class="icon-btn" title="Notifications">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
+                <div class="avatar-circle"><%= user.username ? user.username.charAt(0).toUpperCase() : 'U' %></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="page-wrapper">
+        <h1 class="page-title">My Bookings</h1>
+
+        <% if (typeof error !== 'undefined' && error.length > 0) { %>
+            <div class="flash-error"><%= error[0] %></div>
+        <% } %>
+
+        <% if (bookings.length === 0) { %>
+            <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <h3>No bookings yet</h3>
+                <p>You haven't booked any events. Browse events to get started.</p>
+                <a href="/events" class="btn-browse">Browse Events</a>
+            </div>
+        <% } else { %>
+            <div class="bookings-list">
+                <% bookings.forEach(booking => { %>
+                <div class="booking-card">
+                    <div class="booking-card-image">
+                        <% if (booking.event && booking.event.image) { %>
+                            <img src="<%= booking.event.image %>" alt="<%= booking.event ? booking.event.name : 'Event' %>">
+                        <% } else { %>
+                            <div class="card-img-placeholder">
+                                <span><%= booking.event ? booking.event.name.charAt(0) : 'E' %></span>
+                            </div>
+                        <% } %>
+                        <span class="card-status status-<%= booking.status %>"><%= booking.status.toUpperCase() %></span>
+                    </div>
+                    <div class="booking-card-body">
+                        <div class="card-ref">#<%= booking.bookingRef %></div>
+                        <h3 class="card-event-name"><%= booking.event ? booking.event.name : 'Event Removed' %></h3>
+                        <div class="card-meta">
+                            <% if (booking.event) { %>
+                            <span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <%= new Date(booking.event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                            </span>
+                            <span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <%= booking.event.location || 'TBA' %>
+                            </span>
+                            <% } %>
+                            <span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <%= booking.amount === 0 ? 'Free' : '$' + booking.amount.toFixed(2) %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="booking-card-actions">
+                        <a href="/bookings/manage/<%= booking._id %>" class="btn-manage">Manage →</a>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="page-footer">
+        <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+        <div class="footer-links">
+            <a href="#">PRIVACY POLICY</a>
+            <a href="#">TERMS OF SERVICE</a>
+            <a href="#">CONTACT</a>
+        </div>
+    </footer>
+
+</body>
+</html>
