@@ -17,20 +17,343 @@
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>
+      </div>
     </header>
 
-    <main class="container">
-        <section class="hero">
-            <h1>Welcome to the Event Management System</h1>
-            <p>Your one-stop solution for managing and organizing unforgettable events with ease and elegance.</p>
-            <a href="/events" class="btn btn-primary">Browse Events</a>
-        </section>
-    </main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-heading">
+          Discover and<br />book<br />
+          <em class="hero-accent">incredible</em><br />
+          events.
+        </h1>
+        <p class="hero-sub">
+          Join the architectural evolution of event management.<br />
+          Curated experiences, seamless bookings, and memories<br />
+          that anchor the future of 2026.
+        </p>
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <svg
+              class="search-icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" placeholder="Search events..." />
+          </div>
+          <div class="date-select">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span>Any Date</span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <button class="btn-search">Search</button>
+        </div>
+        <div class="events-badge">
+          <span class="badge-number">160+ Curated<br />Events Added</span>
+        </div>
+      </div>
+      <div class="hero-image-wrap">
+        <img
+          src="images/hero.svg"
+          alt="Incredible event venue"
+          class="hero-img"
+        />
+      </div>
+    </section>
 
-    <footer>
-        <p>&copy; 2026 EventMaster. All rights reserved.</p>
+    <section class="events-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <div>
+            <p class="section-label">CURATION 2026</p>
+            <h2 class="section-title">Upcoming Events</h2>
+          </div>
+          <div class="carousel-controls">
+            <button class="carousel-btn">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <button class="carousel-btn">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="events-grid">
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img src="images/festival.svg" alt="Neon Horizon Music Gala" />
+              <span class="card-tag tag-festival">FESTIVAL</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">MAR 14, 2026</p>
+              <h3 class="card-title">Neon Horizon Music Gala</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Tokyo, Japan
+              </p>
+            </div>
+          </div>
+
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img src="images/summit.svg" alt="Global AI Summit 2026" />
+              <span class="card-tag tag-tech">TECH</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">APR 02, 2026</p>
+              <h3 class="card-title">Global AI Summit 2026</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                San Francisco, USA
+              </p>
+            </div>
+          </div>
+
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img src="images/expo.svg" alt="Minimalist Visionaries Expo" />
+              <span class="card-tag tag-arts">ARTS</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">MAY 18, 2026</p>
+              <h3 class="card-title">Minimalist Visionaries Expo</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Berlin, Germany
+              </p>
+            </div>
+          </div>
+
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img src="images/ball.svg" alt="The 2026 Emerald Ball" />
+              <span class="card-tag tag-gala">GALA</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">JUN 10, 2026</p>
+              <h3 class="card-title">The 2026 Emerald Ball</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                London, UK
+              </p>
+            </div>
+          </div>
+
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img
+                src="images/workshop.svg"
+                alt="Creative Leadership Intensive"
+              />
+              <span class="card-tag tag-workshop">WORKSHOP</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">JUL 22, 2026</p>
+              <h3 class="card-title">Creative Leadership Intensive</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Sydney, Australia
+              </p>
+            </div>
+          </div>
+
+          <div class="event-card">
+            <div class="card-img-wrap">
+              <img
+                src="images/athletics.svg"
+                alt="Urban Athletics Championship"
+              />
+              <span class="card-tag tag-sports">SPORTS</span>
+            </div>
+            <div class="card-body">
+              <p class="card-date">AUG 05, 2026</p>
+              <h3 class="card-title">Urban Athletics Championship</h3>
+              <p class="card-location">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                New York, USA
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="browse-wrap">
+          <a href="#" class="btn-browse"
+            >Browse All Events
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" /></svg
+          ></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="cta-inner">
+        <div class="cta-text">
+          <h2 class="cta-heading">Never miss a curated<br />moment.</h2>
+          <p class="cta-sub">
+            Sign up for early access to tickets and exclusive announcements
+            for<br />the 2026 season.
+          </p>
+          <div class="cta-form">
+            <input type="email" placeholder="Email address" class="cta-input" />
+            <button class="btn-subscribe">Subscribe</button>
+          </div>
+        </div>
+        <div class="cta-ticket-icon">
+          <svg
+            viewBox="0 0 120 80"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+          >
+            <rect
+              x="8"
+              y="18"
+              width="104"
+              height="44"
+              rx="6"
+              fill="#c8cfe8"
+              opacity="0.5"
+            />
+            <circle cx="8" cy="40" r="8" fill="#dde4f4" />
+            <circle cx="112" cy="40" r="8" fill="#dde4f4" />
+            <line
+              x1="8"
+              y1="40"
+              x2="112"
+              y2="40"
+              stroke="#b0bcd8"
+              stroke-width="1"
+              stroke-dasharray="4 4"
+            />
+            <circle cx="40" cy="28" r="3" fill="#b0bcd8" />
+            <circle cx="40" cy="52" r="3" fill="#b0bcd8" />
+            <circle cx="40" cy="40" r="3" fill="#b0bcd8" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span class="footer-copy"
+        >COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span
+      >
+      <div class="footer-links">
+        <a href="#">TERMS</a>
+        <a href="#">PRIVACY</a>
+      </div>
     </footer>
-
-    <script src="/js/script.js"></script>
-</body>
+  </body>
 </html>
