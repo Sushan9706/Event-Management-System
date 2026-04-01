@@ -16,6 +16,9 @@ router.post('/register', userController.postRegister);
 router.get('/login', userController.getLogin);
 router.post('/login', userController.postLogin);
 
+// User Dashboard Route (Protected)
+router.get('/user', isLoggedIn, userController.getUserDashboard);
+
 // Admin Dashboard (Protected by both Login and Admin check)
 // router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
 //     // Make sure you have an adminDashboard.ejs file in your views folder!
