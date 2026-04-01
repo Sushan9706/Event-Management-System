@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/style.css">
-    <!-- Include Google Fonts for modern design -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-</head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">EventMaster</div>
-            <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="/events">Events</a></li>
-                <li><a href="/about">About</a></li>
-            </ul>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS – Discover & Book Incredible Events</title>
+    <link rel="stylesheet" href="/css/guest.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="nav-inner">
+        <span class="logo">EMS</span>
+        <nav class="nav-links">
+          <a href="/login" class="nav-link active">Events</a>
+          <a href="/login" class="nav-link">My Bookings</a>
+          <a href="/login" class="nav-link">Login/Register</a>
+          <a href="/login" class="btn-get-started">Get Started</a>
         </nav>
       </div>
     </header>
@@ -76,16 +79,17 @@
           </div>
           <button class="btn-search">Search</button>
         </div>
-        <div class="events-badge">
-          <span class="badge-number">160+ Curated<br />Events Added</span>
-        </div>
       </div>
       <div class="hero-image-wrap">
         <img
-          src="images/hero.svg"
-          alt="Incredible event venue"
           class="hero-img"
+          src="https://ca-times.brightspotcdn.com/dims4/default/f854f6b/2147483647/strip/true/crop/5568x3712+0+0/resize/1200x800!/quality/75/?url=https%3A%2F%2Fcalifornia-times-brightspot.s3.amazonaws.com%2Faa%2F18%2Fe54c32e242b684c943ea0cf6c222%2Fap21310170175809.jpg"
         />
+
+        <div class="floating-card">
+          150+ Exclusive <br />
+          Events Added
+        </div>
       </div>
     </section>
 
@@ -127,7 +131,10 @@
         <div class="events-grid">
           <div class="event-card">
             <div class="card-img-wrap">
-              <img src="images/festival.svg" alt="Neon Horizon Music Gala" />
+              <img
+                src="https://i.ytimg.com/vi/a9jBIGgRMl8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCZGUIsN8n7K_ua11wqNdZ84VEv9w"
+                alt="Neon Horizon Music Gala"
+              />
               <span class="card-tag tag-festival">FESTIVAL</span>
             </div>
             <div class="card-body">
@@ -152,7 +159,10 @@
 
           <div class="event-card">
             <div class="card-img-wrap">
-              <img src="images/summit.svg" alt="Global AI Summit 2026" />
+              <img
+                src="https://i0.wp.com/asambhav.in/wp-content/uploads/2026/02/World-AI-Summit-2026.jpeg?fit=1600%2C995&ssl=1"
+                alt="Global AI Summit 2026"
+              />
               <span class="card-tag tag-tech">TECH</span>
             </div>
             <div class="card-body">
@@ -177,7 +187,10 @@
 
           <div class="event-card">
             <div class="card-img-wrap">
-              <img src="images/expo.svg" alt="Minimalist Visionaries Expo" />
+              <img
+                src="https://expobelgrade2027.org/_next/image?url=%2Fimages%2Fexperience%2Fprogramme%2Fprogramme-hero.webp&w=3840&q=75"
+                alt="Minimalist Visionaries Expo"
+              />
               <span class="card-tag tag-arts">ARTS</span>
             </div>
             <div class="card-body">
@@ -202,7 +215,10 @@
 
           <div class="event-card">
             <div class="card-img-wrap">
-              <img src="images/ball.svg" alt="The 2026 Emerald Ball" />
+              <img
+                src="https://dkmpk7k3ppdsy.cloudfront.net/0cca86ddf6b20d9011945926b0baeed5.jpg"
+                alt="The 2026 Emerald Ball"
+              />
               <span class="card-tag tag-gala">GALA</span>
             </div>
             <div class="card-body">
@@ -228,7 +244,7 @@
           <div class="event-card">
             <div class="card-img-wrap">
               <img
-                src="images/workshop.svg"
+                src="https://cdn.prod.website-files.com/65e5ae1fb7482afd48d22155/6706ea5e03d5848ae30fc235_6706ea5dc8adc83e48fccf11_shutterstock_629137265-1-1024x576.jpeg"
                 alt="Creative Leadership Intensive"
               />
               <span class="card-tag tag-workshop">WORKSHOP</span>
@@ -256,7 +272,7 @@
           <div class="event-card">
             <div class="card-img-wrap">
               <img
-                src="images/athletics.svg"
+                src="https://d26itsb5vlqdeq.cloudfront.net/image/E8C91600-D662-27C9-2257982BE48884B8"
                 alt="Urban Athletics Championship"
               />
               <span class="card-tag tag-sports">SPORTS</span>
@@ -293,8 +309,9 @@
               stroke="currentColor"
               stroke-width="2"
             >
-              <path d="M5 12h14M12 5l7 7-7 7" /></svg
-          ></a>
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+          </a> 
         </div>
       </div>
     </section>
@@ -313,7 +330,7 @@
           </div>
         </div>
         <div class="cta-ticket-icon">
-          <svg
+        </svg>
             viewBox="0 0 120 80"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

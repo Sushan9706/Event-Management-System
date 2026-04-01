@@ -7,7 +7,7 @@ exports.getHome = async (req, res) => {
         const user = await userModel.findById(req.user.userId);
         res.render("index", { user });
     } catch (err) {
-        res.redirect("/login");
+        res.redirect("/");
     }
 };
 
@@ -101,12 +101,26 @@ exports.postLogin = async (req, res) => {
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
             }
-            return res.redirect('/'); // Regular user dashboard
+            return res.redirect('/user'); // Regular user dashboard
         } else {
             req.flash('error', 'Invalid Credentials');
             res.redirect('/login');
         }
     } catch (err) {
+        res.redirect('/login');
+    }
+};
+
+exports.getUserDashboard = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.userId); // get user info from JWT
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/login');
+        }
+        res.render('user', { user }); // render user.ejs
+    } catch (err) {
+        console.error(err);
         res.redirect('/login');
     }
 };
