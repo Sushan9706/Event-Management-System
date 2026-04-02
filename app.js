@@ -10,6 +10,7 @@ const flash = require('connect-flash');
 
 // routes
 const indexRouter = require('./routes/index');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -37,11 +38,14 @@ app.use(flash());
 // make flash available in views
 app.use((req, res, next) => {
     res.locals.error = req.flash('error');
+    res.locals.success = req.flash('success');
     next();
 });
 
 // Routes
 app.use('/', indexRouter);
+app.use('/admin', adminRoutes);
+
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');

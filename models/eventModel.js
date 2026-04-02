@@ -1,12 +1,54 @@
-// Placeholder event model - likely to use a database query with mysql2 later
-const db = require('../config/db');
+const mongoose = require('mongoose');
 
-const Event = {
-    getAll: (callback) => {
-        const query = 'SELECT * FROM events';
-        // db.execute(query, callback);
+const eventSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true
     },
-    // Add more methods as needed (create, findById, etc.)
-};
+    description: {
+        type: String,
+        default: ''
+    },
+    category: {
+        type: String,
+        default: 'General'
+    },
+    date: {
+        type: Date,
+        required: true
+    },
+    time: {
+        type: String,
+        required: true
+    },
+    location: {
+        type: String,
+        default: ''
+    },
+    city: {
+        type: String,
+        default: ''
+    },
+    max_capacity: {
+        type: Number,
+        default: 100
+    },
+    ticket_price: {
+        type: Number,
+        default: 0
+    },
+    status: {
+        type: String,
+        enum: ['active', 'draft', 'cancelled', 'completed'],
+        default: 'draft'
+    },
+    banner_image: {
+        type: String,
+        default: null
+    }
+}, {
+    timestamps: true
+});
 
-module.exports = Event;
+module.exports = mongoose.model('Event', eventSchema);
