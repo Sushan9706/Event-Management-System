@@ -23,7 +23,7 @@ router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
 });
 
 // search route for searching the events 
-// router.get('/events/search', userController.searchEvents);
+router.get('/events/search', userController.searchEvents);
 
 // Logout Route
 router.get('/logout', userController.logout);
