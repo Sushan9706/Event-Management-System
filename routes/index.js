@@ -22,9 +22,6 @@ router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
     res.render('adminDashboard', { user: req.user });
 });
 
-// search route for searching the events 
-router.get('/events/search', userController.searchEvents);
-
 // Logout Route
 router.get('/logout', userController.logout);
 
