@@ -64,7 +64,14 @@
       <section class="hero">
         <p class="hero-eyebrow">DASHBOARD</p>
         <h1 class="hero-title">
-          Welcome back, <span class="hero-name">Julian</span>.
+          <%
+            const firstName = (user.username || "").split(" ")[0];
+            const capitalized = firstName
+              ? firstName[0].toUpperCase() + firstName.slice(1)
+              : "";
+          %>
+
+          Welcome back, <span class="hero-name"><%= capitalized %></span>.
         </h1>
         <p class="hero-sub">
           Your curated events and management hub for the 2026<br />season is

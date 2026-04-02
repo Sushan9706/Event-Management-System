@@ -25,3 +25,24 @@ exports.isAdmin = (req, res, next) => {
         res.redirect('/'); // Send regular users back to the home page
     }
 };
+
+exports.redirectIfLoggedIn = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+        return next(); // Not logged in → stay on guest page
+    }
+
+    try {
+        const decoded = jwt.verify(token, "shhhhhhhhh");
+
+        // Redirect based on role
+        if (decoded.role === "admin") {
+            return res.redirect("/admin/dashboard");
+        }
+
+        return res.redirect("/user");
+    } catch (err) {
+        return next(); // Invalid token → treat as guest
+    }
+};

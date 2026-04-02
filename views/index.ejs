@@ -15,7 +15,7 @@
       <div class="nav-inner">
         <span class="logo">EMS</span>
         <nav class="nav-links">
-          <a href="/login" class="nav-link active">Events</a>
+          <a href="/" class="nav-link active">Events</a>
           <a href="/login" class="nav-link">My Bookings</a>
           <a href="/login" class="nav-link">Login/Register</a>
           <a href="/login" class="btn-get-started">Get Started</a>
@@ -35,50 +35,17 @@
           Curated experiences, seamless bookings, and memories<br />
           that anchor the future of 2026.
         </p>
-        <div class="search-bar">
+        <form action="/events/search" method="GET" class="search-bar">
           <div class="search-input-wrap">
-            <svg
-              class="search-icon"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input type="text" placeholder="Search events..." />
+            <input type="text" name="q" placeholder="Search events..." />
           </div>
+          
           <div class="date-select">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <span>Any Date</span>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <input type="date" name="date" style="border:none; outline:none; background:transparent; font-family: inherit;">
           </div>
-          <button class="btn-search">Search</button>
-        </div>
+          
+          <button type="submit" class="btn-search">Search</button>
+      </form>
       </div>
       <div class="hero-image-wrap">
         <img
@@ -129,173 +96,25 @@
         </div>
 
         <div class="events-grid">
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://i.ytimg.com/vi/a9jBIGgRMl8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCZGUIsN8n7K_ua11wqNdZ84VEv9w"
-                alt="Neon Horizon Music Gala"
-              />
-              <span class="card-tag tag-festival">FESTIVAL</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">MAR 14, 2026</p>
-              <h3 class="card-title">Neon Horizon Music Gala</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                Tokyo, Japan
-              </p>
-            </div>
-          </div>
-
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://i0.wp.com/asambhav.in/wp-content/uploads/2026/02/World-AI-Summit-2026.jpeg?fit=1600%2C995&ssl=1"
-                alt="Global AI Summit 2026"
-              />
-              <span class="card-tag tag-tech">TECH</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">APR 02, 2026</p>
-              <h3 class="card-title">Global AI Summit 2026</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                San Francisco, USA
-              </p>
-            </div>
-          </div>
-
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://expobelgrade2027.org/_next/image?url=%2Fimages%2Fexperience%2Fprogramme%2Fprogramme-hero.webp&w=3840&q=75"
-                alt="Minimalist Visionaries Expo"
-              />
-              <span class="card-tag tag-arts">ARTS</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">MAY 18, 2026</p>
-              <h3 class="card-title">Minimalist Visionaries Expo</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                Berlin, Germany
-              </p>
-            </div>
-          </div>
-
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://dkmpk7k3ppdsy.cloudfront.net/0cca86ddf6b20d9011945926b0baeed5.jpg"
-                alt="The 2026 Emerald Ball"
-              />
-              <span class="card-tag tag-gala">GALA</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">JUN 10, 2026</p>
-              <h3 class="card-title">The 2026 Emerald Ball</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                London, UK
-              </p>
-            </div>
-          </div>
-
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://cdn.prod.website-files.com/65e5ae1fb7482afd48d22155/6706ea5e03d5848ae30fc235_6706ea5dc8adc83e48fccf11_shutterstock_629137265-1-1024x576.jpeg"
-                alt="Creative Leadership Intensive"
-              />
-              <span class="card-tag tag-workshop">WORKSHOP</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">JUL 22, 2026</p>
-              <h3 class="card-title">Creative Leadership Intensive</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                Sydney, Australia
-              </p>
-            </div>
-          </div>
-
-          <div class="event-card">
-            <div class="card-img-wrap">
-              <img
-                src="https://d26itsb5vlqdeq.cloudfront.net/image/E8C91600-D662-27C9-2257982BE48884B8"
-                alt="Urban Athletics Championship"
-              />
-              <span class="card-tag tag-sports">SPORTS</span>
-            </div>
-            <div class="card-body">
-              <p class="card-date">AUG 05, 2026</p>
-              <h3 class="card-title">Urban Athletics Championship</h3>
-              <p class="card-location">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                New York, USA
-              </p>
-            </div>
-          </div>
+          <% if (events && events.length > 0) { %>
+            <% events.forEach(event => { %>
+              <div class="event-card">
+                <div class="card-img-wrap">
+                  <img src="<%= event.image %>" alt="<%= event.title %>" />
+                  <span class="card-tag tag-<%= event.category.toLowerCase() %>">
+                    <%= event.category %>
+                  </span>
+                </div>
+                <div class="card-body">
+                  <p class="card-date"><%= event.date.toDateString() %></p>
+                  <h3 class="card-title"><%= event.title %></h3>
+                  <p class="card-location"><%= event.location %></p>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p>No events found for your search.</p>
+          <% } %>
         </div>
 
         <div class="browse-wrap">

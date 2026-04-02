@@ -1,12 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { isLoggedIn, isAdmin, redirectIfLoggedIn } = require('../middlewares/auth');
 
-// Update this line to include isAdmin
-const { isLoggedIn, isAdmin } = require('../middlewares/auth');
-
-// Home Route (Protected)
-router.get('/', isLoggedIn, userController.getHome);
+router.get('/', redirectIfLoggedIn, userController.getGuestDashboard);
 
 // Registration Routes
 router.get('/register', userController.getRegister);

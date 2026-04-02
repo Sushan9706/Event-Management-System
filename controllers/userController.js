@@ -1,15 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const userModel = require("../models/user");
-
-exports.getHome = async (req, res) => {
-    try {
-        const user = await userModel.findById(req.user.userId);
-        res.render("index", { user });
-    } catch (err) {
-        res.redirect("/");
-    }
-};
+const eventModel = require("../models/event");
 
 exports.getRegister = (req, res) => {
     res.render("register");
@@ -122,6 +114,44 @@ exports.getUserDashboard = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.redirect('/login');
+    }
+};
+
+exports.getGuestDashboard = async (req, res) => {
+    try {
+        // Fetch ALL events to show by default
+        const events = await eventModel.find({});
+        res.render("index", { events: events });
+    } catch (err) {
+        res.status(500).send("Error loading dashboard");
+    }
+};
+
+exports.searchEvents = async (req, res) => {
+    try {
+        let { q, date } = req.query;
+        let queryObj = {};
+
+        // 1. Text Search (Matches title regardless of case)
+        if (q) {
+            queryObj.title = { $regex: q, $options: "i" };
+        }
+
+        // 2. Date Search
+        if (date) {
+            queryObj.date = { 
+                $gte: new Date(date), 
+                $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) 
+            };
+        }
+
+        // Fetch events from DB
+        const events = await eventModel.find(queryObj);
+
+        // Render the page with the found events
+        res.render("index", { events: events });
+    } catch (err) {
+        res.status(500).send("Search failed");
     }
 };
 
