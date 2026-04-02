@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EMS – User Dashboard</title>
-    <link rel="stylesheet" href="/css/user.css" />
+    <link rel="stylesheet" href="/stylesheets/user.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -52,7 +52,7 @@
           </svg>
         </button>
         <img
-          src="images/avatar.svg"
+          src="https://img.freepik.com/premium-photo/memoji-emoji-handsome-smiling-man-white-background_826801-6987.jpg?semt=ais_incoming&w=740&q=80"
           alt="User avatar"
           class="avatar-circle"
           onerror="this.style.background='#3b4254';this.removeAttribute('src')"
@@ -64,14 +64,7 @@
       <section class="hero">
         <p class="hero-eyebrow">DASHBOARD</p>
         <h1 class="hero-title">
-          <%
-            const firstName = (user.username || "").split(" ")[0];
-            const capitalized = firstName
-              ? firstName[0].toUpperCase() + firstName.slice(1)
-              : "";
-          %>
-
-          Welcome back, <span class="hero-name"><%= capitalized %></span>.
+          Welcome back, <span class="hero-name">Divyani</span>.
         </h1>
         <p class="hero-sub">
           Your curated events and management hub for the 2026<br />season is
@@ -178,7 +171,7 @@
           <div class="ecard ecard--featured">
             <div class="ecard-img-wrap">
               <img
-                src="images/tech-conference.svg"
+                src="https://media.bitcot.com/wp-content/uploads/2025/04/Best-Tech-Conferences-2026.webp"
                 alt="Tech Conference 2026"
                 class="ecard-img ecard-img--featured"
               />
@@ -222,7 +215,7 @@
           <div class="ecard ecard--sm">
             <div class="ecard-img-wrap">
               <img
-                src="images/metropolis-night.svg"
+                src="https://covers.stocktune.com/public/a/2/f/a2f8dadf-ce7a-4158-bb72-82a31cc5b032_large/infinite-neon-soundscapes-stocktune.jpg"
                 alt="Metropolis Night Series"
                 class="ecard-img ecard-img--sm"
               />
@@ -237,8 +230,9 @@
 
           <div class="ecard ecard--sm">
             <div class="ecard-img-wrap">
+
               <img
-                src="images/artisan-dinner.svg"
+                src="https://nohoartsdistrict.com/wp-content/uploads/2025/11/Throw-a-Festive-Winter-Solstice-Dinner-With-These-Finishing-Touches-scaled.jpeg"
                 alt="The Artisan's Table"
                 class="ecard-img ecard-img--sm"
               />
@@ -252,6 +246,33 @@
           </div>
         </div>
       </section>
+    </section>
+
+    <section class="search-filter">
+      <h2 class="sec-title">Search & Filter Events</h2>
+    
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="Search events by name..." />
+    
+        <select id="dateFilter">
+          <option value="">All Dates</option>
+          <option value="2026-10-12">Oct 12, 2026</option>
+          <option value="2026-11-04">Nov 04, 2026</option>
+        </select>
+    
+        <select id="locationFilter">
+          <option value="">All Locations</option>
+          <option value="Berlin">Berlin</option>
+          <option value="Kathmandu">Kathmandu</option>
+        </select>
+    
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="Tech">Tech</option>
+          <option value="Music">Music</option>
+        </select>
+      </div>
+    </section>
 
       <section class="bookings-wrap">
         <div class="bookings-box">
@@ -391,5 +412,6 @@
         <a href="#">CONTACT</a>
       </div>
     </footer>
+    <script src="script.js"></script>
   </body>
 </html>
