@@ -1,9 +1,5 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://127.0.0.1:27017/eventManagement")
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
-
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -21,16 +17,16 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        minlength: 8 
+        required: true
     },
     role: {
         type: String,
-        enum: ['user', 'admin'], // Only allows these two values
-        default: 'user'          // role defaults to user 
-    }
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
+    createdAt: { type: Date, default: Date.now }
 }, {
-    timestamps: true // handles the created at and updated at automatically
+    timestamps: true // keep this for updatedAt if needed
 });
 
 module.exports = mongoose.model("user", userSchema);

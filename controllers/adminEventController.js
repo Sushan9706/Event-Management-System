@@ -1,30 +1,97 @@
 const Event = require('../models/eventModel');
+const Category = require('../models/categoryModel');
 const Booking = require('../models/bookingModel');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Seed Categories if they don't exist
+ */
+const seedCategories = async () => {
+    const count = await Category.countDocuments();
+    if (count === 0) {
+        const defaultCategories = [
+            { name: "Music" },
+            { name: "Technology" },
+            { name: "Sports" },
+            { name: "Arts" },
+            { name: "Food and Drink" },
+            { name: "Networking" },
+            { name: "Education" },
+            { name: "Other" }
+        ];
+        await Category.insertMany(defaultCategories);
+    }
+};
+
 // ─── MANAGE EVENTS PAGE ──────────────────────────────────────
 exports.getManageEvents = async (req, res) => {
     try {
-        const events = await Event.find().sort({ createdAt: -1 });
+        await seedCategories();
 
-        // Calculate stats
-        const totalEvents = events.length;
-        const activeEvents = events.filter(e => e.status === 'active').length;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 8;
+        const search = req.query.search || '';
+        const status = req.query.status || 'all';
 
-        // Get total attendees across all events
-        const totalAttendees = await Booking.countDocuments({ status: { $ne: 'cancelled' } });
+        let query = {};
+        if (search) {
+            query.eventName = { $regex: search, $options: 'i' };
+        }
+        if (status !== 'all') {
+            query.status = status;
+        }
 
-        // Calculate average attendance percentage
+        const totalItems = await Event.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const events = await Event.find(query)
+            .populate('categoryId')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        // Stats for cards - based on ALL events not just filtered ones for accurate dashboard
+        const totalEventsCount = await Event.countDocuments();
+        const activeEventsCount = await Event.countDocuments({ status: 'upcoming' }); // Using 'upcoming' as 'active' for now
+        const totalAttendees = await Booking.countDocuments({ status: 'confirmed' });
+
+        // Avg Attendance (Mocked or calculated if possible)
+        const allEvents = await Event.find();
         let avgAttendance = 0;
-        if (totalEvents > 0) {
-            const totalCapacity = events.reduce((sum, e) => sum + (e.max_capacity || 0), 0);
+        if (totalEventsCount > 0) {
+            const totalCapacity = allEvents.reduce((sum, e) => sum + (e.maxCapacity || 0), 0);
             avgAttendance = totalCapacity > 0 ? Math.round((totalAttendees / totalCapacity) * 100) : 0;
         }
 
-        const stats = { totalEvents, activeEvents, totalAttendees, avgAttendance };
+        const stats = {
+            totalEvents: totalEventsCount,
+            activeEvents: activeEventsCount,
+            totalAttendees: totalAttendees,
+            avgAttendance: avgAttendance
+        };
 
-        res.render('admin/manageEvents', { events, stats });
+        // If AJAX request, return JSON
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            return res.json({
+                events,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems
+                }
+            });
+        }
+
+        res.render('admin/manageEvents', {
+            events,
+            stats,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems
+            }
+        });
     } catch (err) {
         console.error('Error loading manage events:', err);
         req.flash('error', 'Failed to load events');
@@ -33,30 +100,35 @@ exports.getManageEvents = async (req, res) => {
 };
 
 // ─── CREATE EVENT PAGE ───────────────────────────────────────
-exports.getCreateEvent = (req, res) => {
-    res.render('admin/createEvent');
+exports.getCreateEvent = async (req, res) => {
+    try {
+        const categories = await Category.find();
+        res.render('admin/createEvent', { categories });
+    } catch (err) {
+        console.error('Error loading create event page:', err);
+        res.redirect('/admin/events');
+    }
 };
 
 exports.postCreateEvent = async (req, res) => {
     try {
-        const { name, description, category, date, time, location, city, max_capacity, ticket_price, status } = req.body;
+        const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
 
         const eventData = {
-            name,
+            eventName,
             description,
-            category,
+            categoryId,
             date,
             time,
             location,
-            city,
-            max_capacity: parseInt(max_capacity) || 100,
-            ticket_price: parseFloat(ticket_price) || 0,
-            status: status || 'draft'
+            maxCapacity: parseInt(maxCapacity) || 0,
+            ticketPrice: parseFloat(ticketPrice) || 0,
+            status: status || 'upcoming',
+            createdBy: req.session.user ? req.session.user._id : null
         };
 
-        // Handle image upload
         if (req.file) {
-            eventData.banner_image = '/images/events/' + req.file.filename;
+            eventData.imagePath = '/images/events/' + req.file.filename;
         }
 
         await Event.create(eventData);
@@ -78,7 +150,8 @@ exports.getEditEvent = async (req, res) => {
             req.flash('error', 'Event not found');
             return res.redirect('/admin/events');
         }
-        res.render('admin/editEvent', { event });
+        const categories = await Category.find();
+        res.render('admin/editEvent', { event, categories });
     } catch (err) {
         console.error('Error loading edit event:', err);
         req.flash('error', 'Failed to load event');
@@ -88,30 +161,27 @@ exports.getEditEvent = async (req, res) => {
 
 exports.postEditEvent = async (req, res) => {
     try {
-        const { name, description, category, date, time, location, city, max_capacity, ticket_price, status } = req.body;
+        const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
 
         const updateData = {
-            name,
+            eventName,
             description,
-            category,
+            categoryId,
             date,
             time,
             location,
-            city,
-            max_capacity: parseInt(max_capacity) || 100,
-            ticket_price: parseFloat(ticket_price) || 0,
-            status: status || 'draft'
+            maxCapacity: parseInt(maxCapacity) || 0,
+            ticketPrice: parseFloat(ticketPrice) || 0,
+            status: status || 'upcoming'
         };
 
-        // Handle new image upload
         if (req.file) {
-            // Delete old image if exists
             const oldEvent = await Event.findById(req.params.id);
-            if (oldEvent && oldEvent.banner_image) {
-                const oldPath = path.join(__dirname, '..', 'public', oldEvent.banner_image);
+            if (oldEvent && oldEvent.imagePath) {
+                const oldPath = path.join(__dirname, '..', 'public', oldEvent.imagePath);
                 if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
             }
-            updateData.banner_image = '/images/events/' + req.file.filename;
+            updateData.imagePath = '/images/events/' + req.file.filename;
         }
 
         await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
@@ -129,15 +199,16 @@ exports.postEditEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
-
-        // Delete banner image from disk
-        if (event && event.banner_image) {
-            const imgPath = path.join(__dirname, '..', 'public', event.banner_image);
+        if (event && event.imagePath) {
+            const imgPath = path.join(__dirname, '..', 'public', event.imagePath);
             if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
         }
 
         await Event.findByIdAndDelete(req.params.id);
-        await Booking.deleteMany({ event_id: req.params.id });
+        // Clean up bookings if model exists and has correct field
+        if (Booking && Booking.deleteMany) {
+            await Booking.deleteMany({ eventId: req.params.id });
+        }
 
         req.flash('success', 'Event deleted successfully');
         res.redirect('/admin/events');
@@ -152,11 +223,11 @@ exports.deleteEvent = async (req, res) => {
 exports.removeEventImage = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
-        if (event && event.banner_image) {
-            const imgPath = path.join(__dirname, '..', 'public', event.banner_image);
+        if (event && event.imagePath) {
+            const imgPath = path.join(__dirname, '..', 'public', event.imagePath);
             if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
 
-            event.banner_image = null;
+            event.imagePath = null;
             await event.save();
         }
         res.json({ success: true });
@@ -169,7 +240,7 @@ exports.removeEventImage = async (req, res) => {
 // ─── BOOKING DETAILS PAGE ───────────────────────────────────
 exports.getBookingDetails = async (req, res) => {
     try {
-        const event = await Event.findById(req.params.id);
+        const event = await Event.findById(req.params.id).populate('categoryId');
         if (!event) {
             req.flash('error', 'Event not found');
             return res.redirect('/admin/events');
@@ -181,24 +252,38 @@ exports.getBookingDetails = async (req, res) => {
         const search = req.query.search || '';
 
         // Build query
-        const query = { event_id: req.params.id };
+        const query = { eventId: req.params.id };
         if (statusFilter !== 'all') query.status = statusFilter;
         if (search) {
             query.$or = [
-                { user_name: { $regex: search, $options: 'i' } },
-                { user_email: { $regex: search, $options: 'i' } },
-                { reference_number: { $regex: search, $options: 'i' } }
+                { userName: { $regex: search, $options: 'i' } },
+                { userEmail: { $regex: search, $options: 'i' } },
+                { referenceNumber: { $regex: search, $options: 'i' } }
             ];
         }
 
-        const total = await Booking.countDocuments(query);
+        const totalItems = await Booking.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit);
+
         const bookings = await Booking.find(query)
-            .sort({ booking_date: -1 })
+            .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
 
-        const totalBookings = await Booking.countDocuments({ event_id: req.params.id, status: { $ne: 'cancelled' } });
-        const capacityPercent = event.max_capacity > 0 ? Math.round((totalBookings / event.max_capacity) * 100) : 0;
+        const totalBookings = await Booking.countDocuments({ eventId: req.params.id, status: { $ne: 'cancelled' } });
+        const capacityPercent = event.maxCapacity > 0 ? Math.round((totalBookings / event.maxCapacity) * 100) : 0;
+
+        // If AJAX request
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            return res.json({
+                bookings,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems
+                }
+            });
+        }
 
         res.render('admin/bookingDetails', {
             event,
@@ -206,10 +291,9 @@ exports.getBookingDetails = async (req, res) => {
             totalBookings,
             capacityPercent,
             pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit) || 1
+                currentPage: page,
+                totalPages,
+                totalItems
             },
             filters: {
                 status: statusFilter,
@@ -229,15 +313,15 @@ exports.exportBookingsCsv = async (req, res) => {
         const event = await Event.findById(req.params.id);
         if (!event) return res.status(404).send('Event not found');
 
-        const bookings = await Booking.find({ event_id: req.params.id }).sort({ booking_date: -1 });
+        const bookings = await Booking.find({ eventId: req.params.id }).sort({ createdAt: -1 });
 
         let csv = 'Name,Email,Reference,Status,Booking Date\n';
         bookings.forEach(b => {
-            csv += `"${b.user_name}","${b.user_email}","${b.reference_number}","${b.status}","${b.booking_date}"\n`;
+            csv += `"${b.userName}","${b.userEmail}","${b.referenceNumber}","${b.status}","${b.createdAt}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${event.name.replace(/[^a-zA-Z0-9]/g, '_')}_attendees.csv"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${event.eventName.replace(/[^a-zA-Z0-9]/g, '_')}_attendees.csv"`);
         res.send(csv);
     } catch (err) {
         console.error('Error exporting CSV:', err);

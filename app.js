@@ -35,8 +35,19 @@ app.use(session({
 
 app.use(flash());
 
-// make flash available in views
+// make user and flash available in views
 app.use((req, res, next) => {
+    const jwt = require('jsonwebtoken');
+    const token = req.cookies.token;
+    if (token) {
+        try {
+            res.locals.user = jwt.verify(token, "shhhhhhhhh");
+        } catch (err) {
+            res.locals.user = null;
+        }
+    } else {
+        res.locals.user = null;
+    }
     res.locals.error = req.flash('error');
     res.locals.success = req.flash('success');
     next();

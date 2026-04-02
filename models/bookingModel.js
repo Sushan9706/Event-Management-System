@@ -1,23 +1,23 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-    event_id: {
+    eventId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
         required: true
     },
-    user_name: {
+    userName: {
         type: String,
         required: true,
         trim: true
     },
-    user_email: {
+    userEmail: {
         type: String,
         required: true,
         trim: true,
         lowercase: true
     },
-    reference_number: {
+    referenceNumber: {
         type: String,
         required: true,
         unique: true
@@ -26,10 +26,6 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         enum: ['confirmed', 'pending', 'cancelled'],
         default: 'confirmed'
-    },
-    booking_date: {
-        type: Date,
-        default: Date.now
     }
 }, {
     timestamps: true

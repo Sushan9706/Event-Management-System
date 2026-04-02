@@ -1,271 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMS – User Dashboard</title>
-    <link rel="stylesheet" href="/stylesheets/user.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <header class="navbar">
-      <div class="nav-logo">EMS</div>
-      <nav class="nav-center">
-        <a href="#">Events</a>
-        <a href="#">My Bookings</a>
-        <a href="#" class="nav-active">Profile</a>
-      </nav>
-      <div class="nav-right">
-        <button class="icon-btn" aria-label="Search">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS – User Dashboard</title>
+  <link rel="stylesheet" href="/css/user.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+  <header class="navbar">
+    <div class="nav-logo">EMS</div>
+    <nav class="nav-center">
+      <a href="#">Events</a>
+      <a href="#">My Bookings</a>
+      <a href="#" class="nav-active">Profile</a>
+    </nav>
+    <div class="nav-right">
+      <button class="icon-btn" aria-label="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+      </button>
+      <img
+        src="https://img.freepik.com/premium-photo/memoji-emoji-handsome-smiling-man-white-background_826801-6987.jpg?semt=ais_incoming&w=740&q=80"
+        alt="User avatar" class="avatar-circle" onerror="this.style.background='#3b4254';this.removeAttribute('src')" />
+    </div>
+  </header>
+
+  <main class="page-main">
+    <section class="hero">
+      <p class="hero-eyebrow">DASHBOARD</p>
+      <h1 class="hero-title">
+        Welcome back, <span class="hero-name">Divyani</span>.
+      </h1>
+      <p class="hero-sub">
+        Your curated events and management hub for the 2026<br />season is
+        ready for exploration.
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </div>
+          <p class="stat-label">TOTAL BOOKINGS</p>
+          <p class="stat-num">24</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <p class="stat-label">UPCOMING EVENTS</p>
+          <p class="stat-num">03</p>
+        </div>
+        <div class="stat-card stat-card--member">
+          <div class="member-row-top">
+            <p class="member-eyebrow">MEMBERSHIP</p>
+            <div class="gem-icon">
+              <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+                <polygon points="25,3 47,17 47,39 25,49 3,39 3,17" fill="rgba(255,255,255,0.05)"
+                  stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
+                <polygon points="25,11 40,21 40,37 25,45 10,37 10,21" fill="rgba(255,255,255,0.04)"
+                  stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+                <circle cx="25" cy="28" r="5" fill="rgba(255,255,255,0.18)" />
+              </svg>
+            </div>
+          </div>
+          <p class="member-title">Elite Curator</p>
+          <a href="#" class="member-link">VIEW BENEFITS →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="recommended">
+      <div class="sec-header">
+        <div>
+          <h2 class="sec-title">Recommended for You</h2>
+          <p class="sec-sub">
+            AI-powered suggestions based on your interests
+          </p>
+        </div>
+        <a href="#" class="explore-all">EXPLORE ALL
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-        </button>
-        <button class="icon-btn" aria-label="Notifications">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-        </button>
-        <img
-          src="https://img.freepik.com/premium-photo/memoji-emoji-handsome-smiling-man-white-background_826801-6987.jpg?semt=ais_incoming&w=740&q=80"
-          alt="User avatar"
-          class="avatar-circle"
-          onerror="this.style.background='#3b4254';this.removeAttribute('src')"
-        />
+        </a>
       </div>
-    </header>
 
-    <main class="page-main">
-      <section class="hero">
-        <p class="hero-eyebrow">DASHBOARD</p>
-        <h1 class="hero-title">
-          Welcome back, <span class="hero-name">Divyani</span>.
-        </h1>
-        <p class="hero-sub">
-          Your curated events and management hub for the 2026<br />season is
-          ready for exploration.
-        </p>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-ico">
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-              >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-              </svg>
-            </div>
-            <p class="stat-label">TOTAL BOOKINGS</p>
-            <p class="stat-num">24</p>
+      <div class="cards-grid">
+        <div class="ecard ecard--featured">
+          <div class="ecard-img-wrap">
+            <img src="https://media.bitcot.com/wp-content/uploads/2025/04/Best-Tech-Conferences-2026.webp"
+              alt="Tech Conference 2026" class="ecard-img ecard-img--featured" />
           </div>
-          <div class="stat-card">
-            <div class="stat-ico">
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-              >
+          <div class="ecard-body">
+            <p class="ecard-meta">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-            </div>
-            <p class="stat-label">UPCOMING EVENTS</p>
-            <p class="stat-num">03</p>
-          </div>
-          <div class="stat-card stat-card--member">
-            <div class="member-row-top">
-              <p class="member-eyebrow">MEMBERSHIP</p>
-              <div class="gem-icon">
-                <svg
-                  viewBox="0 0 50 50"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="36"
-                  height="36"
-                >
-                  <polygon
-                    points="25,3 47,17 47,39 25,49 3,39 3,17"
-                    fill="rgba(255,255,255,0.05)"
-                    stroke="rgba(255,255,255,0.2)"
-                    stroke-width="1.2"
-                  />
-                  <polygon
-                    points="25,11 40,21 40,37 25,45 10,37 10,21"
-                    fill="rgba(255,255,255,0.04)"
-                    stroke="rgba(255,255,255,0.12)"
-                    stroke-width="1"
-                  />
-                  <circle cx="25" cy="28" r="5" fill="rgba(255,255,255,0.18)" />
-                </svg>
-              </div>
-            </div>
-            <p class="member-title">Elite Curator</p>
-            <a href="#" class="member-link">VIEW BENEFITS →</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="recommended">
-        <div class="sec-header">
-          <div>
-            <h2 class="sec-title">Recommended for You</h2>
-            <p class="sec-sub">
-              AI-powered suggestions based on your interests
+              Oct 12, 2026
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="margin-left: 5px">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              Berlin, DE
             </p>
-          </div>
-          <a href="#" class="explore-all"
-            >EXPLORE ALL
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </a>
-        </div>
-
-        <div class="cards-grid">
-          <div class="ecard ecard--featured">
-            <div class="ecard-img-wrap">
-              <img
-                src="https://media.bitcot.com/wp-content/uploads/2025/04/Best-Tech-Conferences-2026.webp"
-                alt="Tech Conference 2026"
-                class="ecard-img ecard-img--featured"
-              />
-            </div>
-            <div class="ecard-body">
-              <p class="ecard-meta">
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                Oct 12, 2026
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  style="margin-left: 5px"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                Berlin, DE
-              </p>
-              <h3 class="ecard-title">
-                Global Synergy: Design &amp; Ethics Summit
-              </h3>
-            </div>
-          </div>
-
-          <div class="ecard ecard--sm">
-            <div class="ecard-img-wrap">
-              <img
-                src="https://covers.stocktune.com/public/a/2/f/a2f8dadf-ce7a-4158-bb72-82a31cc5b032_large/infinite-neon-soundscapes-stocktune.jpg"
-                alt="Metropolis Night Series"
-                class="ecard-img ecard-img--sm"
-              />
-            </div>
-            <div class="ecard-body ecard-body--sm">
-              <p class="ecard-date-sm">Nov 04, 2026</p>
-              <h3 class="ecard-title ecard-title--sm">
-                Metropolis Night Series: Soundscapes
-              </h3>
-            </div>
-          </div>
-
-          <div class="ecard ecard--sm">
-            <div class="ecard-img-wrap">
-
-              <img
-                src="https://nohoartsdistrict.com/wp-content/uploads/2025/11/Throw-a-Festive-Winter-Solstice-Dinner-With-These-Finishing-Touches-scaled.jpeg"
-                alt="The Artisan's Table"
-                class="ecard-img ecard-img--sm"
-              />
-            </div>
-            <div class="ecard-body ecard-body--sm">
-              <p class="ecard-date-sm">Dec 15, 2026</p>
-              <h3 class="ecard-title ecard-title--sm">
-                The Artisan's Table: Winter Solstice
-              </h3>
-            </div>
+            <h3 class="ecard-title">
+              Global Synergy: Design &amp; Ethics Summit
+            </h3>
           </div>
         </div>
-      </section>
+
+        <div class="ecard ecard--sm">
+          <div class="ecard-img-wrap">
+            <img
+              src="https://covers.stocktune.com/public/a/2/f/a2f8dadf-ce7a-4158-bb72-82a31cc5b032_large/infinite-neon-soundscapes-stocktune.jpg"
+              alt="Metropolis Night Series" class="ecard-img ecard-img--sm" />
+          </div>
+          <div class="ecard-body ecard-body--sm">
+            <p class="ecard-date-sm">Nov 04, 2026</p>
+            <h3 class="ecard-title ecard-title--sm">
+              Metropolis Night Series: Soundscapes
+            </h3>
+          </div>
+        </div>
+
+        <div class="ecard ecard--sm">
+          <div class="ecard-img-wrap">
+
+            <img
+              src="https://nohoartsdistrict.com/wp-content/uploads/2025/11/Throw-a-Festive-Winter-Solstice-Dinner-With-These-Finishing-Touches-scaled.jpeg"
+              alt="The Artisan's Table" class="ecard-img ecard-img--sm" />
+          </div>
+          <div class="ecard-body ecard-body--sm">
+            <p class="ecard-date-sm">Dec 15, 2026</p>
+            <h3 class="ecard-title ecard-title--sm">
+              The Artisan's Table: Winter Solstice
+            </h3>
+          </div>
+        </div>
+      </div>
+    </section>
     </section>
 
     <section class="search-filter">
       <h2 class="sec-title">Search & Filter Events</h2>
-    
+
       <div class="filter-row">
         <input type="text" id="searchInput" placeholder="Search events by name..." />
-    
+
         <select id="dateFilter">
           <option value="">All Dates</option>
           <option value="2026-10-12">Oct 12, 2026</option>
           <option value="2026-11-04">Nov 04, 2026</option>
         </select>
-    
+
         <select id="locationFilter">
           <option value="">All Locations</option>
           <option value="Berlin">Berlin</option>
           <option value="Kathmandu">Kathmandu</option>
         </select>
-    
+
         <select id="categoryFilter">
           <option value="">All Categories</option>
           <option value="Tech">Tech</option>
@@ -274,144 +199,114 @@
       </div>
     </section>
 
-      <section class="bookings-wrap">
-        <div class="bookings-box">
-          <div class="bk-header">
-            <h2 class="sec-title">Recent Bookings</h2>
-            <a href="#" class="view-hist">VIEW HISTORY</a>
+    <section class="bookings-wrap">
+      <div class="bookings-box">
+        <div class="bk-header">
+          <h2 class="sec-title">Recent Bookings</h2>
+          <a href="#" class="view-hist">VIEW HISTORY</a>
+        </div>
+
+        <div class="tbl">
+          <div class="tbl-head">
+            <span class="th th-event">EVENT NAME</span>
+            <span class="th th-status">STATUS</span>
+            <span class="th th-amount">AMOUNT</span>
+            <span class="th th-action">ACTION</span>
           </div>
 
-          <div class="tbl">
-            <div class="tbl-head">
-              <span class="th th-event">EVENT NAME</span>
-              <span class="th th-status">STATUS</span>
-              <span class="th th-amount">AMOUNT</span>
-              <span class="th th-action">ACTION</span>
-            </div>
-
-            <div class="tbl-row">
-              <div class="td td-event">
-                <div class="ri ri--blue">
-                  <img
-                    src="images/icon-expo.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><polyline points=\'12 6 12 12 16 14\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Modernist Expo 2026</p>
-                  <p class="rid">Booking ID: #EMS-29402</p>
-                </div>
+          <div class="tbl-row">
+            <div class="td td-event">
+              <div class="ri ri--blue">
+                <img src="images/icon-expo.png" alt="" class="ri-img"
+                  onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><polyline points=\'12 6 12 12 16 14\'/></svg>'" />
               </div>
-              <div class="td td-status">
-                <span class="pill pill--ok">CONFIRMED</span>
-              </div>
-              <div class="td td-amount">$145.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="Download">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
+              <div>
+                <p class="rn">Modernist Expo 2026</p>
+                <p class="rid">Booking ID: #EMS-29402</p>
               </div>
             </div>
+            <div class="td td-status">
+              <span class="pill pill--ok">CONFIRMED</span>
+            </div>
+            <div class="td td-amount">$145.00</div>
+            <div class="td td-action">
+              <button class="act-btn" aria-label="Download">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-            <div class="tbl-row">
-              <div class="td td-event">
-                <div class="ri ri--amber">
-                  <img
-                    src="images/icon-gastro.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\'/><path d=\'M7 2v20\'/><path d=\'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Gastronomy Workshop</p>
-                  <p class="rid">Booking ID: #EMS-28183</p>
-                </div>
+          <div class="tbl-row">
+            <div class="td td-event">
+              <div class="ri ri--amber">
+                <img src="images/icon-gastro.png" alt="" class="ri-img"
+                  onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\'/><path d=\'M7 2v20\'/><path d=\'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7\'/></svg>'" />
               </div>
-              <div class="td td-status">
-                <span class="pill pill--pend">PENDING</span>
-              </div>
-              <div class="td td-amount">$89.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="More options">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <circle cx="12" cy="5" r="1.5" />
-                    <circle cx="12" cy="12" r="1.5" />
-                    <circle cx="12" cy="19" r="1.5" />
-                  </svg>
-                </button>
+              <div>
+                <p class="rn">Gastronomy Workshop</p>
+                <p class="rid">Booking ID: #EMS-28183</p>
               </div>
             </div>
+            <div class="td td-status">
+              <span class="pill pill--pend">PENDING</span>
+            </div>
+            <div class="td td-amount">$89.00</div>
+            <div class="td td-action">
+              <button class="act-btn" aria-label="More options">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.5" />
+                  <circle cx="12" cy="12" r="1.5" />
+                  <circle cx="12" cy="19" r="1.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-            <div class="tbl-row tbl-row--last">
-              <div class="td td-event">
-                <div class="ri ri--green">
-                  <img
-                    src="images/icon-startup.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><polygon points=\'13 2 3 14 12 14 11 22 21 10 12 10 13 2\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Startup Ignition Night</p>
-                  <p class="rid">Booking ID: #EMS-27561</p>
-                </div>
+          <div class="tbl-row tbl-row--last">
+            <div class="td td-event">
+              <div class="ri ri--green">
+                <img src="images/icon-startup.png" alt="" class="ri-img"
+                  onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><polygon points=\'13 2 3 14 12 14 11 22 21 10 12 10 13 2\'/></svg>'" />
               </div>
-              <div class="td td-status">
-                <span class="pill pill--ok">CONFIRMED</span>
+              <div>
+                <p class="rn">Startup Ignition Night</p>
+                <p class="rid">Booking ID: #EMS-27561</p>
               </div>
-              <div class="td td-amount">$0.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="Download">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
-              </div>
+            </div>
+            <div class="td td-status">
+              <span class="pill pill--ok">CONFIRMED</span>
+            </div>
+            <div class="td td-amount">$0.00</div>
+            <div class="td td-action">
+              <button class="act-btn" aria-label="Download">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
-      <div class="footer-links">
-        <a href="#">PRIVACY POLICY</a>
-        <a href="#">TERMS OF SERVICE</a>
-        <a href="#">CONTACT</a>
       </div>
-    </footer>
-    <script src="script.js"></script>
-  </body>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+    <div class="footer-links">
+      <a href="#">PRIVACY POLICY</a>
+      <a href="#">TERMS OF SERVICE</a>
+      <a href="#">CONTACT</a>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+
 </html>
