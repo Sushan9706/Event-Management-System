@@ -7,7 +7,7 @@ const userController = require('../controllers/userController');
 // Home Route
 router.get('/', userController.getHome);
 
-// Admin Dashboard (Protected by both Login and Admin check)
+// Admin Dashboard (Protected by role check)
 // router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
 //     // Make sure you have an adminDashboard.ejs file in your views folder!
 //     res.render('adminDashboard', { user: req.user });

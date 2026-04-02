@@ -19,6 +19,13 @@ body {
     flex-direction: column;
 }
 
+:root {
+    --page-max: 1480px;
+    --page-pad: 20px;
+    --page-pad-mobile: 18px;
+    --page-top: 40px;
+}
+
 /* ---------- NAVBAR ---------- */
 .navbar {
     background: #ffffff;
@@ -30,10 +37,10 @@ body {
 }
 
 .nav-inner {
-    max-width: 1120px;
+    max-width: var(--page-max);
     margin: 0 auto;
-    padding: 0 24px;
-    height: 64px;
+    padding: 0 var(--page-pad);
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -45,6 +52,7 @@ body {
     letter-spacing: 0.08em;
     color: #1a237e;
     font-style: italic;
+    text-decoration: none;
 }
 
 .nav-links {
@@ -114,9 +122,9 @@ body {
 
 /* ---------- PAGE WRAPPER ---------- */
 .page-wrapper {
-    max-width: 1120px;
+    max-width: var(--page-max);
     margin: 0 auto;
-    padding: 28px 24px 80px;
+    padding: var(--page-top) var(--page-pad) 96px;
     flex: 1;
     width: 100%;
 }
@@ -133,6 +141,7 @@ body {
     text-decoration: none;
     margin-bottom: 18px;
     transition: color 0.2s;
+    text-transform: uppercase;
 }
 
 .back-link:hover {
@@ -141,18 +150,21 @@ body {
 
 /* ---------- PAGE TITLE ---------- */
 .page-title {
-    font-size: 2.5rem;
+    font-size: 2.95rem;
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.05;
     color: #1a1a1a;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     padding-bottom: 14px;
     display: inline-block;
     position: relative;
+    letter-spacing: -0.02em;
+    max-width: 760px;
 }
 
 .page-title span {
     color: #1a1a1a;
+    display: block;
 }
 
 .page-title::after {
@@ -160,8 +172,8 @@ body {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 64px;
-    height: 3px;
+    width: 60px;
+    height: 2.5px;
     background: #1a1a1a;
     border-radius: 99px;
 }
@@ -182,7 +194,7 @@ body {
 .booking-layout {
     display: grid;
     grid-template-columns: 1fr 320px;
-    gap: 32px;
+    gap: 36px;
     align-items: start;
 }
 
@@ -826,7 +838,7 @@ body {
 .page-footer {
     background: #fff;
     border-top: 1px solid #ede7e3;
-    padding: 16px 24px;
+    padding: 20px var(--page-pad);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -854,6 +866,18 @@ body {
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 900px) {
+    .nav-inner {
+        padding: 0 var(--page-pad-mobile);
+    }
+
+    .page-wrapper {
+        padding: 32px var(--page-pad-mobile) 72px;
+    }
+
+    .page-footer {
+        padding: 18px var(--page-pad-mobile);
+    }
+
     .booking-layout {
         grid-template-columns: 1fr;
     }

@@ -12,7 +12,7 @@
     <!-- ========== NAVBAR ========== -->
     <header class="navbar">
         <div class="nav-inner">
-            <div class="nav-logo">EMS</div>
+            <a href="/dashboard" class="nav-logo">EMS</a>
 
             <nav class="nav-links">
                 <a href="/events">Events</a>
@@ -192,7 +192,8 @@
         <div class="modal-box">
             <h2 id="cancelModalTitle" class="modal-title">Cancel Booking?</h2>
             <p class="modal-body">
-                Are you sure you want to cancel this booking?
+                Are you sure you want to cancel your booking for
+                <strong><%= booking.event.name %></strong>?
             </p>
 
             <div class="modal-actions">
@@ -205,10 +206,19 @@
     </div>
 
     <!-- ========== DOWNLOAD CONFIRMATION MODAL ========== -->
-    <div id="downloadModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle">
+    <div id="downloadModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle"
+        data-event="<%= booking.event.name %>"
+        data-date="<%= new Date(booking.event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>"
+        data-time="<%= booking.event.time ? booking.event.time + ' CET' : '' %>"
+        data-location="<%= booking.event.location || 'TBA' %>"
+        data-user-id="<%= user && user._id ? user._id : 'N/A' %>"
+        data-booking-ref="<%= booking.bookingRef %>"
+        data-status="<%= booking.status %>">
         <div class="modal-box">
             <h2 id="downloadModalTitle" class="modal-title">Download Confirmation</h2>
-            <p class="modal-body">Review the details before saving.</p>
+            <p class="modal-body">
+                Review the details for <strong><%= booking.event.name %></strong> before saving.
+            </p>
 
             <div class="download-details">
                 <div class="download-row">
@@ -237,7 +247,7 @@
 
             <div class="modal-actions">
                 <button class="btn-keep" onclick="closeDownloadModal()">Cancel</button>
-                <button class="btn-primary" type="button">Save</button>
+                <button class="btn-primary" type="button" onclick="saveTicket()">Save</button>
             </div>
         </div>
     </div>

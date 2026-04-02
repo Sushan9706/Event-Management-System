@@ -21,73 +21,147 @@ mongoose.connect('mongodb://127.0.0.1:27017/eventManagement')
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes - Manage Booking Page Only
+// Routes - Demo pages for My Bookings + Manage Booking
 const Booking = require('./models/bookingModel');
 const userModel = require('./models/user');
 const Event = require('./models/eventModel');
 
 // Sample data
-const sampleEvent = {
-    name: 'Noir Architectural Symposium',
-    description: 'An evening dedicated to the exploration of monochromatic silhouettes in modern architecture. The Noir Architectural Symposium brings together the continent\'s most influential structural designers for a night of curated dialogue at Berlin\'s iconic Concrete Atrium.',
-    date: new Date('2026-03-14'),
-    time: '19:00 — 22:30 CET',
-    location: 'The Concrete Atrium, Berlin',
-    category: 'Architecture',
-    ticketPrice: 150,
-    maxCapacity: 500,
-    tier: 'Front Row Circle',
-    currentBookings: 1,
-    status: 'active'
-};
+const sampleEvents = [
+    {
+        name: 'Global Design Summit 2026',
+        description: 'A curated summit exploring future-facing design systems, material innovation, and human-centric architecture.',
+        date: new Date('2026-11-14'),
+        time: '18:30',
+        location: 'The Glass Pavilion, NYC',
+        category: 'Design',
+        ticketPrice: 120,
+        maxCapacity: 400,
+        tier: 'Reserved',
+        currentBookings: 1,
+        status: 'active'
+    },
+    {
+        name: 'Architectural Biennale',
+        description: 'A modernist showcase celebrating boundary-pushing spatial narratives and immersive installations.',
+        date: new Date('2026-12-02'),
+        time: '19:00',
+        location: 'Modernist Wing, London',
+        category: 'Architecture',
+        ticketPrice: 95,
+        maxCapacity: 350,
+        tier: 'Premium',
+        currentBookings: 1,
+        status: 'active'
+    },
+    {
+        name: "The Curator's Gala",
+        description: 'An elegant evening honoring curators and collectors shaping contemporary art across the globe.',
+        date: new Date('2026-12-15'),
+        time: '20:00',
+        location: 'Royal Botanical Gardens',
+        category: 'Art',
+        ticketPrice: 150,
+        maxCapacity: 300,
+        tier: 'Front Row',
+        currentBookings: 1,
+        status: 'active'
+    }
+];
 
 const sampleUser = {
-    username: 'Alexander Sterling',
-    email: 'a.sterling@ems.com',
+    username: 'hello',
+    email: 'hello@gmail.com',
     password: 'hashed_password_here'
 };
 
-app.get('/', async (req, res) => {
-    try {
-        // Get first booking from database
-        let booking = await Booking.findOne().populate('event');
-        
-        // If no booking exists, create sample data
-        if (!booking) {
-            // Find or create event
-            let event = await Event.findOne();
+async function ensureDemoData() {
+    let user = await userModel.findOne();
+    if (!user) {
+        user = await userModel.create(sampleUser);
+    }
+
+    const existingBookings = await Booking.find({ user: user._id });
+    if (existingBookings.length === 0) {
+        for (const data of sampleEvents) {
+            let event = await Event.findOne({ name: data.name });
             if (!event) {
-                event = await Event.create(sampleEvent);
+                event = await Event.create(data);
             }
-            
-            // Find or create user
-            let user = await userModel.findOne();
-            if (!user) {
-                user = await userModel.create(sampleUser);
-            }
-            
-            // Create booking
-            booking = await Booking.create({
+            await Booking.create({
                 user: user._id,
                 event: event._id,
                 amount: event.ticketPrice,
                 status: 'confirmed'
             });
-            
-            booking = await booking.populate('event');
+        }
+    }
+
+    return user;
+}
+
+async function renderMyBookings(req, res) {
+    try {
+        const user = await ensureDemoData();
+        let bookings = await Booking.find({ user: user._id })
+            .populate('event')
+            .sort({ createdAt: -1 });
+
+        return res.render('myBookings', { bookings, user, error: [] });
+    } catch (err) {
+        console.error('My bookings error:', err);
+        return res.status(500).send('Server Error: ' + err.message);
+    }
+}
+
+app.get('/', renderMyBookings);
+app.get('/bookings/my-bookings', renderMyBookings);
+
+app.get('/bookings/manage/:bookingId', async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.bookingId).populate('event');
+        if (!booking) {
+            return res.redirect('/bookings/my-bookings');
         }
 
-        // Get user data
         let user = await userModel.findById(booking.user);
         if (!user) {
             user = sampleUser;
         }
-        
+
         return res.render('manageBooking', { booking, user, error: [] });
     } catch (err) {
-        console.error('Route error:', err);
-        console.error('Full error stack:', err.stack);
+        console.error('Manage booking error:', err);
         return res.status(500).send('Server Error: ' + err.message);
+    }
+});
+
+// Cancel booking (no auth for demo mode)
+app.post('/bookings/cancel/:bookingId', async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.bookingId).populate('event');
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found.' });
+        }
+
+        if (booking.status === 'cancelled') {
+            return res.status(400).json({ success: false, message: 'This booking is already cancelled.' });
+        }
+
+        booking.status = 'cancelled';
+        await booking.save();
+
+        if (booking.event && booking.event.currentBookings > 0) {
+            await Event.findByIdAndUpdate(booking.event._id, {
+                $inc: { currentBookings: -1 }
+            });
+        }
+
+        return res.status(200).json({ success: true, message: 'Booking cancelled successfully.' });
+    } catch (err) {
+        console.error('Cancel booking error:', err);
+        return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
     }
 });
 

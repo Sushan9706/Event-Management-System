@@ -56,6 +56,37 @@ function closeDownloadModal() {
     }
 }
 
+function saveTicket() {
+    const modal = document.getElementById('downloadModal');
+    if (!modal) return;
+
+    const data = modal.dataset || {};
+    const lines = [
+        'EMS Ticket Confirmation',
+        `Event: ${data.event || ''}`,
+        `Date: ${data.date || ''}`,
+        data.time ? `Time: ${data.time}` : null,
+        `Location: ${data.location || ''}`,
+        `User ID: ${data.userId || ''}`,
+        `Booking Ref: ${data.bookingRef || ''}`,
+        `Status: ${(data.status || '').toUpperCase()}`
+    ].filter(Boolean);
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const safeRef = (data.bookingRef || 'ticket').replace(/[^a-zA-Z0-9-_\.]/g, '_');
+    const fileName = `EMS-${safeRef}.txt`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+
+    closeDownloadModal();
+}
+
 /**
  * Confirm cancellation — send POST request to cancel the booking.
  * @param {string} id - The booking MongoDB _id
