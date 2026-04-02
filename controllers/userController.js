@@ -56,7 +56,7 @@ exports.postRegister = async (req, res) => {
         if (user.role === 'admin') {
             res.redirect('/admin/dashboard');
         } else {
-            res.redirect('/user');
+            res.redirect('/login');
         }
 
     } catch (err) {
