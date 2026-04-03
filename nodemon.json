@@ -1,0 +1,4 @@
+{
+    "ignore": ["public/*", "views/*", "*.ejs", "*.css"],
+    "watch": ["event.js"]
+  }
