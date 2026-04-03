@@ -64,7 +64,9 @@
       <section class="hero">
         <p class="hero-eyebrow">DASHBOARD</p>
         <h1 class="hero-title">
-          Welcome back, <span class="hero-name">Divyani</span>.
+          Welcome back, <span class="hero-name"><%= user.username 
+  ? user.username.charAt(0).toUpperCase() + user.username.slice(1) 
+  : '' %></span>.
         </h1>
         <p class="hero-sub">
           Your curated events and management hub for the 2026<br />season is
