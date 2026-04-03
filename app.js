@@ -23,9 +23,20 @@ app.get("/user", (req, res) => {
   res.render("user"); // user dashboard
 });
 
-app.get("/event", (req, res)=>{
-  res.render("event")
-})
+app.get("/event", (req, res) => {
+  res.render("event");
+});
+
+app.get("/catalog", (req, res) => {
+  res.render("catalog");
+});
+app.get("/bookings", (req, res) => {
+  res.render("bookings");
+});
+
+app.get("/profile", (req, res) => {
+  res.render("profile");
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
