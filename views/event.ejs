@@ -4,36 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Global Architecture Summit 2026 – EMS</title>
-    <link rel="stylesheet" href="/css/event.css" />
+    <link rel="stylesheet" href="css/event.css" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"n"
+    rel="stylesheet" />
   </head>
   <body>
-    <!-- ── Navbar ── -->
     <header class="navbar">
       <div class="logo">EMS</div>
       <nav class="nav-links">
-        <a href="#" class="active">Events</a>
-        <a href="#">My Bookings</a>
-        <a href="#">Profile</a>
+        <a href="guest.html" class="active">Home </a>
+        <a href="user.html">Events</a>
+        <a href="user.html">My Bookings</a>
       </nav>
       <div class="nav-icons">
-        <button class="icon-btn" aria-label="Search">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </button>
-        <button class="icon-btn" aria-label="Notifications">
+        <button class="icon-btn" aria-label="Notifications" id="notifBtn">
           <svg
             width="18"
             height="18"
@@ -46,9 +31,9 @@
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
         </button>
-        <div class="avatar">
+        <div class="avatar" id="avatarBtn" style="cursor: pointer">
           <img
-            src="images/avatar.png"
+            src="https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80"
             alt="User"
             onerror="this.style.display='none'"
           />
@@ -56,15 +41,13 @@
       </div>
     </header>
 
-    <!-- ── Hero ── -->
     <section class="hero">
       <div class="hero-bg">
         <img
-          src="images/hero-spiral.png"
-          alt=""
-          class="hero-img"
-          onerror="this.style.display='none'"
+          src="https://images.unsplash.com/photo-1633507170063-253c395b532c?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Architecture"
         />
+        class="hero-img" onerror="this.style.display='none'" />
         <div class="hero-overlay"></div>
       </div>
       <div class="hero-content">
@@ -75,10 +58,8 @@
       </div>
     </section>
 
-    <!-- ── Main content ── -->
     <div class="page-body">
       <div class="content-col">
-        <!-- Meta cards -->
         <div class="meta-cards">
           <div class="meta-card">
             <p class="meta-label">WHEN</p>
@@ -97,7 +78,6 @@
           </div>
         </div>
 
-        <!-- Vision section -->
         <div class="vision">
           <h2>The Vision for Tomorrow</h2>
           <p>
@@ -117,7 +97,6 @@
           </p>
         </div>
 
-        <!-- Location -->
         <div class="location-section">
           <div class="location-header">
             <h2>Location</h2>
@@ -141,7 +120,7 @@
           </div>
           <div class="map-container">
             <img
-              src="images/map.png"
+              src="https://gisgeography.com/wp-content/uploads/2017/10/Japan-Map-1265x1223.jpg"
               alt="Map of Tokyo, Japan"
               class="map-img"
               onerror="this.innerHTML=''"
@@ -163,7 +142,6 @@
         </div>
       </div>
 
-      <!-- ── Booking sidebar ── -->
       <aside class="booking-sidebar">
         <p class="entry-label">STANDARD ENTRY</p>
         <div class="price-row">
@@ -184,14 +162,261 @@
             Digital Certification of Attendance
           </li>
         </ul>
-        <button class="book-btn">Book Now</button>
+        <button class="book-btn" onclick="handleBooking()">Book Now</button>
         <p class="secure-note">
           SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
         </p>
       </aside>
     </div>
 
-    <!-- ── Footer ── -->
+    <div
+      id="notifDropdown"
+      style="
+        display: none;
+        position: fixed;
+        top: 66px;
+        right: 80px;
+        width: 280px;
+        background: #fff;
+        border: 1px solid #e2e4e8;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        z-index: 400;
+        padding: 16px;
+      "
+    >
+      <p
+        style="
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          color: #888;
+          margin-bottom: 12px;
+        "
+      >
+        NOTIFICATIONS
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="padding: 10px; background: #f4f4f6; border-radius: 7px">
+          <p
+            style="
+              font-size: 12.5px;
+              font-weight: 600;
+              color: #1a1a2e;
+              margin-bottom: 2px;
+            "
+          >
+            Booking Confirmed
+          </p>
+          <p style="font-size: 11px; color: #888">
+            Modernist Expo 2026 · #EMS-29402
+          </p>
+        </div>
+        <div style="padding: 10px; background: #f4f4f6; border-radius: 7px">
+          <p
+            style="
+              font-size: 12.5px;
+              font-weight: 600;
+              color: #1a1a2e;
+              margin-bottom: 2px;
+            "
+          >
+            Event Reminder
+          </p>
+          <p style="font-size: 11px; color: #888">
+            Global AI Summit starts in 3 days
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="searchOverlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 100px;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 10px;
+          padding: 20px;
+          width: 500px;
+          max-width: 90%;
+        "
+      >
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search events..."
+          style="
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e4e8;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+          "
+        />
+        <p
+          style="
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            text-align: center;
+          "
+        >
+          Press ESC to close
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="evOverlay"
+      style="display: none; position: fixed; inset: 0; z-index: 300"
+    ></div>
+    <aside
+      id="evSidebar"
+      style="
+        position: fixed;
+        top: 58px;
+        right: -260px;
+        width: 200px;
+        height: auto;
+        background: #fff;
+        border: 1px solid #e2e4e8;
+        border-radius: 8px;
+        z-index: 301;
+        padding: 8px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        transition: right 0.22s ease;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <a
+        href="user.html"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 22px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #1a1a2e;
+          text-decoration: none;
+        "
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        Edit Profile
+      </a>
+      <a
+        id="evLogoutBtn"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 22px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #c0392b;
+          background: none;
+          border: none;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+        "
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Log Out
+      </a>
+    </aside>
+
+    <div
+      id="bookingModal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 400;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 12px;
+          padding: 32px 28px;
+          width: 340px;
+          text-align: center;
+        "
+      >
+        <div style="font-size: 40px; margin-bottom: 12px">🎟️</div>
+        <h3
+          style="
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+          "
+        >
+          Booking Confirmed!
+        </h3>
+        <p style="font-size: 13px; color: #555; margin-bottom: 4px">
+          Global Architecture Summit 2026
+        </p>
+        <p style="font-size: 12px; color: #888; margin-bottom: 24px">
+          Oct 14–16 · Tokyo, Japan · $850
+        </p>
+        <button
+          onclick="closeBooking()"
+          style="
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          Done
+        </button>
+      </div>
+    </div>
+
     <footer class="footer">
       <p>COPYRIGHT 2026 EMS MANAGEMENT</p>
       <div class="footer-links">
@@ -200,5 +425,59 @@
         <a href="#">CONTACT</a>
       </div>
     </footer>
+    <script>
+      const notifDropdown = document.getElementById("notifDropdown");
+      document.getElementById("notifBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifDropdown.style.display =
+          notifDropdown.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", () => {
+        notifDropdown.style.display = "none";
+      });
+
+      const evSidebar = document.getElementById("evSidebar");
+      const evOverlay = document.getElementById("evOverlay");
+      function openSidebar() {
+        evSidebar.style.right = "0";
+        evOverlay.style.display = "block";
+      }
+      function closeSidebar() {
+        evSidebar.style.right = "-260px";
+        evOverlay.style.display = "none";
+      }
+      document
+        .getElementById("avatarBtn")
+        .addEventListener("click", () =>
+          evSidebar.style.right === "0px" ? closeSidebar() : openSidebar()
+        );
+      evOverlay.addEventListener("click", closeSidebar);
+
+      document.getElementById("evLogoutBtn").addEventListener("click", () => {
+        if (confirm("Are you sure you want to log out?"))
+          window.location.href = "guest.html";
+      });
+
+      function handleBooking() {
+        document.getElementById("bookingModal").style.display = "flex";
+      }
+      function closeBooking() {
+        document.getElementById("bookingModal").style.display = "none";
+        window.location.href = "user.html";
+      }
+      document
+        .getElementById("bookingModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) this.style.display = "none";
+        });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          searchOverlay.style.display = "none";
+          notifDropdown.style.display = "none";
+          closeSidebar();
+        }
+      });
+    </script>
   </body>
 </html>
