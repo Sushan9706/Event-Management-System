@@ -1,4 +1,3 @@
-
 const searchOverlay = document.getElementById("searchOverlay");
 const searchInput = document.getElementById("searchInput");
 

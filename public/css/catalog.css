@@ -44,7 +44,7 @@ button {
   height: 52px;
 }
 .nav-inner {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px;
   height: 100%;
@@ -233,10 +233,10 @@ button {
 }
 .avatar-sidebar {
   position: fixed;
-  top: 52px; 
+  top: 52px;
   right: -260px;
   width: 240px;
-  height: auto; 
+  height: auto;
   background: var(--white);
   border-left: 1px solid var(--border);
   z-index: 301;
@@ -289,7 +289,7 @@ button {
 }
 
 .hero {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 40px 32px 28px;
 }
@@ -356,7 +356,7 @@ button {
 }
 
 .filters {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 28px;
   display: flex;
@@ -385,7 +385,7 @@ button {
 }
 
 .events-section {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 48px;
 }

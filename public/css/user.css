@@ -46,13 +46,19 @@ svg {
 .navbar {
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
   height: 48px;
-  padding: 0 32px;
   position: sticky;
   top: 0;
   z-index: 100;
+}
+.nav-inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .nav-logo {
@@ -114,7 +120,7 @@ svg {
 }
 
 .page-main {
-  max-width: 860px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 28px 32px 48px;
   display: flex;
@@ -549,13 +555,6 @@ svg {
   color: var(--text-dark);
 }
 
-.search-filter {
-  background: var(--white);
-  border: 1px solid var(--border);
-  padding: 15px;
-  border-radius: 8px;
-}
-
 .filter-row {
   display: flex;
   gap: 10px;
@@ -568,4 +567,170 @@ svg {
   border: 1px solid var(--border);
   border-radius: 5px;
   font-size: 12px;
+}
+.cta-ticket-icon {
+  position: relative;
+  top: -10px;
+  opacity: 0.5;
+}
+
+.avatar-circle {
+  cursor: pointer;
+}
+
+.avatar-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+.avatar-sidebar-overlay.open {
+  display: block;
+}
+
+.avatar-sidebar {
+  position: fixed;
+  top: 48px;
+  right: -260px;
+  width: 200px;
+  height: auto;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  z-index: 201;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: right 0.22s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+.avatar-sidebar.open {
+  right: 16px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dark);
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+}
+.sidebar-item:hover {
+  background: var(--bg-stat);
+}
+.sidebar-item--danger {
+  color: #c0392b;
+}
+.sidebar-item svg {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px px;
+}
+
+.pw-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+.pw-modal-overlay.open {
+  display: flex;
+}
+
+.pw-modal {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 28px 24px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pw-modal h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.pw-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-mid);
+}
+.pw-modal input[type="password"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+}
+.pw-modal input[type="password"]:focus {
+  border-color: var(--blue);
+}
+.pw-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pw-btn {
+  padding: 7px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: none;
+  color: var(--text-dark);
+}
+.pw-btn--primary {
+  background: var(--text-dark);
+  color: #fff;
+  border-color: var(--text-dark);
+}
+.pw-btn--primary:hover {
+  background: #333;
+}
+.pw-msg {
+  font-size: 11px;
+  color: var(--green-ok);
+  min-height: 14px;
+}
+.search-filter {
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px 48px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.bookings-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 48px 48px;
 }
