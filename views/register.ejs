@@ -11,7 +11,7 @@
     <header class="navbar">
         <div class="logo">EMS</div>
         <nav>
-            <a href="#">Events</a>
+            <a href="/">Events</a>
             <a href="/login" class="btn-login-nav">Login/Sign In</a>
         </nav>
     </header>
@@ -23,6 +23,12 @@
         </section>
 
         <div class="register-card">
+            <% if (error && error.length > 0) { %>
+                <div class="flash-message error">
+                    <%= error[0] %>
+                </div>
+            <% } %>
+
             <form action="/register" method="POST">
                 <div class="input-group">
                     <label for="username">USERNAME</label>

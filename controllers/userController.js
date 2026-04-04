@@ -33,7 +33,7 @@ exports.postRegister = async (req, res) => {
         // 2. Check if user already exists
         let existingUser = await userModel.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
-            req.flash('error', 'User already exists');
+            req.flash('error', 'User already exists. Please try again!');
             return res.redirect('/register');
         }
 
