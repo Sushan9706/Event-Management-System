@@ -42,7 +42,7 @@ body {
 }
 
 .nav-inner {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 24px;
   height: 52px;
@@ -97,7 +97,7 @@ body {
 }
 
 .hero {
-  max-width: 1300px; 
+  max-width: 1500px;
   margin: 0 auto;
   padding: 48px 24px 32px;
   display: flex;
@@ -238,7 +238,7 @@ body {
 }
 
 .section-inner {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -505,7 +505,7 @@ body {
 }
 
 .footer {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px 24px;
   display: flex;

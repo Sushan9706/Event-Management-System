@@ -52,7 +52,7 @@ svg {
   z-index: 100;
 }
 .nav-inner {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   width: 100%;
   padding: 0 32px;
@@ -120,7 +120,7 @@ svg {
 }
 
 .page-main {
-  max-width: 1300px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 28px 32px 48px;
   display: flex;
@@ -555,13 +555,6 @@ svg {
   color: var(--text-dark);
 }
 
-.search-filter {
-  background: var(--white);
-  border: 1px solid var(--border);
-  padding: 15px;
-  border-radius: 8px;
-}
-
 .filter-row {
   display: flex;
   gap: 10px;
@@ -595,25 +588,28 @@ svg {
   display: block;
 }
 
+
 .avatar-sidebar {
   position: fixed;
-  top: 0;
+  top: 48px;
   right: -260px;
-  width: 240px;
-  height: 100vh;
+  width: 200px;
+  height: auto;
   background: var(--white);
-  border-left: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
   z-index: 201;
-  padding: 56px 0 20px;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   transition: right 0.22s ease;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 .avatar-sidebar.open {
-  right: 0;
+  right: 16px; 
 }
+
 
 .sidebar-item {
   display: flex;
@@ -644,7 +640,7 @@ svg {
 .sidebar-divider {
   height: 1px;
   background: var(--border);
-  margin: 6px 22px;
+  margin: 4px px;
 }
 
 .pw-modal-overlay {
@@ -725,7 +721,7 @@ svg {
   min-height: 14px;
 }
 .search-filter {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   width: 100%;
   padding: 20px 48px;

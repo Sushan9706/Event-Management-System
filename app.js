@@ -4,23 +4,20 @@ const path = require("path");
 const app = express();
 const PORT = 3000;
 
-// View engine
 app.set("view engine", "ejs");
 
-// Static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Routes
 app.get("/", (req, res) => {
-  res.render("index"); // homepage
+  res.render("index"); 
 });
 
 app.get("/guest", (req, res) => {
-  res.render("guest"); // guest page
+  res.render("guest"); 
 });
 
 app.get("/user", (req, res) => {
-  res.render("user"); // user dashboard
+  res.render("user"); 
 });
 
 app.get("/event", (req, res) => {
@@ -34,6 +31,9 @@ app.get("/bookings", (req, res) => {
   res.render("bookings");
 });
 
+app.get("/profile", (req, res) => {
+  res.render("profile");
+});
 app.get("/profile", (req, res) => {
   res.render("profile");
 });
