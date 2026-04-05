@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+// It's usually better to handle the connection in your main app.js, 
+// but keeping it here as per your current structure:
 mongoose.connect("mongodb://127.0.0.1:27017/eventManagement")
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
@@ -26,11 +28,16 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'], // Only allows these two values
-        default: 'user'          // role defaults to user 
+        enum: ['user', 'admin'], 
+        default: 'user'          
+    },
+    // ADD THIS FIELD:
+    profileImage: {
+        type: String,
+        default: "" // You can set a default placeholder URL here if you like
     }
 }, {
-    timestamps: true // handles the created at and updated at automatically
+    timestamps: true 
 });
 
 module.exports = mongoose.model("user", userSchema);
