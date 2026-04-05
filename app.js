@@ -26,46 +26,147 @@ const Booking = require('./models/bookingModel');
 const userModel = require('./models/user');
 const Event = require('./models/eventModel');
 
-// Sample data
+// Sample data (seeded into MongoDB so Manage works with real IDs)
 const sampleEvents = [
     {
-        name: 'Global Design Summit 2026',
-        description: 'A curated summit exploring future-facing design systems, material innovation, and human-centric architecture.',
-        date: new Date('2026-11-14'),
-        time: '18:30',
-        location: 'The Glass Pavilion, NYC',
-        category: 'Design',
-        ticketPrice: 120,
-        maxCapacity: 400,
-        tier: 'Reserved',
-        currentBookings: 1,
-        status: 'active'
+        name: 'Kathmandu Jazz Night',
+        description: 'An intimate live jazz session featuring local legends and modern improvisations.',
+        date: new Date('2026-04-12'),
+        time: '07:30 PM',
+        location: 'Jazz Upstairs, Kathmandu',
+        category: 'Music',
+        ticketPrice: 35,
+        maxCapacity: 180,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-jazz/900/600',
+        bookingStatus: 'confirmed'
     },
     {
-        name: 'Architectural Biennale',
-        description: 'A modernist showcase celebrating boundary-pushing spatial narratives and immersive installations.',
-        date: new Date('2026-12-02'),
-        time: '19:00',
-        location: 'Modernist Wing, London',
-        category: 'Architecture',
-        ticketPrice: 95,
-        maxCapacity: 350,
+        name: 'Startup Expo 2026',
+        description: 'A one-day expo showcasing Nepal’s most promising startups, demos, and investor sessions.',
+        date: new Date('2026-04-18'),
+        time: '10:00 AM',
+        location: 'Bhrikutimandap, Kathmandu',
+        category: 'Tech',
+        ticketPrice: 20,
+        maxCapacity: 500,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-startup/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Himalayan Food Fest',
+        description: 'Street food, regional specialties, and live cooking stations from across the Himalayas.',
+        date: new Date('2026-04-22'),
+        time: '04:00 PM',
+        location: 'Tundikhel, Kathmandu',
+        category: 'Festival',
+        ticketPrice: 10,
+        maxCapacity: 800,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-food/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Everest Trail Photo Walk',
+        description: 'Golden-hour photo walk with a local guide, perfect for landscape and street photography.',
+        date: new Date('2026-04-27'),
+        time: '06:00 AM',
+        location: 'Thamel, Kathmandu',
+        category: 'Photography',
+        ticketPrice: 15,
+        maxCapacity: 60,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-photo/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Pokhara Lakeside Yoga Retreat',
+        description: 'Morning flow sessions by Phewa Lake with a calm, scenic view and guided breathing.',
+        date: new Date('2026-05-03'),
+        time: '07:00 AM',
+        location: 'Lakeside, Pokhara',
+        category: 'Wellness',
+        ticketPrice: 25,
+        maxCapacity: 120,
         tier: 'Premium',
-        currentBookings: 1,
-        status: 'active'
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-yoga/900/600',
+        bookingStatus: 'confirmed'
     },
     {
-        name: "The Curator's Gala",
-        description: 'An elegant evening honoring curators and collectors shaping contemporary art across the globe.',
-        date: new Date('2026-12-15'),
-        time: '20:00',
-        location: 'Royal Botanical Gardens',
+        name: 'Nepali Film Premiere: Everest Dawn',
+        description: 'Red-carpet premiere of a new Nepali feature film with cast and director Q&A.',
+        date: new Date('2026-05-09'),
+        time: '07:00 PM',
+        location: 'QFX Civil Mall, Kathmandu',
+        category: 'Film',
+        ticketPrice: 18,
+        maxCapacity: 250,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-film/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Tech Meetup: Cloud & AI',
+        description: 'Lightning talks and networking on cloud architecture, AI tooling, and local use cases.',
+        date: new Date('2026-05-16'),
+        time: '05:30 PM',
+        location: 'Lalitpur Hub',
+        category: 'Tech',
+        ticketPrice: 0,
+        maxCapacity: 200,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-tech/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Monsoon Art Market',
+        description: 'A curated market of painters, ceramicists, and textile artists from the valley.',
+        date: new Date('2026-05-20'),
+        time: '03:00 PM',
+        location: 'Patan Durbar Square',
         category: 'Art',
-        ticketPrice: 150,
+        ticketPrice: 12,
         maxCapacity: 300,
-        tier: 'Front Row',
-        currentBookings: 1,
-        status: 'active'
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-art/900/600',
+        bookingStatus: 'cancelled'
+    },
+    {
+        name: 'Heritage Cycling Tour',
+        description: 'A guided early-morning cycling tour through Bhaktapur’s heritage lanes.',
+        date: new Date('2026-05-24'),
+        time: '06:00 AM',
+        location: 'Bhaktapur Durbar Square',
+        category: 'Outdoor',
+        ticketPrice: 22,
+        maxCapacity: 90,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-cycle/900/600',
+        bookingStatus: 'cancelled'
+    },
+    {
+        name: 'Acoustic Rooftop Sessions',
+        description: 'Sunset acoustic sets with a rooftop view and curated refreshments.',
+        date: new Date('2026-05-28'),
+        time: '08:00 PM',
+        location: 'Lazimpat, Kathmandu',
+        category: 'Music',
+        ticketPrice: 15,
+        maxCapacity: 120,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-acoustic/900/600',
+        bookingStatus: 'cancelled'
     }
 ];
 
@@ -81,19 +182,32 @@ async function ensureDemoData() {
         user = await userModel.create(sampleUser);
     }
 
-    const existingBookings = await Booking.find({ user: user._id });
-    if (existingBookings.length === 0) {
-        for (const data of sampleEvents) {
-            let event = await Event.findOne({ name: data.name });
-            if (!event) {
-                event = await Event.create(data);
-            }
+    for (const data of sampleEvents) {
+        const { bookingStatus, ...eventData } = data;
+        let event = await Event.findOne({ name: eventData.name });
+        if (!event) {
+            event = await Event.create({
+                ...eventData,
+                currentBookings: bookingStatus === 'confirmed' ? 1 : 0
+            });
+        } else if (!event.image && eventData.image) {
+            event.image = eventData.image;
+            await event.save();
+        }
+
+        const existingBooking = await Booking.findOne({ user: user._id, event: event._id });
+        if (!existingBooking) {
             await Booking.create({
                 user: user._id,
                 event: event._id,
                 amount: event.ticketPrice,
-                status: 'confirmed'
+                status: bookingStatus
             });
+
+            if (bookingStatus === 'confirmed' && event.currentBookings === 0) {
+                event.currentBookings = 1;
+                await event.save();
+            }
         }
     }
 
@@ -119,7 +233,12 @@ app.get('/bookings/my-bookings', renderMyBookings);
 
 app.get('/bookings/manage/:bookingId', async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.bookingId).populate('event');
+        const { bookingId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.redirect('/bookings/my-bookings');
+        }
+
+        const booking = await Booking.findById(bookingId).populate('event');
         if (!booking) {
             return res.redirect('/bookings/my-bookings');
         }
@@ -139,7 +258,12 @@ app.get('/bookings/manage/:bookingId', async (req, res) => {
 // Cancel booking (no auth for demo mode)
 app.post('/bookings/cancel/:bookingId', async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.bookingId).populate('event');
+        const { bookingId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: 'Invalid booking reference.' });
+        }
+
+        const booking = await Booking.findById(bookingId).populate('event');
 
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found.' });

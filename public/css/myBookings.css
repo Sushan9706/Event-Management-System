@@ -238,11 +238,13 @@
     background: #4f5b73;
     color: #fff;
     text-decoration: none;
+    border: none;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
     transition: background 0.2s;
+    cursor: pointer;
 }
 
 .btn-manage:hover {

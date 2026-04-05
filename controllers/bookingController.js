@@ -1,5 +1,6 @@
 const Booking = require('../models/bookingModel');
 const Event = require('../models/eventModel');
+const mongoose = require('mongoose');
 
 // Required for Manage Booking page (attendee name + email display)
 const userModel = require('../models/user');
@@ -70,7 +71,13 @@ exports.getConfirmation = async (req, res) => {
 // GET /bookings/manage/:bookingId  —  Manage Booking detail page
 exports.getManageBooking = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.bookingId).populate('event');
+        const { bookingId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            req.flash('error', 'Invalid booking reference.');
+            return res.redirect('/bookings/my-bookings');
+        }
+
+        const booking = await Booking.findById(bookingId).populate('event');
 
         if (!booking) {
             return res.status(404).render('404', { title: '404 - Not Found' });
@@ -111,7 +118,12 @@ exports.getMyBookings = async (req, res) => {
 // POST /bookings/cancel/:bookingId  —  Cancel a booking (AJAX)
 exports.cancelBooking = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.bookingId).populate('event');
+        const { bookingId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: 'Invalid booking reference.' });
+        }
+
+        const booking = await Booking.findById(bookingId).populate('event');
 
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found.' });
