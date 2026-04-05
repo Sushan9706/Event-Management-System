@@ -28,4 +28,30 @@ router.get('/events/search', userController.searchEvents);
 // Logout Route
 router.get('/logout', userController.logout);
 
+router.get("/guest", (req, res) => {
+  res.render("guest");
+});
+
+router.get("/event", (req, res) => {
+  res.render("event");
+});
+
+router.get("/catalog", (req, res) => {
+  res.render("catalog");
+});
+
+router.get("/bookings", (req, res) => {
+  res.render("bookings");
+});
+
+router.get("/profile", (req, res) => {
+  res.render("profile");
+});
+
+// ❌ removed duplicate /profile route
+
+router.get("/eventcreat", (req, res) => {
+  res.send("this is the file yet to be created. ")
+});
+
 module.exports = router;
