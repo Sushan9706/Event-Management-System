@@ -7,6 +7,7 @@ const DEFAULT_NAV_AVATAR =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Crect width='34' height='34' rx='17' fill='%23e74c3c'/%3E%3Ccircle cx='17' cy='13' r='6' fill='%23fff'/%3E%3Cellipse cx='17' cy='27' rx='10' ry='6' fill='%23fff'/%3E%3C/svg%3E";
 
 const saved = {};
+let pendingFile = null
 
 function persistState() {
   ["username", "email", "currentPw", "newPw", "confirmPw"].forEach((id) => {
@@ -30,16 +31,19 @@ function toggleNotif() {
 }
 
 function handleAvatarUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const src = ev.target.result;
-    document.getElementById("profileAvatar").src = src;
-    document.getElementById("navAvatar").src = src;
-    showToast("Avatar uploaded! Save Changes to keep it.");
-  };
-  reader.readAsDataURL(file);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 1. Preview the image locally (but don't upload yet)
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        document.getElementById("profileAvatar").src = ev.target.result;
+        document.getElementById("navAvatar").src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // 2. Store the file for later
+    pendingFile = file;
 }
 
 function removePhoto() {
@@ -49,36 +53,60 @@ function removePhoto() {
   showToast("Photo removed. Save Changes to confirm.");
 }
 
-function updatePassword() {
-  const cur = document.getElementById("currentPw").value.trim();
-  const nw = document.getElementById("newPw").value.trim();
-  const cf = document.getElementById("confirmPw").value.trim();
+async function updatePassword() {
+  const currentPassword = document.getElementById("currentPw").value.trim();
+  const newPassword = document.getElementById("newPw").value.trim();
+  const confirmNewPassword = document.getElementById("confirmPw").value.trim();
 
-  if (!cur) {
+  // 1. Basic Frontend Validation
+  if (!currentPassword) {
     showToast("⚠️ Enter your current password.");
     return;
   }
-  if (!nw) {
-    showToast("⚠️ Enter a new password.");
+  if (newPassword.length < 8) {
+    showToast("⚠️ New password must be at least 8 characters.");
     return;
   }
-  if (nw.length < 8) {
-    showToast("⚠️ Password must be at least 8 characters.");
-    return;
-  }
-  if (nw !== cf) {
+  if (newPassword !== confirmNewPassword) {
     showToast("⚠️ New passwords do not match.");
     return;
   }
-  if (!/[A-Z]/.test(nw) || !/\d/.test(nw) || !/[^A-Za-z0-9]/.test(nw)) {
-    showToast("⚠️ Include an uppercase letter, a number, and a symbol.");
+  if (!/[A-Z]/.test(newPassword) || !/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+    showToast("⚠️ Use an uppercase letter, a number, and a symbol.");
     return;
   }
 
-  document.getElementById("currentPw").value = nw;
-  document.getElementById("newPw").value = "";
-  document.getElementById("confirmPw").value = "";
-  showToast(" Password updated successfully!");
+  try {
+    // 2. Send data to the server
+    const response = await fetch('/profile/update-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+        confirmNewPassword
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // 3. Success! Clear the fields
+      document.getElementById("currentPw").value = "";
+      document.getElementById("newPw").value = "";
+      document.getElementById("confirmPw").value = "";
+      showToast("✅ " + result.message);
+      persistState(); // Update the saved state so "Discard" doesn't bring back old text
+    } else {
+      // 4. Server-side error (e.g., wrong current password)
+      showToast("❌ " + (result.message || "Update failed"));
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    showToast("❌ Network error. Try again later.");
+  }
 }
 
 function openDiscardModal() {
@@ -89,28 +117,58 @@ function closeDiscardModal() {
 }
 
 function confirmDiscard() {
-  ["username", "email", "currentPw", "newPw", "confirmPw"].forEach((id) => {
-    document.getElementById(id).value = saved[id];
-  });
-  document.getElementById("profileAvatar").src = saved.profileSrc;
-  document.getElementById("navAvatar").src = saved.navSrc;
-  closeDiscardModal();
-  showToast("Changes discarded.");
+    // Reset inputs to original saved values
+    ["username", "email"].forEach((id) => {
+        document.getElementById(id).value = saved[id];
+    });
+    
+    // Reset images to original saved paths
+    document.getElementById("profileAvatar").src = saved.profileSrc;
+    document.getElementById("navAvatar").src = saved.navSrc;
+    
+    // CRITICAL: Clear the pending upload
+    pendingFile = null;
+    document.getElementById("avatarInput").value = "";
+
+    closeDiscardModal();
+    showToast("Changes discarded.");
 }
 
-function saveChanges() {
-  const user = document.getElementById("username").value.trim();
-  const email = document.getElementById("email").value.trim();
-  if (!user) {
-    showToast("⚠️ Username cannot be empty.");
-    return;
-  }
-  if (!email || !email.includes("@")) {
-    showToast("⚠️ Enter a valid email address.");
-    return;
-  }
-  persistState();
-  showToast("Changes saved successfully!");
+async function saveChanges() {
+    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("email").value.trim();
+
+    if (!username || !email) {
+        return showToast("⚠️ Please fill in all fields.");
+    }
+
+    // We use FormData because it can carry both Text and Files
+    const formData = new FormData();
+    formData.append("username", username);
+    formData.append("email", email);
+    
+    if (pendingFile) {
+        formData.append("avatar", pendingFile);
+    }
+
+    try {
+        const response = await fetch('/profile/update-info', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showToast("✅ Changes saved successfully!");
+            pendingFile = null; // Clear the pending file
+            persistState();
+        } else {
+            showToast("❌ " + result.message);
+        }
+    } catch (err) {
+        showToast("❌ Failed to save changes.");
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

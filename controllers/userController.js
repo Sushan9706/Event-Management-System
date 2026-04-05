@@ -155,6 +155,110 @@ exports.searchEvents = async (req, res) => {
     }
 };
 
+// Add this to your userController.js
+exports.getProfile = async (req, res) => {
+    try {
+        // req.user.userId comes from your auth middleware
+        const user = await userModel.findById(req.user.userId);
+        
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/login');
+        }
+
+        // Render profile.ejs and pass the user object
+        res.render('profile', { user });
+    } catch (err) {
+        console.error("Error fetching profile:", err);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+exports.updatePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ message: "New passwords do not match." });
+        }
+
+        const user = await userModel.findById(req.user.userId);
+
+        // 1. Verify the OLD password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Current password is incorrect." });
+        }
+
+        // 2. Hash the NEW password
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(newPassword, salt);
+
+        // 3. Update the database
+        user.password = newHash;
+        await user.save();
+
+        res.json({ message: "Password updated successfully!" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error during password update." });
+    }
+};
+
+exports.updateAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // The path we store in the DB (relative to the 'public' folder)
+        const imagePath = `/images/uploads/${req.file.filename}`;
+
+        await userModel.findByIdAndUpdate(req.user.userId, {
+            profileImage: imagePath
+        });
+
+        res.json({ 
+            message: "Avatar updated successfully!", 
+            imagePath: imagePath 
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error saving avatar" });
+    }
+}; 
+
+exports.updateProfileInfo = async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        const updateData = { username, email };
+
+        // If a file was uploaded via Multer, add the path to the update object
+        if (req.file) {
+            updateData.profileImage = `/images/uploads/${req.file.filename}`;
+        }
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            req.user.userId, 
+            updateData, 
+            { new: true } // Returns the updated document
+        );
+
+        res.json({ 
+            message: "Profile updated!", 
+            user: updatedUser 
+        });
+    } catch (err) {
+        console.error(err);
+        if (err.code === 11000) {
+            return res.status(400).json({ message: "Username or Email already taken." });
+        }
+        res.status(500).json({ message: "Error updating profile." });
+    }
+};
+
+
+
 exports.logout = (req, res) => {
     res.cookie("token", "");
     res.redirect("/login");
