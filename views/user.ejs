@@ -286,122 +286,46 @@
             <h2 class="sec-title">Recent Bookings</h2>
             <a href="#" class="view-hist">VIEW HISTORY</a>
           </div>
+          <p class="stat-num"><%= user.bookedEvents.length %></p>
           <div class="tbl">
-            <div class="tbl-head">
-              <span class="th">EVENT NAME</span>
-              <span class="th">STATUS</span>
-              <span class="th">AMOUNT</span>
-              <span class="th">ACTION</span>
-            </div>
-            <div class="tbl-row">
-              <div class="td td-event">
-                <div class="ri ri--blue">
-                  <img
-                    src="images/icon-expo.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><polyline points=\'12 6 12 12 16 14\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Modernist Expo 2026</p>
-                  <p class="rid">Booking ID: #EMS-29402</p>
-                </div>
-              </div>
-              <div class="td td-status">
-                <span class="pill pill--ok">CONFIRMED</span>
-              </div>
-              <div class="td td-amount">$145.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="Download">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="tbl-row">
-              <div class="td td-event">
-                <div class="ri ri--amber">
-                  <img
-                    src="images/icon-gastro.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\'/><path d=\'M7 2v20\'/><path d=\'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Gastronomy Workshop</p>
-                  <p class="rid">Booking ID: #EMS-28183</p>
-                </div>
-              </div>
-              <div class="td td-status">
-                <span class="pill pill--pend">PENDING</span>
-              </div>
-              <div class="td td-amount">$89.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="More options">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <circle cx="12" cy="5" r="1.5" />
-                    <circle cx="12" cy="12" r="1.5" />
-                    <circle cx="12" cy="19" r="1.5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="tbl-row tbl-row--last">
-              <div class="td td-event">
-                <div class="ri ri--green">
-                  <img
-                    src="images/icon-startup.png"
-                    alt=""
-                    class="ri-img"
-                    onerror="this.parentElement.innerHTML='<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><polygon points=\'13 2 3 14 12 14 11 22 21 10 12 10 13 2\'/></svg>'"
-                  />
-                </div>
-                <div>
-                  <p class="rn">Startup Ignition Night</p>
-                  <p class="rid">Booking ID: #EMS-27561</p>
-                </div>
-              </div>
-              <div class="td td-status">
-                <span class="pill pill--ok">CONFIRMED</span>
-              </div>
-              <div class="td td-amount">$0.00</div>
-              <div class="td td-action">
-                <button class="act-btn" aria-label="Download">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+  <div class="tbl-head">
+    <span class="th">EVENT NAME</span>
+    <span class="th">STATUS</span>
+    <span class="th">DATE</span> <span class="th">ACTION</span>
+  </div>
+
+  <% if (user.bookedEvents.length > 0) { %>
+    <% user.bookedEvents.forEach(event => { %>
+      <div class="tbl-row">
+        <div class="td td-event">
+          <div class="ri ri--blue">
+            <img src="<%= event.image %>" alt="" class="ri-img" 
+                 onerror="this.style.display='none'">
           </div>
+          <div>
+            <p class="rn"><%= event.title %></p>
+            <p class="rid">Location: <%= event.location %></p>
+          </div>
+        </div>
+        <div class="td td-status">
+          <span class="pill pill--ok">CONFIRMED</span>
+        </div>
+        <div class="td td-amount">
+          <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+        </div>
+        <div class="td td-action">
+          <button class="act-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="tbl-row" style="justify-content: center; padding: 40px; color: #888;">
+      No bookings found. Start exploring events!
+    </div>
+  <% } %>
+</div>
         </div>
       </section>
     </main>

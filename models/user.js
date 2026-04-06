@@ -35,7 +35,11 @@ const userSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         default: "" // You can set a default placeholder URL here if you like
-    }
+    }, 
+    bookedEvents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "event" 
+    }]
 }, {
     timestamps: true 
 });
