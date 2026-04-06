@@ -1,0 +1,282 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+body {
+    background-color: #f8f8f8;
+    color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -1px;
+}
+
+.navbar nav a {
+    text-decoration: none;
+    color: #666;
+    margin-left: 30px;
+    font-size: 0.9rem;
+}
+
+.btn-login-nav, .btn-logout-nav {
+    color: #000 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #000;
+    padding-bottom: 2px;
+}
+
+/* Flash Error */
+.flash-error {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 12px 50px;
+    font-size: 0.9rem;
+}
+
+/* Hero */
+.event-hero {
+    width: 100%;
+    height: 320px;
+    background-color: #1a1a2e;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.hero-overlay {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 40px 60px;
+}
+
+.hero-content {
+    color: #fff;
+}
+
+.event-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.hero-content h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* Info Bar */
+.event-info-bar {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 0 60px;
+}
+
+.info-box {
+    padding: 22px 40px 22px 0;
+    margin-right: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-box.highlight {
+    margin-left: auto;
+    margin-right: 0;
+    padding-right: 0;
+    text-align: right;
+}
+
+.info-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.info-value.price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #556073;
+}
+
+/* Main Body */
+.event-main {
+    flex: 1;
+    padding: 50px 60px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.event-body {
+    display: flex;
+    gap: 50px;
+    align-items: flex-start;
+}
+
+/* Description */
+.event-description {
+    flex: 1;
+}
+
+.event-description h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #1a1a1a;
+}
+
+.event-description p {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.8;
+}
+
+.capacity-info {
+    margin-top: 30px;
+}
+
+.capacity-info span {
+    font-size: 0.8rem;
+    color: #888;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.capacity-bar {
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.capacity-fill {
+    height: 100%;
+    background: #556073;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Booking Panel */
+.booking-panel {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.booking-card {
+    background: #fff;
+    padding: 35px 30px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.booking-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.price-display {
+    margin-bottom: 25px;
+}
+
+.price-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    display: block;
+}
+
+.price-per {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.book-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #556073;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s ease;
+}
+
+.book-btn:hover {
+    background-color: #465061;
+}
+
+.book-btn.sold-out {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.secure-note {
+    font-size: 0.72rem;
+    color: #bbb;
+    margin-top: 12px;
+}
+
+/* Footer */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 30px 50px;
+    font-size: 0.7rem;
+    color: #bbb;
+    letter-spacing: 0.5px;
+    border-top: 1px solid #eee;
+    margin-top: auto;
+}
+
+.footer-right a {
+    text-decoration: none;
+    color: #bbb;
+    margin-left: 20px;
+}
