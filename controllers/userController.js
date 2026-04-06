@@ -105,12 +105,16 @@ exports.postLogin = async (req, res) => {
 
 exports.getUserDashboard = async (req, res) => {
     try {
-        const user = await userModel.findById(req.user.userId); // get user info from JWT
+        // We find the user and 'populate' the bookedEvents field
+        const user = await userModel.findById(req.user.userId).populate('bookedEvents');
+        
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/login');
         }
-        res.render('user', { user }); // render user.ejs
+
+        // We pass the user (which now contains bookedEvents) to the EJS
+        res.render('user', { user }); 
     } catch (err) {
         console.error(err);
         res.redirect('/login');
