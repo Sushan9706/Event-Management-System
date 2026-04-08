@@ -20,39 +20,33 @@ router.get('/logout', userController.logout);
 router.get('/user', isLoggedIn, userController.getUserDashboard);
 
 // This is the specific update you asked for:
-router.get("/profile", isLoggedIn, userController.getProfile); 
+router.get("/profile", isLoggedIn, userController.getProfile);
 
 router.post('/profile/update-password', isLoggedIn, userController.updatePassword);
 
 // Ensure your route uses the upload middleware to look for the avatar field within the form data.
 router.post(
-    '/profile/update-info', 
-    isLoggedIn, 
-    upload.single('avatar'), 
+    '/profile/update-info',
+    isLoggedIn,
+    upload.single('avatar'),
     userController.updateProfileInfo
 );
 
 router.get("/bookings", isLoggedIn, (req, res) => {
-  res.render("bookings", { user: req.user });
+    res.render("bookings", { user: req.user });
 });
 
 router.get("/catalog", isLoggedIn, (req, res) => {
-  res.render("catalog", { user: req.user });
+    res.render("catalog", { user: req.user });
 });
 
 router.post('/profile/upload-avatar', isLoggedIn, upload.single('avatar'), userController.updateAvatar);
-
-// --- ADMIN ROUTES ---
-router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
-    res.render('adminDashboard', { user: req.user });
-});
 
 // --- FUNCTIONAL ROUTES ---
 router.get('/events/search', userController.searchEvents);
 
 router.get("/eventcreat", (req, res) => {
-  res.send("this is the file yet to be created.");
+    res.send("this is the file yet to be created.");
 });
-
 
 module.exports = router;
