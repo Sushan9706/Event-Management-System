@@ -24,10 +24,12 @@
 
         <div class="register-card">
             <% if (error && error.length > 0) { %>
-                <div class="flash-message error">
-                    <%= error[0] %>
-                </div>
-            <% } %>
+    <% error.forEach(function(err) { %>
+        <div class="flash-message error">
+            <%= err %>
+        </div>
+    <% }) %>
+<% } %>
 
             <form action="/register" method="POST">
                 <div class="input-group">

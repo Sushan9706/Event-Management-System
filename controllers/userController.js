@@ -11,18 +11,42 @@ exports.postRegister = async (req, res) => {
     try {
         let { username, email, password, confirmPassword } = req.body;
 
-        // Prevent anyone from registering as an admin email
+        const errors = [];
+
+        // 🚫 Reserved email check
         if (email.toLowerCase() === "admin@ems.com") {
-            req.flash('error', 'This email is reserved for system administration.');
-            return res.redirect('/register');
+            errors.push('This email is reserved for system administration.');
         }
 
+        // 🔐 Password validations
+        if (password.length < 8) {
+            errors.push('Password must be at least 8 characters long.');
+        }
+
+        if (!/[A-Za-z]/.test(password)) {
+            errors.push('Password must contain at least one letter.');
+        }
+
+        if (!/\d/.test(password)) {
+            errors.push('Password must contain at least one number.');
+        }
+
+        if (!/[^A-Za-z0-9]/.test(password)) {
+            errors.push('Password must contain at least one symbol.');
+        }
+
+        // 🔁 Confirm password
         if (password !== confirmPassword) {
-            req.flash('error', 'Passwords do not match');
+            errors.push('Passwords do not match.');
+        }
+
+        // ❌ If any errors → send all
+        if (errors.length > 0) {
+            errors.forEach(err => req.flash('error', err));
             return res.redirect('/register');
         }
 
-        // 1. Define who gets to be an admin
+        // 1. Define admin
         const adminEmail = "admin@ems.com"; 
         let assignedRole = 'user';
 
@@ -30,17 +54,18 @@ exports.postRegister = async (req, res) => {
             assignedRole = 'admin';
         }
 
-        // 2. Check if user already exists
+        // 2. Check existing user
         let existingUser = await userModel.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
-            req.flash('error', 'User already exists. Please try again!');
+            req.flash('error', 'Credentials already exists. Please try again!');
             return res.redirect('/register');
         }
 
+        // 3. Hash password
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 
-        // 3. Create User with the assignedRole
+        // 4. Create user
         let user = await userModel.create({ 
             username, 
             email, 
@@ -48,11 +73,15 @@ exports.postRegister = async (req, res) => {
             role: assignedRole 
         });
 
-        // 4. Generate Token
-        let token = jwt.sign({ email: email, userId: user._id, role: user.role }, "shhhhhhhhh");
+        // 5. Token
+        let token = jwt.sign(
+            { email: email, userId: user._id, role: user.role },
+            "shhhhhhhhh"
+        );
+
         res.cookie("token", token);
 
-        // 5. Dynamic Redirect based on Role
+        // 6. Redirect
         if (user.role === 'admin') {
             res.redirect('/admin/dashboard');
         } else {
@@ -105,19 +134,42 @@ exports.postLogin = async (req, res) => {
 
 exports.getUserDashboard = async (req, res) => {
     try {
-        // We find the user and 'populate' the bookedEvents field
-        const user = await userModel.findById(req.user.userId).populate('bookedEvents');
-        
+        const now = new Date();
+
+        // 1. Find the user
+        // 2. Populate 'bookedEvents' BUT with a match filter for the date
+        const user = await userModel.findById(req.user.userId).populate({
+            path: 'bookedEvents',
+            match: { date: { $gte: now } }, // Only fetch events happening today or later
+            options: { sort: { date: 1 } }  // Sort them so the soonest is first
+        });
+
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/login');
         }
 
-        // We pass the user (which now contains bookedEvents) to the EJS
+        // Now, user.bookedEvents only contains active, future events.
         res.render('user', { user }); 
     } catch (err) {
-        console.error(err);
+        console.error("Dashboard Error:", err);
         res.redirect('/login');
+    }
+};
+
+exports.cancelBooking = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const userId = req.user.userId;
+
+        // $pull removes the specific ID from the bookedEvents array
+        await userModel.findByIdAndUpdate(userId, {
+            $pull: { bookedEvents: eventId }
+        });
+
+        res.json({ success: true, message: "Booking cancelled successfully" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
 
@@ -234,29 +286,31 @@ exports.updateAvatar = async (req, res) => {
 
 exports.updateProfileInfo = async (req, res) => {
     try {
-        const { username, email } = req.body;
-        const updateData = { username, email };
+        const { removeProfileImage } = req.body;
+        const updateData = {};
 
-        // If a file was uploaded via Multer, add the path to the update object
-        if (req.file) {
+        // 1. Handle Image logic
+        if (removeProfileImage === 'true') {
+            // Set back to your DB default or an empty string
+            updateData.profileImage = "https://tinyurl.com/3jjyxzj6"; 
+        } else if (req.file) {
+            // req.file is populated by upload.single('avatar')
             updateData.profileImage = `/images/uploads/${req.file.filename}`;
         }
 
+        // 2. Update DB
         const updatedUser = await userModel.findByIdAndUpdate(
             req.user.userId, 
             updateData, 
-            { new: true } // Returns the updated document
+            { new: true }
         );
 
         res.json({ 
-            message: "Profile updated!", 
+            message: "Profile updated successfully!", 
             user: updatedUser 
         });
     } catch (err) {
         console.error(err);
-        if (err.code === 11000) {
-            return res.status(400).json({ message: "Username or Email already taken." });
-        }
         res.status(500).json({ message: "Error updating profile." });
     }
 };

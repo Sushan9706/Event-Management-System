@@ -61,4 +61,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bellDropdown) bellDropdown.style.display = "none";
   });
 
+document.querySelectorAll('.cancel-trigger').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        const eventId = btn.getAttribute('data-id');
+        
+        if(confirm("Are you sure you want to cancel this booking?")) {
+            const response = await fetch(`/cancel-booking/${eventId}`, { method: 'POST' });
+            const data = await response.json();
+            
+            if(data.success) {
+                // Refresh the page to show the updated list (the event will vanish)
+                window.location.reload();
+            }
+        }
+    });
+});
+
 });

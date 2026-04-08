@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
     // ADD THIS FIELD:
     profileImage: {
         type: String,
-        default: "" // You can set a default placeholder URL here if you like
+        default: "https://tinyurl.com/3jjyxzj6" // You can set a default placeholder URL here if you like
     }, 
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,

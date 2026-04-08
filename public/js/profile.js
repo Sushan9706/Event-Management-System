@@ -1,154 +1,81 @@
-"use strict";
+/**
+ * Profile Management Script
+ * Handles: Image Preview, Removal (Draft), and Final Save to Server
+ */
 
-const DEFAULT_PROFILE_AVATAR =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' fill='%23e74c3c'/%3E%3Ccircle cx='80' cy='58' r='28' fill='%23fff'/%3E%3Ccircle cx='80' cy='60' r='24' fill='%232c3e50'/%3E%3Ccircle cx='71' cy='58' r='4' fill='%23fff'/%3E%3Ccircle cx='89' cy='58' r='4' fill='%23fff'/%3E%3Crect x='72' y='64' width='16' height='3' rx='1.5' fill='%23fff' opacity='.5'/%3E%3Cellipse cx='80' cy='118' rx='40' ry='26' fill='%232c3e50'/%3E%3Crect x='75' y='82' width='10' height='18' fill='%23fff'/%3E%3Crect x='68' y='95' width='24' height='3' fill='%23fff'/%3E%3C/svg%3E";
+// 1. STATE VARIABLES (The "Draft" state)
+let selectedFile = null;
+let isRemovalPending = false;
 
-const DEFAULT_NAV_AVATAR =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Crect width='34' height='34' rx='17' fill='%23e74c3c'/%3E%3Ccircle cx='17' cy='13' r='6' fill='%23fff'/%3E%3Cellipse cx='17' cy='27' rx='10' ry='6' fill='%23fff'/%3E%3C/svg%3E";
+// Grab elements for frequent use
+const profileAvatar = document.getElementById('profileAvatar');
+const navAvatar = document.getElementById('navAvatar');
+const usernameVal = document.getElementById('username').value;
 
-const saved = {};
-let pendingFile = null
+// Default avatar logic (matching your EJS logic)
+const defaultAvatar = `https://ui-avatars.com/api/?name=${usernameVal}&background=e74c3c&color=fff`;
 
-function persistState() {
-  ["username", "email", "currentPw", "newPw", "confirmPw"].forEach((id) => {
-    saved[id] = document.getElementById(id).value;
-  });
-  saved.profileSrc = document.getElementById("profileAvatar").src;
-  saved.navSrc = document.getElementById("navAvatar").src;
+/**
+ * 2. PREVIEW LOGIC
+ * Triggered when user selects a file from their computer.
+ * Does NOT upload to server yet.
+ */
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast("Please select an image file", "error");
+            return;
+        }
+
+        selectedFile = file;
+        isRemovalPending = false; // Uploading cancels a pending removal
+
+        // Use FileReader to show a local preview immediately
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            profileAvatar.src = e.target.result;
+            if (navAvatar) navAvatar.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
-let toastTimer = null;
-function showToast(msg, ms = 2800) {
-  clearTimeout(toastTimer);
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  toastTimer = setTimeout(() => el.classList.remove("show"), ms);
-}
-
-function toggleNotif() {
-  document.getElementById("notifPanel").classList.toggle("open");
-}
-
-function handleAvatarUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // 1. Preview the image locally (but don't upload yet)
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        document.getElementById("profileAvatar").src = ev.target.result;
-        document.getElementById("navAvatar").src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    // 2. Store the file for later
-    pendingFile = file;
-}
-
+/**
+ * 3. REMOVE LOGIC
+ * Triggered when user clicks "Remove Photo".
+ * Only updates the UI to show the default avatar.
+ */
 function removePhoto() {
-  document.getElementById("profileAvatar").src = DEFAULT_PROFILE_AVATAR;
-  document.getElementById("navAvatar").src = DEFAULT_NAV_AVATAR;
-  document.getElementById("avatarInput").value = "";
-  showToast("Photo removed. Save Changes to confirm.");
+    selectedFile = null;
+    isRemovalPending = true;
+
+    // Show the placeholder in the UI
+    profileAvatar.src = defaultAvatar;
+    if (navAvatar) navAvatar.src = defaultAvatar;
 }
 
-async function updatePassword() {
-  const currentPassword = document.getElementById("currentPw").value.trim();
-  const newPassword = document.getElementById("newPw").value.trim();
-  const confirmNewPassword = document.getElementById("confirmPw").value.trim();
-
-  // 1. Basic Frontend Validation
-  if (!currentPassword) {
-    showToast("⚠️ Enter your current password.");
-    return;
-  }
-  if (newPassword.length < 8) {
-    showToast("⚠️ New password must be at least 8 characters.");
-    return;
-  }
-  if (newPassword !== confirmNewPassword) {
-    showToast("⚠️ New passwords do not match.");
-    return;
-  }
-  if (!/[A-Z]/.test(newPassword) || !/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
-    showToast("⚠️ Use an uppercase letter, a number, and a symbol.");
-    return;
-  }
-
-  try {
-    // 2. Send data to the server
-    const response = await fetch('/profile/update-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword,
-        confirmNewPassword
-      })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      // 3. Success! Clear the fields
-      document.getElementById("currentPw").value = "";
-      document.getElementById("newPw").value = "";
-      document.getElementById("confirmPw").value = "";
-      showToast("✅ " + result.message);
-      persistState(); // Update the saved state so "Discard" doesn't bring back old text
-    } else {
-      // 4. Server-side error (e.g., wrong current password)
-      showToast("❌ " + (result.message || "Update failed"));
-    }
-  } catch (err) {
-    console.error("Fetch error:", err);
-    showToast("❌ Network error. Try again later.");
-  }
-}
-
-function openDiscardModal() {
-  document.getElementById("discardModal").classList.add("open");
-}
-function closeDiscardModal() {
-  document.getElementById("discardModal").classList.remove("open");
-}
-
-function confirmDiscard() {
-    // Reset inputs to original saved values
-    ["username", "email"].forEach((id) => {
-        document.getElementById(id).value = saved[id];
-    });
-    
-    // Reset images to original saved paths
-    document.getElementById("profileAvatar").src = saved.profileSrc;
-    document.getElementById("navAvatar").src = saved.navSrc;
-    
-    // CRITICAL: Clear the pending upload
-    pendingFile = null;
-    document.getElementById("avatarInput").value = "";
-
-    closeDiscardModal();
-    showToast("Changes discarded.");
-}
-
+/**
+ * 4. SAVE LOGIC
+ * Triggered when "Save Changes" is clicked.
+ * This is the ONLY function that communicates with the database.
+ */
 async function saveChanges() {
-    const username = document.getElementById("username").value.trim();
-    const email = document.getElementById("email").value.trim();
-
-    if (!username || !email) {
-        return showToast("⚠️ Please fill in all fields.");
-    }
-
-    // We use FormData because it can carry both Text and Files
     const formData = new FormData();
-    formData.append("username", username);
-    formData.append("email", email);
-    
-    if (pendingFile) {
-        formData.append("avatar", pendingFile);
+
+    // Determine what to send to the backend
+    if (isRemovalPending) {
+        // Tell backend to delete the current image path
+        formData.append('removeProfileImage', 'true');
+    } else if (selectedFile) {
+        // Attach the new file. 
+        // NOTE: The key 'avatar' must match upload.single('avatar') in your route!
+        formData.append('avatar', selectedFile);
+    } else {
+        showToast("No changes to save.", "info");
+        return;
     }
 
     try {
@@ -160,31 +87,88 @@ async function saveChanges() {
         const result = await response.json();
 
         if (response.ok) {
-            showToast("✅ Changes saved successfully!");
-            pendingFile = null; // Clear the pending file
-            persistState();
+            showToast("Profile updated successfully!");
+            // Reload after a short delay so user sees the success toast
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
-            showToast("❌ " + result.message);
+            showToast(result.message || "Failed to update profile", "error");
         }
     } catch (err) {
-        showToast("❌ Failed to save changes.");
+        console.error("Save Error:", err);
+        showToast("Server connection failed.", "error");
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  persistState();
+/**
+ * 5. DISCARD / MODAL LOGIC
+ */
+function openDiscardModal() {
+    document.getElementById('discardModal').classList.add('active');
+}
 
-  document.addEventListener("click", (e) => {
-    const btn = document.getElementById("notifBtn");
-    const panel = document.getElementById("notifPanel");
-    if (panel && !btn.contains(e.target) && !panel.contains(e.target)) {
-      panel.classList.remove("open");
+function closeDiscardModal() {
+    document.getElementById('discardModal').classList.remove('active');
+}
+
+function confirmDiscard() {
+    // Simply reload the page. 
+    // This clears the 'selectedFile' variable and fetches the original data from DB.
+    window.location.reload();
+}
+
+/**
+ * 6. PASSWORD LOGIC (Existing functionality)
+ */
+async function updatePassword() {
+    const currentPassword = document.getElementById('currentPw').value;
+    const newPassword = document.getElementById('newPw').value;
+    const confirmNewPassword = document.getElementById('confirmPw').value;
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        showToast("Please fill all password fields", "error");
+        return;
     }
-  });
 
-  document
-    .getElementById("discardModal")
-    .addEventListener("click", function (e) {
-      if (e.target === this) closeDiscardModal();
-    });
-});
+    try {
+        const response = await fetch('/profile/update-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            showToast("Password updated!");
+            // Clear inputs
+            document.getElementById('currentPw').value = "";
+            document.getElementById('newPw').value = "";
+            document.getElementById('confirmPw').value = "";
+        } else {
+            showToast(result.message, "error");
+        }
+    } catch (err) {
+        showToast("Error updating password", "error");
+    }
+}
+
+/**
+ * 7. UTILS
+ */
+function showToast(message, type = "success") {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.backgroundColor = type === "error" ? "#e74c3c" : "#2ecc71";
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Notification Toggle
+function toggleNotif() {
+    const panel = document.getElementById('notifPanel');
+    panel.classList.toggle('active');
+}
