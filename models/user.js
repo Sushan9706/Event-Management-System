@@ -24,9 +24,17 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
-    createdAt: { type: Date, default: Date.now }
+    // ADD THIS FIELD:
+    profileImage: {
+        type: String,
+        default: "" // You can set a default placeholder URL here if you like
+    },
+    bookedEvents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "event"
+    }]
 }, {
-    timestamps: true // keep this for updatedAt if needed
+    timestamps: true
 });
 
 module.exports = mongoose.model("user", userSchema);
