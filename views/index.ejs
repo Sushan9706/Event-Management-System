@@ -1,195 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMS – Discover & Book Incredible Events</title>
-    <link rel="stylesheet" href="/css/guest.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <header class="navbar">
-      <div class="nav-inner">
-        <span class="logo">EMS</span>
-        <nav class="nav-links">
-          <a href="/" class="nav-link active">Events</a>
-          <a href="/login" class="nav-link">My Bookings</a>
-          <a href="/login" class="nav-link">Login/Register</a>
-          <a href="/login" class="btn-get-started">Get Started</a>
-        </nav>
-      </div>
-    </header>
 
-    <section class="hero">
-      <div class="hero-content">
-        <h1 class="hero-heading">
-          Discover and<br />book<br />
-          <em class="hero-accent">incredible</em><br />
-          events.
-        </h1>
-        <p class="hero-sub">
-          Join the architectural evolution of event management.<br />
-          Curated experiences, seamless bookings, and memories<br />
-          that anchor the future of 2026.
-        </p>
-        <form action="/events/search" method="GET" class="search-bar">
-          <div class="search-input-wrap">
-            <input type="text" name="q" placeholder="Search events..." />
-          </div>
-          
-          <div class="date-select">
-            <input type="date" name="date" style="border:none; outline:none; background:transparent; font-family: inherit;">
-          </div>
-          
-          <button type="submit" class="btn-search">Search</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS – Discover & Book Incredible Events</title>
+  <link rel="stylesheet" href="/css/guest.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <span class="logo">EMS</span>
+      <nav class="nav-links">
+        <a href="/" class="nav-link active">Events</a>
+        <a href="/login" class="nav-link">My Bookings</a>
+        <a href="/login" class="nav-link">Login/Register</a>
+        <a href="/login" class="btn-get-started">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-heading">
+        Discover and<br />book<br />
+        <em class="hero-accent">incredible</em><br />
+        events.
+      </h1>
+      <p class="hero-sub">
+        Join the architectural evolution of event management.<br />
+        Curated experiences, seamless bookings, and memories<br />
+        that anchor the future of 2026.
+      </p>
+      <form action="/events/search" method="GET" class="search-bar">
+        <div class="search-input-wrap">
+          <input type="text" name="q" placeholder="Search events..." />
+        </div>
+
+        <div class="date-select">
+          <input type="date" name="date"
+            style="border:none; outline:none; background:transparent; font-family: inherit;">
+        </div>
+
+        <button type="submit" class="btn-search">Search</button>
       </form>
-      </div>
-      <div class="hero-image-wrap">
-        <img
-          class="hero-img"
-          src="https://ca-times.brightspotcdn.com/dims4/default/f854f6b/2147483647/strip/true/crop/5568x3712+0+0/resize/1200x800!/quality/75/?url=https%3A%2F%2Fcalifornia-times-brightspot.s3.amazonaws.com%2Faa%2F18%2Fe54c32e242b684c943ea0cf6c222%2Fap21310170175809.jpg"
-        />
+    </div>
+    <div class="hero-image-wrap">
+      <img class="hero-img"
+        src="https://ca-times.brightspotcdn.com/dims4/default/f854f6b/2147483647/strip/true/crop/5568x3712+0+0/resize/1200x800!/quality/75/?url=https%3A%2F%2Fcalifornia-times-brightspot.s3.amazonaws.com%2Faa%2F18%2Fe54c32e242b684c943ea0cf6c222%2Fap21310170175809.jpg" />
 
-        <div class="floating-card">
-          150+ Exclusive <br />
-          Events Added
+      <div class="floating-card">
+        150+ Exclusive <br />
+        Events Added
+      </div>
+    </div>
+  </section>
+
+  <section class="events-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div>
+          <p class="section-label">CURATION 2026</p>
+          <h2 class="section-title">Upcoming Events</h2>
+        </div>
+        <div class="carousel-controls">
+          <button class="carousel-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button class="carousel-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
         </div>
       </div>
-    </section>
 
-    <section class="events-section">
-      <div class="section-inner">
-        <div class="section-header">
-          <div>
-            <p class="section-label">CURATION 2026</p>
-            <h2 class="section-title">Upcoming Events</h2>
-          </div>
-          <div class="carousel-controls">
-            <button class="carousel-btn">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            <button class="carousel-btn">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="events-grid">
-          <% if (events && events.length > 0) { %>
-            <% events.forEach(event => { %>
-              <div class="event-card">
-                <div class="card-img-wrap">
-                  <img src="<%= event.image %>" alt="<%= event.title %>" />
+      <div class="events-grid">
+        <% if (events && events.length> 0) { %>
+          <% events.forEach(event=> { %>
+            <div class="event-card">
+              <div class="card-img-wrap">
+                <img src="<%= event.image || event.imagePath || '/images/default-event.png' %>"
+                  alt="<%= event.title || event.eventName || 'Event' %>" />
+                <% if (event.category) { %>
                   <span class="card-tag tag-<%= event.category.toLowerCase() %>">
                     <%= event.category %>
                   </span>
-                </div>
-                <div class="card-body">
-                  <p class="card-date"><%= event.date.toDateString() %></p>
-                  <h3 class="card-title"><%= event.title %></h3>
-                  <p class="card-location"><%= event.location %></p>
-                </div>
+                  <% } else if (event.categoryId) { %>
+                    <span class="card-tag">
+                      <%= event.categoryId %>
+                    </span>
+                    <% } %>
               </div>
+              <div class="card-body">
+                <p class="card-date">
+                  <%= event.date ? new Date(event.date).toDateString() : 'Date TBD' %>
+                </p>
+                <h3 class="card-title">
+                  <%= event.title || event.eventName || 'Untitled Event' %>
+                </h3>
+                <p class="card-location">
+                  <%= event.location || 'Location TBD' %>
+                </p>
+              </div>
+            </div>
             <% }) %>
-          <% } else { %>
-            <p>No events found for your search.</p>
-          <% } %>
-        </div>
+              <% } else { %>
+                <p>No events found for your search.</p>
+                <% } %>
+      </div>
 
-        <div class="browse-wrap">
-          <a href="#" class="btn-browse"
-            >Browse All Events
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+      <div class="browse-wrap">
+        <a href="#" class="btn-browse">Browse All Events
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-          </a> 
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="cta-text">
+        <h2 class="cta-heading">Never miss a curated<br />moment.</h2>
+        <p class="cta-sub">
+          Sign up for early access to tickets and exclusive announcements
+          for<br />the 2026 season.
+        </p>
+        <div class="cta-form">
+          <input type="email" placeholder="Email address" class="cta-input" />
+          <button class="btn-subscribe">Subscribe</button>
         </div>
       </div>
-    </section>
-
-    <section class="cta-section">
-      <div class="cta-inner">
-        <div class="cta-text">
-          <h2 class="cta-heading">Never miss a curated<br />moment.</h2>
-          <p class="cta-sub">
-            Sign up for early access to tickets and exclusive announcements
-            for<br />the 2026 season.
-          </p>
-          <div class="cta-form">
-            <input type="email" placeholder="Email address" class="cta-input" />
-            <button class="btn-subscribe">Subscribe</button>
-          </div>
-        </div>
-        <div class="cta-ticket-icon">
+      <div class="cta-ticket-icon">
+        <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" fill="none">
+          <rect x="8" y="18" width="104" height="44" rx="6" fill="#c8cfe8" opacity="0.5" />
+          <circle cx="8" cy="40" r="8" fill="#dde4f4" />
+          <circle cx="112" cy="40" r="8" fill="#dde4f4" />
+          <line x1="8" y1="40" x2="112" y2="40" stroke="#b0bcd8" stroke-width="1" stroke-dasharray="4 4" />
+          <circle cx="40" cy="28" r="3" fill="#b0bcd8" />
+          <circle cx="40" cy="52" r="3" fill="#b0bcd8" />
+          <circle cx="40" cy="40" r="3" fill="#b0bcd8" />
         </svg>
-            viewBox="0 0 120 80"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-          >
-            <rect
-              x="8"
-              y="18"
-              width="104"
-              height="44"
-              rx="6"
-              fill="#c8cfe8"
-              opacity="0.5"
-            />
-            <circle cx="8" cy="40" r="8" fill="#dde4f4" />
-            <circle cx="112" cy="40" r="8" fill="#dde4f4" />
-            <line
-              x1="8"
-              y1="40"
-              x2="112"
-              y2="40"
-              stroke="#b0bcd8"
-              stroke-width="1"
-              stroke-dasharray="4 4"
-            />
-            <circle cx="40" cy="28" r="3" fill="#b0bcd8" />
-            <circle cx="40" cy="52" r="3" fill="#b0bcd8" />
-            <circle cx="40" cy="40" r="3" fill="#b0bcd8" />
-          </svg>
-        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <footer class="footer">
-      <span class="footer-copy"
-        >COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span
-      >
-      <div class="footer-links">
-        <a href="#">TERMS</a>
-        <a href="#">PRIVACY</a>
-      </div>
-    </footer>
-  </body>
+  <footer class="footer">
+    <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+    <div class="footer-links">
+      <a href="#">TERMS</a>
+      <a href="#">PRIVACY</a>
+    </div>
+  </footer>
+</body>
+
 </html>
