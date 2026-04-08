@@ -255,16 +255,113 @@
   </button>
 </div>
       </div>
-    <% }) %>
-  <% } else { %>
-    <div class="tbl-row" style="justify-content: center; padding: 40px; color: #888;">
-      No bookings found. Start exploring events!
-    </div>
-  <% } %>
-</div>
+    </section>
+
+    <section class="search-filter">
+      <h2 class="sec-title">Search &amp; Filter Events</h2>
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="Search events by name..." />
+        <select id="dateFilter">
+          <option value="">All Dates</option>
+          <option value="2026-10-12">Oct 12, 2026</option>
+          <option value="2026-11-04">Nov 04, 2026</option>
+        </select>
+        <select id="locationFilter">
+          <option value="">All Locations</option>
+          <option value="Berlin">Berlin</option>
+          <option value="Kathmandu">Kathmandu</option>
+        </select>
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="Tech">Tech</option>
+          <option value="Music">Music</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="bookings-wrap">
+      <div class="bookings-box">
+        <div class="bk-header">
+          <h2 class="sec-title">Recent Bookings</h2>
+          <a href="#" class="view-hist">VIEW HISTORY</a>
         </div>
-      </section>
-    </main>
+        <p class="stat-num">
+          <%= user.bookedEvents.length %>
+        </p>
+        <div class="tbl">
+          <div class="tbl-head">
+            <span class="th">EVENT NAME</span>
+            <span class="th">STATUS</span>
+            <span class="th">DATE</span> <span class="th">ACTION</span>
+          </div>
+
+          <% if (user.bookedEvents.length> 0) { %>
+            <% user.bookedEvents.forEach(event=> { %>
+              <div class="tbl-row">
+                <div class="td td-event">
+                  <div class="ri ri--blue">
+                    <img src="<%= event.image %>" alt="" class="ri-img" onerror="this.style.display='none'">
+                  </div>
+                  <div>
+                    <p class="rn">
+                      <%= event.title %>
+                    </p>
+                    <p class="rid">Location: <%= event.location %>
+                    </p>
+                  </div>
+                </div>
+                <div class="td td-status">
+                  <span class="pill pill--ok">CONFIRMED</span>
+                </div>
+                <div class="td td-amount">
+                  <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short' , day: 'numeric' ,
+                    year: 'numeric' }) %>
+                </div>
+                <div class="td td-action">
+                  <button class="act-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <% }) %>
+                <% } else { %>
+                  <div class="tbl-row" style="justify-content: center; padding: 40px; color: #888;">
+                    No bookings found. Start exploring events!
+                  </div>
+                  <% } %>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+    <div class="footer-links">
+      <a href="#">PRIVACY POLICY</a>
+      <a href="#">TERMS OF SERVICE</a>
+      <a href="#">CONTACT</a>
+    </div>
+  </footer>
+  <div class="avatar-sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="avatar-sidebar" id="avatarSidebar">
+    <a href="/profile" class="sidebar-item">
+      My Profile
+    </a>
+    <div class="sidebar-divider"></div>
+    <a href="/logout" class="sidebar-item sidebar-item--danger" id="logoutBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+      Log Out
+    </a>
+  </aside>
 
   <footer class="site-footer">
     <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
