@@ -19,6 +19,7 @@ router.get('/logout', userController.logout);
 // --- PROTECTED USER ROUTES (Requires isLoggedIn) ---
 router.get('/user', isLoggedIn, userController.getUserDashboard);
 
+<<<<<<< HEAD
 // This is the specific update you asked for:
 router.get("/profile", isLoggedIn, userController.getProfile); 
 
@@ -46,6 +47,8 @@ router.post('/profile/upload-avatar', isLoggedIn, upload.single('avatar'), userC
 router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
     res.render('adminDashboard', { user: req.user });
 });
+=======
+>>>>>>> feature/events-CRUD
 
 // --- FUNCTIONAL ROUTES ---
 router.get('/events/search', userController.searchEvents);

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Event – EMS Admin</title>
+    <link rel="stylesheet" href="/css/admin-create.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body>
+    <!-- ── Navbar ── -->
+    <header class="navbar">
+        <div class="nav-inner">
+            <span class="logo">EMS</span>
+            <nav class="nav-links">
+                <a href="/admin/events" class="nav-link">Events</a>
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+
+                <div class="user-menu-container">
+                    <button class="user-trigger" id="userTrigger" title="User Account">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/admin/profile" class="dropdown-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1-2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                            Profile
+                        </a>
+                        <a href="/logout" class="dropdown-link logout">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="create-layout">
+        <!-- ── Left Panel ── -->
+        <aside class="left-panel">
+            <div class="left-panel-content">
+                <div class="ai-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    AI ASSISTANCE ENABLED
+                </div>
+                <h1 class="left-heading">Refining the<br />Experience.</h1>
+                <p class="left-caption">Update your event details to keep your audience informed. Every change is
+                    reflected in real-time.</p>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+                    <p style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 8px;">Edit Mode</p>
+                    <p style="font-size: 13px; color: var(--text-light);">You are currently editing "<%= event.eventName
+                            %>".</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ── Right Panel (Form) ── -->
+        <section class="right-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                <a href="/admin/events"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    BACK TO EVENTS
+                </a>
+                <form action="/admin/events/delete/<%= event._id %>" method="POST"
+                    onsubmit="return confirm('Silmeye emin misiniz?')">
+                    <button type="submit" class="btn-danger-outline"
+                        style="border: none; color: #ef4444; background: #fee2e2; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                        DELETE EVENT
+                    </button>
+                </form>
+            </div>
+
+            <form action="/admin/events/edit/<%= event._id %>" method="POST" enctype="multipart/form-data"
+                class="event-form">
+
+                <div class="form-section">
+                    <h2 class="form-section-title">Event Visuals</h2>
+                    <div class="upload-wrapper" style="margin-top: 20px;">
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="banner_image" name="banner_image" accept="image/*" hidden />
+
+                            <div class="upload-placeholder" id="uploadPlaceholder"
+                                style="<%= event.imagePath ? 'display:none' : '' %>">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <p class="upload-text">Upload New Banner</p>
+                            </div>
+
+                            <div class="upload-preview" id="uploadPreview"
+                                style="<%= event.imagePath ? 'display:block' : 'display:none' %>">
+                                <img id="previewImg" src="<%= event.imagePath || '' %>" alt="Preview" />
+                                <button type="button" class="remove-img" id="removeImageBtn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-head">
+                        <h2 class="form-section-title">Core Information</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventName">Event Name</label>
+                        <input type="text" id="eventName" name="eventName" value="<%= event.eventName %>" required />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoryId">Category</label>
+                            <select id="categoryId" name="categoryId" required>
+                                <% categories.forEach(cat=> { %>
+                                    <option value="<%= cat._id %>" <%=(event.categoryId &&
+                                        event.categoryId.toString()===cat._id.toString()) ? 'selected' : '' %>>
+                                        <%= cat.name %>
+                                    </option>
+                                    <% }) %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Event Status</label>
+                            <select id="status" name="status">
+                                <option value="upcoming" <%=event.status==='upcoming' ? 'selected' : '' %>>Upcoming
+                                </option>
+                                <option value="ongoing" <%=event.status==='ongoing' ? 'selected' : '' %>>Ongoing
+                                </option>
+                                <option value="completed" <%=event.status==='completed' ? 'selected' : '' %>>Completed
+                                </option>
+                                <option value="cancelled" <%=event.status==='cancelled' ? 'selected' : '' %>>Cancelled
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Event Description</label>
+                        <textarea id="description" name="description" rows="6"><%= event.description %></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2 class="form-section-title">Logistics & Venue</h2>
+
+                    <div class="form-row three-col" style="margin-top: 24px;">
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date"
+                                value="<%= event.date ? new Date(event.date).toISOString().split('T')[0] : '' %>"
+                                required />
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Time</label>
+                            <input type="time" id="time" name="time" value="<%= event.time %>" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="maxCapacity">Max Capacity</label>
+                            <input type="number" id="maxCapacity" name="maxCapacity" value="<%= event.maxCapacity %>" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ticketPrice">Ticket Price ($)</label>
+                            <input type="number" id="ticketPrice" name="ticketPrice" value="<%= event.ticketPrice %>"
+                                step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location / Venue</label>
+                            <input type="text" id="location" name="location" value="<%= event.location %>" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary"
+                        onclick="window.location.href='/admin/events'">CANCEL</button>
+                    <button type="submit" class="btn-primary">SAVE CHANGES</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('banner_image');
+        const placeholder = document.getElementById('uploadPlaceholder');
+        const preview = document.getElementById('uploadPreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeImageBtn');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) showPreview(fileInput.files[0]);
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                placeholder.style.display = 'none';
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (fileInput.files.length > 0) {
+                fileInput.value = '';
+                previewImg.src = '<%= event.imagePath || "" %>';
+                if (!previewImg.src) {
+                    preview.style.display = 'none';
+                    placeholder.style.display = 'block';
+                }
+            } else {
+                if (!confirm('Remove current event image?')) return;
+                try {
+                    const res = await fetch('/admin/events/remove-image/<%= event._id %>', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        previewImg.src = '';
+                        preview.style.display = 'none';
+                        placeholder.style.display = 'block';
+                    }
+                } catch (e) {
+                    alert('Failed to remove image');
+                }
+            }
+        });
+
+        // ─── Navbar User Dropdown ───
+        const userTrigger = document.getElementById('userTrigger');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userTrigger) {
+            userTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+    </script>
+</body>
+
+</html>
