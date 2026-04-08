@@ -140,6 +140,30 @@ async function updatePassword() {
         return;
     }
 
+    // Password Validation
+    if (newPassword.length < 8) {
+        showToast("Password must be at least 8 characters long", "error");
+        return;
+    }
+
+    const hasNumber = /\d/.test(newPassword);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+
+    if (!hasNumber) {
+        showToast("Password must include at least one number", "error");
+        return;
+    }
+
+    if (!hasSymbol) {
+        showToast("Password must include at least one unique symbol", "error");
+        return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        showToast("New passwords do not match", "error");
+        return;
+    }
+
     try {
         const response = await fetch('/profile/update-password', {
             method: 'POST',
