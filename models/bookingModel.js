@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Event',
+        ref: 'event',
         required: true
     },
     userName: {

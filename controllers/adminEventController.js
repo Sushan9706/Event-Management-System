@@ -1,4 +1,4 @@
-const Event = require('../models/eventModel');
+const Event = require('../models/event');
 const Category = require('../models/categoryModel');
 const Booking = require('../models/bookingModel');
 const path = require('path');
@@ -106,7 +106,7 @@ exports.getCreateEvent = async (req, res) => {
         res.render('admin/createEvent', { categories });
     } catch (err) {
         console.error('Error loading create event page:', err);
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     }
 };
 
@@ -124,7 +124,7 @@ exports.postCreateEvent = async (req, res) => {
             maxCapacity: parseInt(maxCapacity) || 0,
             ticketPrice: parseFloat(ticketPrice) || 0,
             status: status || 'upcoming',
-            createdBy: req.session.user ? req.session.user._id : null
+            createdBy: req.user ? req.user.userId : null
         };
 
         if (req.file) {
@@ -134,7 +134,7 @@ exports.postCreateEvent = async (req, res) => {
         await Event.create(eventData);
 
         req.flash('success', 'Event created successfully!');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error creating event:', err);
         req.flash('error', 'Failed to create event');
@@ -148,14 +148,14 @@ exports.getEditEvent = async (req, res) => {
         const event = await Event.findById(req.params.id);
         if (!event) {
             req.flash('error', 'Event not found');
-            return res.redirect('/admin/events');
+            return res.redirect('/admin/dashboard');
         }
         const categories = await Category.find();
         res.render('admin/editEvent', { event, categories });
     } catch (err) {
         console.error('Error loading edit event:', err);
         req.flash('error', 'Failed to load event');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     }
 };
 
@@ -187,7 +187,7 @@ exports.postEditEvent = async (req, res) => {
         await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
         req.flash('success', 'Event updated successfully!');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error updating event:', err);
         req.flash('error', 'Failed to update event');
@@ -211,11 +211,11 @@ exports.deleteEvent = async (req, res) => {
         }
 
         req.flash('success', 'Event deleted successfully');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error deleting event:', err);
         req.flash('error', 'Failed to delete event');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     }
 };
 
@@ -243,7 +243,7 @@ exports.getBookingDetails = async (req, res) => {
         const event = await Event.findById(req.params.id).populate('categoryId');
         if (!event) {
             req.flash('error', 'Event not found');
-            return res.redirect('/admin/events');
+            return res.redirect('/admin/dashboard');
         }
 
         const page = parseInt(req.query.page) || 1;
@@ -303,7 +303,7 @@ exports.getBookingDetails = async (req, res) => {
     } catch (err) {
         console.error('Error loading booking details:', err);
         req.flash('error', 'Failed to load booking details');
-        res.redirect('/admin/events');
+        res.redirect('/admin/dashboard');
     }
 };
 
