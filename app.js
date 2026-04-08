@@ -25,6 +25,9 @@ mongoose.connect('mongodb://127.0.0.1:27017/eventManagement')
 const Booking = require('./models/bookingModel');
 const userModel = require('./models/user');
 const Event = require('./models/eventModel');
+const eventRoutes = require('./routes/eventRoutes');
+
+app.use('/events', eventRoutes);
 
 // Sample data (seeded into MongoDB so Manage works with real IDs)
 const sampleEvents = [
@@ -167,6 +170,90 @@ const sampleEvents = [
         status: 'active',
         image: 'https://picsum.photos/seed/ems-acoustic/900/600',
         bookingStatus: 'cancelled'
+    },
+    {
+        name: 'Kathmandu Design Week',
+        description: 'A city-wide showcase of local design studios, exhibitions, and creative talks.',
+        date: new Date('2026-06-05'),
+        time: '11:00 AM',
+        location: 'Durbar Marg, Kathmandu',
+        category: 'Design',
+        ticketPrice: 30,
+        maxCapacity: 400,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-design/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Lumbini Mindfulness Retreat',
+        description: 'Guided meditation, mindful walks, and restorative sessions in Lumbini.',
+        date: new Date('2026-06-12'),
+        time: '06:00 AM',
+        location: 'Lumbini, Rupandehi',
+        category: 'Wellness',
+        ticketPrice: 40,
+        maxCapacity: 80,
+        tier: 'Premium',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-lumbini/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Bhaktapur Heritage Food Walk',
+        description: 'An evening food walk through Bhaktapur’s heritage lanes and local eateries.',
+        date: new Date('2026-06-18'),
+        time: '04:30 PM',
+        location: 'Bhaktapur Durbar Square',
+        category: 'Food',
+        ticketPrice: 12,
+        maxCapacity: 120,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-bhaktapur/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Chitwan Jungle Photography Camp',
+        description: 'Sunrise safaris, birding sessions, and wildlife photography workshops.',
+        date: new Date('2026-06-25'),
+        time: '05:00 AM',
+        location: 'Sauraha, Chitwan',
+        category: 'Photography',
+        ticketPrice: 55,
+        maxCapacity: 60,
+        tier: 'Premium',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-chitwan/900/600',
+        bookingStatus: 'confirmed'
+    },
+    {
+        name: 'Patan Street Jazz Evening',
+        description: 'Open-air jazz performances with local bands and curated food stalls.',
+        date: new Date('2026-07-03'),
+        time: '07:00 PM',
+        location: 'Patan Durbar Square',
+        category: 'Music',
+        ticketPrice: 18,
+        maxCapacity: 250,
+        tier: 'Standard',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-patanjazz/900/600',
+        bookingStatus: 'cancelled'
+    },
+    {
+        name: 'Pokhara Paragliding Festival',
+        description: 'A full-day festival celebrating aerial sports with demo flights and workshops.',
+        date: new Date('2026-07-10'),
+        time: '09:00 AM',
+        location: 'Sarangkot, Pokhara',
+        category: 'Adventure',
+        ticketPrice: 65,
+        maxCapacity: 150,
+        tier: 'Premium',
+        status: 'active',
+        image: 'https://picsum.photos/seed/ems-paragliding/900/600',
+        bookingStatus: 'cancelled'
     }
 ];
 
@@ -221,6 +308,8 @@ async function renderMyBookings(req, res) {
             .populate('event')
             .sort({ createdAt: -1 });
 
+        bookings = bookings.filter(booking => booking.event);
+
         return res.render('myBookings', { bookings, user, error: [] });
     } catch (err) {
         console.error('My bookings error:', err);
@@ -239,7 +328,7 @@ app.get('/bookings/manage/:bookingId', async (req, res) => {
         }
 
         const booking = await Booking.findById(bookingId).populate('event');
-        if (!booking) {
+        if (!booking || !booking.event) {
             return res.redirect('/bookings/my-bookings');
         }
 

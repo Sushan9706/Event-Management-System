@@ -79,7 +79,7 @@ exports.getManageBooking = async (req, res) => {
 
         const booking = await Booking.findById(bookingId).populate('event');
 
-        if (!booking) {
+        if (!booking || !booking.event) {
             return res.status(404).render('404', { title: '404 - Not Found' });
         }
 
@@ -102,9 +102,11 @@ exports.getManageBooking = async (req, res) => {
 // GET /bookings/my-bookings  —  List all bookings for logged-in user
 exports.getMyBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({ user: req.user.userId })
+        let bookings = await Booking.find({ user: req.user.userId })
             .populate('event')
             .sort({ createdAt: -1 });
+
+        bookings = bookings.filter(booking => booking.event);
 
         const user = await userModel.findById(req.user.userId);
 

@@ -50,8 +50,8 @@ body {
     font-size: 1.25rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #1a237e;
-    font-style: italic;
+    color: #111;
+    font-style: normal;
     text-decoration: none;
 }
 
@@ -69,6 +69,18 @@ body {
     padding-bottom: 4px;
     border-bottom: 2px solid transparent;
     transition: color 0.2s, border-color 0.2s;
+}
+
+.nav-link-btn {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b6b6b;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
+    cursor: default;
 }
 
 .nav-links a:hover {
@@ -594,10 +606,24 @@ body {
     color: #fff;
 }
 
-.btn-download:hover {
+.btn-download:not(:disabled):hover {
     background: #333;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-download:disabled,
+.btn-download--disabled {
+    background: #f0f0f0;
+    color: #9a9a9a;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-download:disabled svg,
+.btn-download--disabled svg {
+    stroke: #9a9a9a;
 }
 
 /* Cancel */
