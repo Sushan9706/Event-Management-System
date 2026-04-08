@@ -8,7 +8,7 @@ const upload = require('../middlewares/upload');
 router.use(isLoggedIn, isAdmin);
 
 // ─── MANAGE EVENTS ────────────────────────────────────────────
-router.get('/events', adminEventController.getManageEvents);
+router.get('/dashboard', adminEventController.getManageEvents);
 
 // ─── CREATE EVENT ─────────────────────────────────────────────
 router.get('/events/create', adminEventController.getCreateEvent);
