@@ -1,11 +1,5 @@
 const mongoose = require("mongoose");
 
-// It's usually better to handle the connection in your main app.js, 
-// but keeping it here as per your current structure:
-mongoose.connect("mongodb://127.0.0.1:27017/eventManagement")
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
-
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -23,13 +17,12 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        minlength: 8 
+        required: true
     },
     role: {
         type: String,
-        enum: ['user', 'admin'], 
-        default: 'user'          
+        enum: ['user', 'admin'],
+        default: 'user'
     },
     // ADD THIS FIELD:
     profileImage: {
@@ -38,10 +31,10 @@ const userSchema = new mongoose.Schema({
     }, 
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "event" 
+        ref: "event"
     }]
 }, {
-    timestamps: true 
+    timestamps: true
 });
 
 module.exports = mongoose.model("user", userSchema);

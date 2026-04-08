@@ -105,16 +105,25 @@ async function saveChanges() {
  * 5. DISCARD / MODAL LOGIC
  */
 function openDiscardModal() {
-    document.getElementById('discardModal').classList.add('active');
+    document.getElementById('discardModal').classList.add('open');
 }
 
 function closeDiscardModal() {
-    document.getElementById('discardModal').classList.remove('active');
+    document.getElementById('discardModal').classList.remove('open');
 }
 
 function confirmDiscard() {
-    // Simply reload the page. 
-    // This clears the 'selectedFile' variable and fetches the original data from DB.
+    // 1. Clear password fields
+    document.getElementById('currentPw').value = "";
+    document.getElementById('newPw').value = "";
+    document.getElementById('confirmPw').value = "";
+
+    // 2. Clear any selected file and reset removal pending
+    selectedFile = null;
+    isRemovalPending = false;
+
+    // 3. Reload the page to reset the avatar and fetch original data
+    // (This also closes the modal automatically as state is lost)
     window.location.reload();
 }
 
@@ -170,5 +179,5 @@ function showToast(message, type = "success") {
 // Notification Toggle
 function toggleNotif() {
     const panel = document.getElementById('notifPanel');
-    panel.classList.toggle('active');
+    panel.classList.toggle('open');
 }
