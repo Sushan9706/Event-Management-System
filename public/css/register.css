@@ -195,3 +195,40 @@ input::placeholder {
     color: #bbb;
     margin-left: 20px;
 }
+
+/* Container for input and button */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 60px; /* Make space for the button */
+}
+
+/* Toggle Button Styling */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #777; /* Premium indigo color */
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #222;
+}
+
+/* Ensure input group doesn't break */
+.input-group {
+    margin-bottom: 20px;
+}

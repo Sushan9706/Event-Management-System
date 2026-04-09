@@ -64,7 +64,7 @@
     <section class="hero">
       <p class="hero-eyebrow">DASHBOARD</p>
       <h1 class="hero-title">
-        Welcome back, <span class="hero-name">
+        Welcome, <span class="hero-name">
           <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest'
             %>
         </span>.
@@ -120,10 +120,7 @@
     <section class="recommended">
       <div class="sec-header">
         <div>
-          <h2 class="sec-title">Recommended for You</h2>
-          <p class="sec-sub">
-            AI-powered suggestions based on your interests
-          </p>
+          <h2 class="sec-title">Latest Events</h2>
         </div>
         <a href="#" class="explore-all">EXPLORE ALL
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
