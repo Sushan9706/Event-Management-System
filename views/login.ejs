@@ -22,15 +22,24 @@
         </section>
 
         <div class="login-card">
-            <% if (error && error.length > 0) { %>
-    <div class="error-flash">
-        <%= error %>
-    </div>
-<% } %>
+           <% if (typeof error !== 'undefined' && error.length > 0) { %>
+        <div class="flash-message error">
+            <span class="flash-icon">!</span>
+            <%= error %>
+        </div>
+    <% } %>
+
+    <% if (typeof success !== 'undefined' && success.length > 0) { %>
+        <div class="flash-message success">
+            <span class="flash-icon">✓</span>
+            <%= success %>
+        </div>
+    <% } %>
+
             <form action="/login" method="POST">
                 <div class="input-group">
-                    <label for="username">USERNAME OR EMAIL</label>
-                    <input type="text" id="username" name="username" placeholder="name@event.com" required>
+                    <label for="email">EMAIL</label>
+                    <input type="email" id="email" name="email" placeholder="name@event.com" required value="<%= typeof formData !== 'undefined' ? formData.email : '' %>">
                 </div>
 
                 <div class="input-group">

@@ -4,14 +4,14 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         lowercase: true
+        // unique username
     },
     email: {
         type: String,
         required: true,
-        unique: true,
+        unique: true, // Only email is unique
         lowercase: true,
         trim: true
     },
@@ -24,10 +24,9 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
-    // ADD THIS FIELD:
     profileImage: {
         type: String,
-        default: "https://tinyurl.com/3jjyxzj6" // You can set a default placeholder URL here if you like
+        default: "https://tinyurl.com/3jjyxzj6"
     }, 
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
