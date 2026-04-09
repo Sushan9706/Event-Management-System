@@ -176,3 +176,66 @@ input::placeholder {
     color: #aaa;
     margin-left: 20px;
 }
+
+/* General Flash Message Container */
+.flash-message {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid transparent;
+    animation: fadeInSlide 0.4s ease forwards;
+}
+
+/* Error Variant */
+.flash-message.error {
+    background-color: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+
+.flash-message.error .flash-icon {
+    background-color: #fb7185;
+    color: white;
+}
+
+/* Success Variant */
+.flash-message.success {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.flash-message.success .flash-icon {
+    background-color: #4ade80;
+    color: white;
+}
+
+/* Circular Icon inside the flash card */
+.flash-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Smooth Entrance Animation */
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

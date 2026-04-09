@@ -11,62 +11,48 @@ exports.getRegister = (req, res) => {
 exports.postRegister = async (req, res) => {
     try {
         let { username, email, password, confirmPassword } = req.body;
-
         const errors = [];
 
-        // 🚫 Reserved email check
-        if (email.toLowerCase() === "admin@ems.com") {
-            errors.push('This email is reserved for system administration.');
+        // 1. Unified Password Validation (Regex)
+        // This regex ensures: 8+ chars, at least 1 letter, 1 number, 1 symbol, and NO spaces
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])(?!.*\s).{8,}$/;
+
+        if (!passwordRegex.test(password)) {
+            errors.push('Password must be at least 8 characters long and include letters, numbers, and symbols (no spaces).');
         }
 
-        // 🔐 Password validations
-        if (password.length < 8) {
-            errors.push('Password must be at least 8 characters long.');
-        }
-
-        if (!/[A-Za-z]/.test(password)) {
-            errors.push('Password must contain at least one letter.');
-        }
-
-        if (!/\d/.test(password)) {
-            errors.push('Password must contain at least one number.');
-        }
-
-        if (!/[^A-Za-z0-9]/.test(password)) {
-            errors.push('Password must contain at least one symbol.');
-        }
-
-        // 🔁 Confirm password
+        // 2. Check if passwords match
         if (password !== confirmPassword) {
             errors.push('Passwords do not match.');
         }
 
-        // ❌ If any errors → send all
+        // 3. Reserved admin email check
+        if (email.toLowerCase() === "admin@ems.com") {
+            errors.push('This email is reserved for system administration.');
+        }
+
+        // If any of the above failed, stop and render
         if (errors.length > 0) {
-            errors.forEach(err => req.flash('error', err));
-            return res.redirect('/register');
+            return res.render('register', { 
+                error: errors,
+                formData: { username, email }
+            });
         }
 
-        // 1. Define admin
-        const adminEmail = "admin@ems.com"; 
-        let assignedRole = 'user';
-
-        if (email === adminEmail) {
-            assignedRole = 'admin';
-        }
-
-        // 2. Check existing user
-        let existingUser = await userModel.findOne({ $or: [{ email }, { username }] });
+        // 4. Check for existing email 
+        let existingUser = await userModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            req.flash('error', 'Credentials already exists. Please try again!');
-            return res.redirect('/register');
+            return res.render('register', { 
+                error: ['An account with this email already exists.'],
+                formData: { username, email }
+            });
         }
 
-        // 3. Hash password
+        // 5. Proceed with registration
+        const assignedRole = (email.toLowerCase() === "admin@ems.com") ? 'admin' : 'user';
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 
-        // 4. Create user
         let user = await userModel.create({ 
             username, 
             email, 
@@ -74,24 +60,18 @@ exports.postRegister = async (req, res) => {
             role: assignedRole 
         });
 
-        // 5. Token
         let token = jwt.sign(
-            { email: email, userId: user._id, role: user.role },
+            { email: user.email, userId: user._id, role: user.role },
             "shhhhhhhhh"
         );
-
         res.cookie("token", token);
 
-        // 6. Redirect
-        if (user.role === 'admin') {
-            res.redirect('/admin/dashboard');
-        } else {
-            res.redirect('/login');
-        }
+        req.flash('success', 'Registration successful!');
+        res.redirect('/login');
 
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error during registration");
+        console.error("Registration Error:", err);
+        res.status(500).send("An unexpected error occurred. Please try again later.");
     }
 };
 
@@ -101,14 +81,14 @@ exports.getLogin = (req, res) => {
 
 exports.postLogin = async (req, res) => {
     try {
-        const { username: identifier, password } = req.body;
-        const user = await userModel.findOne({
-            $or: [{ email: identifier }, { username: identifier }]
-        });
+        const { email, password } = req.body;
+        const user = await userModel.findOne({ email });
 
         if (!user) {
-            req.flash('error', 'Invalid Credentials');
-            return res.redirect('/login');
+            return res.render('login', { 
+                error: 'Invalid Credentials',
+                formData: { email }
+            });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -125,8 +105,10 @@ exports.postLogin = async (req, res) => {
             }
             return res.redirect('/user'); // Regular user dashboard
         } else {
-            req.flash('error', 'Invalid Credentials');
-            res.redirect('/login');
+            return res.render('login', { 
+                error: 'Invalid Credentials',
+                formData: { email }
+            });
         }
     } catch (err) {
         res.redirect('/login');
