@@ -36,9 +36,8 @@ router.get("/bookings", isLoggedIn, (req, res) => {
     res.render("bookings", { user: req.user });
 });
 
-router.get("/catalog", isLoggedIn, (req, res) => {
-    res.render("catalog", { user: req.user });
-});
+router.get("/catalog", isLoggedIn, userController.getCatalog);
+
 
 router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('avatar'), userController.updateAvatar);
 

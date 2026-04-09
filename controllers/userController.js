@@ -178,9 +178,22 @@ exports.getGuestDashboard = async (req, res) => {
     try {
         // Fetch ALL events to show by default and populate categoryId
         const events = await eventModel.find({}).populate('categoryId');
-        res.render("index", { events: events });
+        res.render("index", { events: events, user: null });
     } catch (err) {
         res.status(500).send("Error loading dashboard");
+    }
+};
+
+exports.getCatalog = async (req, res) => {
+    try {
+        const events = await eventModel.find({}).populate('categoryId');
+        res.render("catalog", { 
+            events: events, 
+            user: req.user 
+        });
+    } catch (err) {
+        console.error("Error loading catalog:", err);
+        res.status(500).send("Error loading catalog");
     }
 };
 
