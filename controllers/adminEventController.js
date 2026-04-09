@@ -162,29 +162,33 @@ exports.getEditEvent = async (req, res) => {
 exports.postEditEvent = async (req, res) => {
     try {
         const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
-
-        const updateData = {
-            eventName,
-            description,
-            categoryId,
-            date,
-            time,
-            location,
-            maxCapacity: parseInt(maxCapacity) || 0,
-            ticketPrice: parseFloat(ticketPrice) || 0,
-            status: status || 'upcoming'
-        };
-
-        if (req.file) {
-            const oldEvent = await Event.findById(req.params.id);
-            if (oldEvent && oldEvent.imagePath) {
-                const oldPath = path.join(__dirname, '..', 'public', oldEvent.imagePath);
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-            }
-            updateData.imagePath = '/images/events/' + req.file.filename;
+        const event = await Event.findById(req.params.id);
+        
+        if (!event) {
+            req.flash('error', 'Event not found');
+            return res.redirect('/admin/dashboard');
         }
 
-        await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        // Update fields
+        event.eventName = eventName;
+        event.description = description;
+        event.categoryId = categoryId;
+        event.date = date;
+        event.time = time;
+        event.location = location;
+        event.maxCapacity = parseInt(maxCapacity) || 0;
+        event.ticketPrice = parseFloat(ticketPrice) || 0;
+        event.status = status || 'upcoming';
+
+        if (req.file) {
+            if (event.imagePath) {
+                const oldPath = path.join(__dirname, '..', 'public', event.imagePath);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            event.imagePath = '/images/events/' + req.file.filename;
+        }
+
+        await event.save();
 
         req.flash('success', 'Event updated successfully!');
         res.redirect('/admin/dashboard');
@@ -194,6 +198,7 @@ exports.postEditEvent = async (req, res) => {
         res.redirect(`/admin/events/edit/${req.params.id}`);
     }
 };
+
 
 // ─── DELETE EVENT ────────────────────────────────────────────
 exports.deleteEvent = async (req, res) => {

@@ -172,7 +172,7 @@
                    catStr = event.categoryId.name.toLowerCase();
                }
                // Get image
-               let imgUrl = event.image || event.imagePath || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop';
+               let imgUrl = event.imagePath || event.image || '/images/default-event.png';
                if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
                    imgUrl = '/' + imgUrl;
                }
@@ -184,7 +184,7 @@
           %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>">
               <div class="card-img">
-                <img src="<%= imgUrl %>" alt="<%= event.eventName || event.title %>" onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop'; this.onerror=null;" />
+                <img src="<%= imgUrl %>" alt="<%= event.eventName || event.title %>" />
                 <span class="card-tag tag-<%= catStr %>"><%= (event.categoryId && event.categoryId.name) ? event.categoryId.name : (event.category || 'Other') %></span>
               </div>
               <div class="card-body">

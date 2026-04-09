@@ -27,11 +27,30 @@ const eventSchema = new mongoose.Schema({
 
 // Pre-save middleware to synchronize title with eventName if one is missing
 eventSchema.pre('save', function (next) {
-    if (this.eventName && !this.title) this.title = this.eventName;
-    if (this.title && !this.eventName) this.eventName = this.title;
-    if (this.imagePath && !this.image) this.image = this.imagePath;
-    if (this.image && !this.imagePath) this.imagePath = this.image;
+    // Sync eventName and title
+    if (this.isModified('eventName')) {
+        this.title = this.eventName;
+    } else if (this.isModified('title')) {
+        this.eventName = this.title;
+    } else {
+        // Fallback for initial creation if only one is provided
+        if (this.eventName && !this.title) this.title = this.eventName;
+        if (this.title && !this.eventName) this.eventName = this.title;
+    }
+
+    // Sync imagePath and image
+    if (this.isModified('imagePath')) {
+        this.image = this.imagePath;
+    } else if (this.isModified('image')) {
+        this.imagePath = this.image;
+    } else {
+        // Fallback for initial creation if only one is provided
+        if (this.imagePath && !this.image) this.image = this.imagePath;
+        if (this.image && !this.imagePath) this.imagePath = this.image;
+    }
+    
     next();
 });
+
 
 module.exports = mongoose.model("event", eventSchema);
