@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const userModel = require("../models/user");
 const eventModel = require("../models/event");
+const categoryModel = require("../models/categoryModel");
 
 exports.getRegister = (req, res) => {
     res.render("register");
@@ -175,8 +176,8 @@ exports.cancelBooking = async (req, res) => {
 
 exports.getGuestDashboard = async (req, res) => {
     try {
-        // Fetch ALL events to show by default
-        const events = await eventModel.find({});
+        // Fetch ALL events to show by default and populate categoryId
+        const events = await eventModel.find({}).populate('categoryId');
         res.render("index", { events: events });
     } catch (err) {
         res.status(500).send("Error loading dashboard");
@@ -185,28 +186,42 @@ exports.getGuestDashboard = async (req, res) => {
 
 exports.searchEvents = async (req, res) => {
     try {
-        let { q, date } = req.query;
+        let { q, date, category } = req.query;
         let queryObj = {};
 
-        // 1. Text Search (Matches title regardless of case)
+        // 1. Text Search (Matches eventName regardless of case)
         if (q) {
-            queryObj.title = { $regex: q, $options: "i" };
+            queryObj.eventName = { $regex: q, $options: "i" };
         }
 
         // 2. Date Search
         if (date) {
+            const searchDate = new Date(date);
+            const nextDay = new Date(date);
+            nextDay.setDate(searchDate.getDate() + 1);
+            
             queryObj.date = { 
-                $gte: new Date(date), 
-                $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) 
+                $gte: searchDate, 
+                $lt: nextDay 
             };
         }
 
-        // Fetch events from DB
-        const events = await eventModel.find(queryObj);
+        // 3. Category Filter
+        if (category && category !== "All") {
+            // Find the category ID first
+            const catDoc = await categoryModel.findOne({ name: category });
+            if (catDoc) {
+                queryObj.categoryId = catDoc._id;
+            }
+        }
+
+        // Fetch events from DB and populate categoryId
+        const events = await eventModel.find(queryObj).populate('categoryId');
 
         // Render the page with the found events
         res.render("index", { events: events });
     } catch (err) {
+        console.error("Search failed:", err);
         res.status(500).send("Search failed");
     }
 };

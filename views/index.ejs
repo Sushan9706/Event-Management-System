@@ -41,9 +41,23 @@
           <input type="text" name="q" placeholder="Search events..." />
         </div>
 
-        <div class="date-select">
+        <div class="category-select-wrap" style="padding: 0 15px; border-left: 1px solid #eee;">
+          <select name="category" style="border:none; outline:none; background:transparent; font-family: inherit; color: #666; cursor: pointer;">
+            <option value="All">All Categories</option>
+            <option value="Music">Music</option>
+            <option value="Technology">Technology</option>
+            <option value="Sports">Sports</option>
+            <option value="Arts">Arts</option>
+            <option value="Food and Drink">Food and Drink</option>
+            <option value="Networking">Networking</option>
+            <option value="Education">Education</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="date-select" style="padding: 0 15px; border-left: 1px solid #eee;">
           <input type="date" name="date"
-            style="border:none; outline:none; background:transparent; font-family: inherit;">
+            style="border:none; outline:none; background:transparent; font-family: inherit; color: #666; cursor: pointer;">
         </div>
 
         <button type="submit" class="btn-search">Search</button>
@@ -92,9 +106,9 @@
                   <span class="card-tag tag-<%= event.category.toLowerCase() %>">
                     <%= event.category %>
                   </span>
-                  <% } else if (event.categoryId) { %>
-                    <span class="card-tag">
-                      <%= event.categoryId %>
+                  <% } else if (event.categoryId && event.categoryId.name) { %>
+                    <span class="card-tag tag-<%= event.categoryId.name.toLowerCase() %>">
+                      <%= event.categoryId.name %>
                     </span>
                     <% } %>
               </div>
