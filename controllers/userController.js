@@ -163,13 +163,20 @@ exports.cancelBooking = async (req, res) => {
         const { eventId } = req.params;
         const userId = req.user.userId;
 
-        // $pull removes the specific ID from the bookedEvents array
-        await userModel.findByIdAndUpdate(userId, {
-            $pull: { bookedEvents: eventId }
-        });
+        // 1. Get user to get email (for finding the specific booking)
+        const user = await userModel.findById(userId);
+
+        // 2. Remove from user's bookedEvents array
+        user.bookedEvents = user.bookedEvents.filter(id => id.toString() !== eventId);
+        await user.save();
+
+        // 3. Remove from Booking collection as well (or update status to cancelled)
+        const bookingModel = require("../models/bookingModel");
+        await bookingModel.deleteMany({ eventId, userEmail: user.email });
 
         res.json({ success: true, message: "Booking cancelled successfully" });
     } catch (err) {
+        console.error("Cancel Booking Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };

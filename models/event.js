@@ -26,7 +26,7 @@ const eventSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Pre-save middleware to synchronize title with eventName if one is missing
-eventSchema.pre('save', function (next) {
+eventSchema.pre('save', async function () {
     // Sync eventName and title
     if (this.isModified('eventName')) {
         this.title = this.eventName;
@@ -48,9 +48,8 @@ eventSchema.pre('save', function (next) {
         if (this.imagePath && !this.image) this.image = this.imagePath;
         if (this.image && !this.imagePath) this.imagePath = this.image;
     }
-    
-    next();
 });
+
 
 
 module.exports = mongoose.model("event", eventSchema);

@@ -41,8 +41,13 @@ router.get("/catalog", isLoggedIn, userController.getCatalog);
 
 router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('avatar'), userController.updateAvatar);
 
+const bookingController = require('../controllers/bookingController');
 // --- FUNCTIONAL ROUTES ---
+router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
+router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.get('/events/search', userController.searchEvents);
+
+
 
 router.get("/eventcreat", (req, res) => {
     res.send("this is the file yet to be created.");
