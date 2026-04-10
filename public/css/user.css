@@ -88,6 +88,26 @@ svg { display: block; flex-shrink: 0; }
   gap: 12px;
 }
 
+.notif-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #efefec;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-title {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-dark);
+}
+
+.notif-sub {
+  font-size: 11px;
+  color: var(--text-mid);
+}
+
 .avatar-circle {
   width: 28px;
   height: 28px;
@@ -134,6 +154,7 @@ svg { display: block; flex-shrink: 0; }
 .tbl-row { display: grid; grid-template-columns: 1fr 130px 90px 64px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .pill { font-size: 9px; padding: 4px 8px; border-radius: 12px; font-weight: 700; }
 .pill--ok { background: #e6f5ee; color: #1e8a48; }
+.bookings-row { grid-template-columns: 1.4fr 120px 80px 90px 80px 90px; }
 
 /* Search & Filter */
 .search-filter { background: white; border: 1px solid var(--border); padding: 16px; border-radius: 8px; }

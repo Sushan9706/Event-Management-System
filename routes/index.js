@@ -1,19 +1,71 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { isLoggedIn, isAdmin, redirectIfLoggedIn } = require('../middlewares/auth');
+const upload = require('../middlewares/upload');
+const bookingController = require('../controllers/bookingController');
+const eventModel = require('../models/event');
+const mongoose = require('mongoose');
 
-// Auth pages removed; keep home/logout lightweight
+// --- PUBLIC / GUEST ROUTES ---
+router.get('/', redirectIfLoggedIn, userController.getGuestDashboard);
+router.get("/guest", (req, res) => res.render("guest"));
+router.get("/event", async (req, res) => {
+    try {
+        let event = null;
+        if (req.query.eventId && mongoose.Types.ObjectId.isValid(req.query.eventId)) {
+            event = await eventModel.findById(req.query.eventId);
+        }
+        if (!event) {
+            event = await eventModel.findOne().sort({ date: 1 });
+        }
+        res.render("event", { event });
+    } catch (err) {
+        res.render("event", { event: null });
+    }
+});
 
-// Home Route
-router.get('/', userController.getHome);
-
-// Admin Dashboard (Protected by role check)
-// router.get('/admin/dashboard', isLoggedIn, isAdmin, (req, res) => {
-//     // Make sure you have an adminDashboard.ejs file in your views folder!
-//     res.render('adminDashboard', { user: req.user });
-// });
-
-// Logout Route
+// --- AUTHENTICATION ROUTES ---
+router.get('/register', userController.getRegister);
+router.post('/register', userController.postRegister);
+router.get('/login', userController.getLogin);
+router.post('/login', userController.postLogin);
 router.get('/logout', userController.logout);
+
+// --- PROTECTED USER ROUTES (Requires isLoggedIn) ---
+router.get('/user', isLoggedIn, userController.getUserDashboard);
+
+// This is the specific update you asked for:
+router.get("/profile", isLoggedIn, userController.getProfile);
+
+router.post('/profile/update-password', isLoggedIn, userController.updatePassword);
+
+// Ensure your route uses the upload middleware to look for the avatar field within the form data.
+router.post(
+    '/profile/update-info',
+    isLoggedIn,
+    upload.avatarUpload.single('avatar'),
+    userController.updateProfileInfo
+);
+
+router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
+router.get("/bookings/manage/:bookingId", isLoggedIn, bookingController.getManageBooking);
+
+router.get("/catalog", isLoggedIn, userController.getCatalog);
+
+
+router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('avatar'), userController.updateAvatar);
+
+// --- FUNCTIONAL ROUTES ---
+router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
+router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
+router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
+router.get('/events/search', userController.searchEvents);
+
+
+
+router.get("/eventcreat", (req, res) => {
+    res.send("this is the file yet to be created.");
+});
 
 module.exports = router;

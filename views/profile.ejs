@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EMS – Account Settings</title>
-    <link rel="stylesheet" href="css/profile.css" />
+    <link rel="stylesheet" href="/css/profile.css" />
   </head>
   <body>
     <nav>
@@ -24,8 +24,21 @@
         </button>
         <div class="notif-panel" id="notifPanel">
           <div class="notif-header">Notifications</div>
-          <div class="notif-item">Your booking was confirmed<span>2 hours ago</span></div>
-          <div class="notif-item">Profile updated successfully<span>Yesterday</span></div>
+          <%
+            const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+            const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+          %>
+          <% if (notifications.length === 0) { %>
+            <div class="notif-item">No new notifications</div>
+          <% } else { %>
+            <% notifications.forEach(function(note) { 
+                const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
+                const eventTitle = note.eventName || 'Event';
+                const countLabel = formatTicketCount(note.ticketCount || 1);
+            %>
+              <div class="notif-item"><%= title %><span><%= eventTitle %> · <%= countLabel %></span></div>
+            <% }) %>
+          <% } %>
         </div>
         <img id="navAvatar" class="nav-avatar" src="https://ui-avatars.com/api/?name=<%= user.username %>&background=e74c3c&color=fff" alt="User avatar" />
       </div>
@@ -67,11 +80,11 @@
           <div class="fields-row">
             <div class="field-group">
               <label for="username">Username</label>
-              <input type="text" id="username" value="<%= user.username %>" />
+              <input type="text" id="username" value="<%= user.username %>" disabled/>
             </div>
             <div class="field-group">
               <label for="email">Email Address</label>
-              <input type="email" id="email" value="<%= user.email %>" />
+              <input type="email" id="email" value="<%= user.email %>" disabled/>
             </div>
           </div>
 
@@ -135,6 +148,6 @@
       </div>
     </div>
 
-    <script src="js/profile.js"></script>
+    <script src="/js/profile.js"></script>
   </body>
 </html>
