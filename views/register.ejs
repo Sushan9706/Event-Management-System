@@ -24,30 +24,50 @@
 
         <div class="register-card">
             <% if (error && error.length > 0) { %>
-                <div class="flash-message error">
-                    <%= error[0] %>
+                <% if (Array.isArray(error)) { %>
+                    <% error.forEach(function(err) { %>
+                        <div class="flash-message error">
+                            <%= err %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="flash-message error">
+                        <%= error %>
+                    </div>
+                <% } %>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success.length > 0) { %>
+                <div class="flash-message success">
+                    <%= success %>
                 </div>
             <% } %>
 
             <form action="/register" method="POST">
                 <div class="input-group">
                     <label for="username">USERNAME</label>
-                    <input type="text" id="username" name="username" placeholder="John Doe" required autocomplete="off">
+                    <input type="text" id="username" name="username" placeholder="John Doe" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.username : '' %>">
                 </div>
 
                 <div class="input-group">
                     <label for="email">EMAIL</label>
-                    <input type="email" id="email" name="email" placeholder="abcd@gmail.com" required autocomplete="off">
+                    <input type="email" id="email" name="email" placeholder="abcd@gmail.com" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.email : '' %>">
                 </div>
 
                 <div class="input-group">
                     <label for="password">PASSWORD</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="off">
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="off">
+                        <button type="button" class="toggle-password" data-target="password">SHOW</button>
+                    </div>
                 </div>
 
                 <div class="input-group">
                     <label for="confirmPassword">CONFIRM PASSWORD</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required autocomplete="off">
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required autocomplete="off">
+                        <button type="button" class="toggle-password" data-target="confirmPassword">SHOW</button>
+                    </div>
                 </div>
 
                 <button type="submit" class="register-btn">
@@ -72,4 +92,21 @@
     </footer>
 
 </body>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            // Get the target input ID from the data-target attribute
+            const targetId = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the button text
+            this.textContent = type === 'password' ? 'SHOW' : 'HIDE';
+        });
+    });
+</script>
 </html>

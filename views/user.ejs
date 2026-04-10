@@ -82,6 +82,7 @@
       <p class="hero-eyebrow">DASHBOARD</p>
       <h1 class="hero-title">
         Welcome back, <span class="hero-name">
+        Welcome back, <span class="hero-name">
           <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest'
             %>
         </span>.
@@ -286,7 +287,6 @@
       <a href="#">CONTACT</a>
     </div>
   </footer>
-
   <div class="avatar-sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="avatar-sidebar" id="avatarSidebar">
     <a href="/profile" class="sidebar-item">

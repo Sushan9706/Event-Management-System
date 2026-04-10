@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Events – EMS Admin</title>
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="/css/admin-manage.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body>
+    <!-- ── Navbar ── -->
+    <header class="navbar">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <span class="logo">EMS</span>
+            </div>
+            <nav class="nav-links">
+                <a href="/admin/dashboard" class="nav-link active">Events</a>
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+
+                <!-- Replace Register button with User Symbol Dropdown -->
+                <div class="user-menu-container">
+                    <button class="user-trigger" id="userTrigger" title="User Account">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/profile" class="dropdown-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                            Profile
+                        </a>
+                        <a href="/logout" class="dropdown-link logout">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <!-- ── Page Header ── -->
+        <div class="page-header">
+            <div class="header-content">
+                <p class="page-eyebrow">Administration</p>
+                <h1 class="page-title">Manage Events</h1>
+            </div>
+            <a href="/admin/events/create" class="btn-create">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create Event
+            </a>
+        </div>
+
+        <!-- ── Flash Messages ── -->
+        <% if (locals.success && success.length> 0) { %>
+            <div class="flash-msg flash-success">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <%= success %>
+            </div>
+            <% } %>
+                <% if (locals.error && error.length> 0) { %>
+                    <div class="flash-msg flash-error">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <%= error %>
+                    </div>
+                    <% } %>
+
+                        <!-- ── Stats Grid ── -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon icon-events">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <path d="M16 2v4"></path>
+                                        <path d="M8 2v4"></path>
+                                        <path d="M3 10h18"></path>
+                                    </svg>
+                                </div>
+                                <p class="stat-label">Total Events</p>
+                                <p class="stat-value">
+                                    <%= stats.totalEvents %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon icon-active">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </div>
+                                <p class="stat-label">Active Now</p>
+                                <p class="stat-value">
+                                    <%= stats.activeEvents %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon icon-revenue">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <p class="stat-label">Total Attendees</p>
+                                <p class="stat-value">
+                                    <%= stats.totalAttendees>= 1000 ? (stats.totalAttendees/1000).toFixed(1) + 'k' :
+                                        stats.totalAttendees %>
+                                </p>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon icon-attendance">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <p class="stat-label">Avg. Attendance</p>
+                                <p class="stat-value">
+                                    <%= stats.avgAttendance %>%
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ── Table Section ── -->
+                        <div class="table-container">
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <input type="text" id="searchInput"
+                                        placeholder="Search events by name, venue or ID..." />
+                                </div>
+                                <div class="filter-group">
+                                    <select class="select-plain" id="statusFilter">
+                                        <option value="all">All Statuses</option>
+                                        <option value="upcoming">Upcoming</option>
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="eventsTableBody">
+                                <table class="events-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Event Details</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (events.length===0) { %>
+                                            <tr>
+                                                <td colspan="4"
+                                                    style="text-align: center; padding: 48px; color: var(--text-muted);">
+                                                    No events found.
+                                                </td>
+                                            </tr>
+                                            <% } else { %>
+                                                <% events.forEach(event=> { %>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="event-cell">
+                                                                <img src="<%= event.imagePath || event.image || '/images/default-event.png' %>" alt="<%= event.eventName || event.title %>" class="event-img" />
+                                                                            <div class="event-info-cell">
+                                                                                <p class="event-name">
+                                                                                    <%= event.eventName %>
+                                                                                </p>
+                                                                                <p class="event-location">
+                                                                                    <%= event.location %>
+                                                                                </p>
+                                                                            </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <p style="font-weight: 500;">
+                                                                <%= new Date(event.date).toLocaleDateString('en-US', {
+                                                                    month: 'short' , day: 'numeric' , year: 'numeric' })
+                                                                    %>
+                                                            </p>
+                                                            <p style="font-size: 12px; color: var(--text-light);">
+                                                                <%= event.time %>
+                                                            </p>
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                class="status-pill status-<%= event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status %>">
+                                                                <%= event.status %>
+                                                            </span>
+                                                        </td>
+                                                        <td class="actions-cell">
+                                                            <a href="/admin/events/<%= event._id %>/bookings"
+                                                                class="btn-view">VIEW</a>
+                                                            <a href="/admin/events/edit/<%= event._id %>"
+                                                                class="btn-icon" title="Edit">
+                                                                <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <path
+                                                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
+                                                                    </path>
+                                                                    <path
+                                                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
+                                                                    </path>
+                                                                </svg>
+                                                            </a>
+                                                            <form action="/admin/events/delete/<%= event._id %>"
+                                                                method="POST" style="display:inline;">
+                                                                <button type="submit" class="btn-icon delete"
+                                                                    title="Delete"
+                                                                    onclick="return confirm('Silmeye emin misiniz?')">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor"
+                                                                        stroke-width="2">
+                                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                                        <path
+                                                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                                        </path>
+                                                                    </svg>
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
+
+                                <!-- Pagination -->
+                                <div class="pagination">
+                                    <a href="?page=<%= pagination.currentPage - 1 %>"
+                                        class="pg-btn <%= pagination.currentPage <= 1 ? 'disabled' : '' %>">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="15 18 9 12 15 6"></polyline>
+                                        </svg>
+                                    </a>
+                                    <% for(let i=1; i <=pagination.totalPages; i++) { %>
+                                        <a href="?page=<%= i %>"
+                                            class="pg-btn <%= i === pagination.currentPage ? 'active' : '' %>">
+                                            <%= i %>
+                                        </a>
+                                        <% } %>
+                                            <a href="?page=<%= pagination.currentPage + 1 %>"
+                                                class="pg-btn <%= pagination.currentPage >= pagination.totalPages ? 'disabled' : '' %>">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                                </svg>
+                                            </a>
+                                </div>
+                            </div>
+                        </div>
+    </main>
+
+    <script>
+        // ─── Navbar User Dropdown ───
+        const userTrigger = document.getElementById('userTrigger');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            userDropdown.classList.remove('show');
+        });
+
+        // ─── Real-time Search & Filter (AJAX) ───
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        let searchTimeout;
+
+        const updateEvents = async () => {
+            const search = searchInput.value;
+            const status = statusFilter.value;
+            const url = `/admin/events?search=${search}&status=${status}`;
+
+            try {
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = await response.json();
+                renderTable(data.events, data.pagination);
+            } catch (err) {
+                console.error('Fetch error:', err);
+            }
+        };
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(updateEvents, 300);
+        });
+
+        statusFilter.addEventListener('change', updateEvents);
+
+        const renderTable = (events, pagination) => {
+            const tbody = document.querySelector('.events-table tbody');
+            const paginationDiv = document.querySelector('.pagination');
+
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--text-muted);">No events found.</td></tr>';
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = events.map(event => `
+                <tr>
+                    <td>
+                        <div class="event-cell">
+                            <img src="${event.imagePath || event.image || '/images/default-event.png'}" alt="${event.eventName || event.title || 'Event'}" class="event-img" />
+                            <div class="event-info-cell">
+                                <p class="event-name">${event.eventName}</p>
+                                <p class="event-location">${event.location}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <p style="font-weight: 500;">${new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p style="font-size: 12px; color: var(--text-light);">${event.time}</p>
+                    </td>
+                    <td>
+                        <span class="status-pill status-${event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status}">${event.status}</span>
+                    </td>
+                    <td class="actions-cell">
+                        <a href="/admin/events/${event._id}/bookings" class="btn-view">VIEW</a>
+                        <a href="/admin/events/edit/${event._id}" class="btn-icon" title="Edit">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </a>
+                        <form action="/admin/events/delete/${event._id}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-icon delete" title="Delete" onclick="return confirm('Are you sure?')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Simple pagination render
+            let pgHtml = `
+                <a href="?page=${pagination.currentPage - 1}" class="pg-btn ${pagination.currentPage <= 1 ? 'disabled' : ''}" onclick="event.preventDefault(); goToPage(${pagination.currentPage - 1})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </a>
+            `;
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                pgHtml += `<a href="?page=${i}" class="pg-btn ${i === pagination.currentPage ? 'active' : ''}" onclick="event.preventDefault(); goToPage(${i})">${i}</a>`;
+            }
+            pgHtml += `
+                <a href="?page=${pagination.currentPage + 1}" class="pg-btn ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}" onclick="event.preventDefault(); goToPage(${pagination.currentPage + 1})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+            `;
+            paginationDiv.innerHTML = pgHtml;
+        };
+
+        window.goToPage = async (page) => {
+            const search = searchInput.value;
+            const status = statusFilter.value;
+            const url = `/admin/events?page=${page}&search=${search}&status=${status}`;
+
+            try {
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = await response.json();
+                renderTable(data.events, data.pagination);
+            } catch (err) {
+                console.error('Fetch error:', err);
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -158,20 +158,39 @@ document.getElementById("eventModal").addEventListener("click", function (e) {
   if (e.target === this) closeModal();
 });
 
-function confirmBooking() {
+async function confirmBooking() {
   if (!currentCard) return;
 
+  const eventId = currentCard.dataset.id;
   const name = currentCard.querySelector(".card-name").textContent;
   const rows = currentCard.querySelectorAll(".card-meta-row");
   const date = rows[0].textContent.trim();
   const location = rows[1].textContent.trim();
 
-  document.getElementById("bookingEventName").textContent = name;
-  document.getElementById("bookingDetail").textContent =
-    date + " · " + location;
+  try {
+    const response = await fetch('/bookings/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId })
+    });
 
-  closeModal();
-  document.getElementById("bookingModal").classList.add("open");
+    const data = await response.json();
+
+    if (data.success) {
+      document.getElementById("bookingEventName").textContent = name;
+      document.getElementById("bookingDetail").textContent =
+        date + " · " + location + " (Ref: " + data.referenceNumber + ")";
+      
+      closeModal();
+      document.getElementById("bookingModal").classList.add("open");
+    } else {
+      alert(data.message || 'Booking failed');
+      closeModal();
+    }
+  } catch (err) {
+    console.error('Booking Error:', err);
+    alert('Something went wrong. Please try again.');
+  }
 }
 
 function closeBooking() {
