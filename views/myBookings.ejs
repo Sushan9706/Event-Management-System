@@ -17,6 +17,7 @@
             <nav class="nav-links">
                 <a href="/events">Events</a>
                 <a href="/bookings/my-bookings" class="active">My Bookings</a>
+                <button class="nav-link-btn" type="button">Profile</button>
             </nav>
             <div class="nav-actions">
                 <button class="icon-btn" title="Search">
@@ -44,10 +45,26 @@
                 <button class="tab-btn active" type="button" data-tab="confirmed">Confirmed</button>
                 <button class="tab-btn" type="button" data-tab="cancelled">Cancelled</button>
             </div>
-            <button class="filter-btn" type="button">
+            <button class="filter-btn" type="button" id="filterToggle" aria-expanded="false" aria-controls="dateFilterPanel">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>
                 Filter by date
             </button>
+        </div>
+        <div class="date-filter-panel" id="dateFilterPanel" hidden>
+            <div class="date-filter-fields">
+                <div class="date-field">
+                    <span class="date-label">From</span>
+                    <input type="date" id="filterStart">
+                </div>
+                <div class="date-field">
+                    <span class="date-label">To</span>
+                    <input type="date" id="filterEnd">
+                </div>
+            </div>
+            <div class="date-filter-actions">
+                <button class="filter-apply" type="button">Apply</button>
+                <button class="filter-clear" type="button">Clear</button>
+            </div>
         </div>
 
         <% if (typeof error !== 'undefined' && error.length > 0) { %>
@@ -62,15 +79,31 @@
                 <a href="/events" class="btn-browse">Browse Events</a>
             </div>
         <% } else { %>
-            <% const confirmedBookings = bookings.filter(b => b.status === 'confirmed'); %>
-            <% const cancelledBookings = bookings.filter(b => b.status === 'cancelled'); %>
+            <% const normalizeStatus = (status) => (status || '').toString().trim().toLowerCase(); %>
+            <% const toLocalISO = (dateObj) => {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            }; %>
+            <% const confirmedBookings = bookings.filter(b => normalizeStatus(b.status) === 'confirmed' && b.event); %>
+            <% const cancelledBookings = bookings.filter(b => ['cancelled', 'canceled'].includes(normalizeStatus(b.status)) && b.event); %>
 
             <div class="bookings-list is-active" data-status="confirmed">
                 <% if (confirmedBookings.length === 0) { %>
                     <div class="empty-inline">No confirmed bookings.</div>
                 <% } %>
-                <% confirmedBookings.forEach(booking => { %>
-                <div class="booking-row">
+                <div class="empty-inline empty-inline--filtered" hidden>No bookings match the selected date range.</div>
+                <% confirmedBookings.forEach(booking => {
+                    if (!booking.event) { return; }
+                    const eventDateObj = booking.event && booking.event.date ? new Date(booking.event.date) : null;
+                    const eventDateValid = eventDateObj && !isNaN(eventDateObj.getTime());
+                    const eventDateISO = eventDateValid ? toLocalISO(eventDateObj) : '';
+                    const eventDateLabel = eventDateValid
+                        ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'TBA';
+                %>
+                <div class="booking-row" data-status="<%= (booking.status || '').toLowerCase() %>" data-date="<%= eventDateISO %>">
                     <div class="row-media">
                         <% if (booking.event && booking.event.image) { %>
                             <img src="<%= booking.event.image %>" alt="<%= booking.event ? booking.event.name : 'Event' %>">
@@ -91,9 +124,7 @@
                     <div class="row-block">
                         <span class="row-label">Date &amp; Location</span>
                         <% if (booking.event) { %>
-                            <span class="row-title">
-                                <%= new Date(booking.event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                            </span>
+                            <span class="row-title"><%= eventDateLabel %></span>
                             <span class="row-subtext"><%= booking.event.location || 'TBA' %></span>
                         <% } else { %>
                             <span class="row-title">TBA</span>
@@ -111,8 +142,17 @@
                 <% if (cancelledBookings.length === 0) { %>
                     <div class="empty-inline">No cancelled bookings.</div>
                 <% } %>
-                <% cancelledBookings.forEach(booking => { %>
-                <div class="booking-row">
+                <div class="empty-inline empty-inline--filtered" hidden>No bookings match the selected date range.</div>
+                <% cancelledBookings.forEach(booking => {
+                    if (!booking.event) { return; }
+                    const eventDateObj = booking.event && booking.event.date ? new Date(booking.event.date) : null;
+                    const eventDateValid = eventDateObj && !isNaN(eventDateObj.getTime());
+                    const eventDateISO = eventDateValid ? toLocalISO(eventDateObj) : '';
+                    const eventDateLabel = eventDateValid
+                        ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'TBA';
+                %>
+                <div class="booking-row" data-status="<%= (booking.status || '').toLowerCase() %>" data-date="<%= eventDateISO %>">
                     <div class="row-media">
                         <% if (booking.event && booking.event.image) { %>
                             <img src="<%= booking.event.image %>" alt="<%= booking.event ? booking.event.name : 'Event' %>">
@@ -133,9 +173,7 @@
                     <div class="row-block">
                         <span class="row-label">Date &amp; Location</span>
                         <% if (booking.event) { %>
-                            <span class="row-title">
-                                <%= new Date(booking.event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                            </span>
+                            <span class="row-title"><%= eventDateLabel %></span>
                             <span class="row-subtext"><%= booking.event.location || 'TBA' %></span>
                         <% } else { %>
                             <span class="row-title">TBA</span>
@@ -143,7 +181,7 @@
                         <% } %>
                     </div>
                     <div class="row-actions">
-                        <a href="/bookings/manage/<%= booking._id %>" class="btn-manage">Manage</a>
+                        <a href="/bookings/manage/<%= booking._id %>" class="btn-manage">View</a>
                     </div>
                 </div>
                 <% }) %>
@@ -165,19 +203,124 @@
         (function () {
             const tabs = document.querySelectorAll('.tab-btn');
             const lists = document.querySelectorAll('.bookings-list');
+            const filterToggle = document.getElementById('filterToggle');
+            const filterPanel = document.getElementById('dateFilterPanel');
+            const startInput = document.getElementById('filterStart');
+            const endInput = document.getElementById('filterEnd');
+            const applyBtn = document.querySelector('.filter-apply');
+            const clearBtn = document.querySelector('.filter-clear');
+
+            function normalizeRange(startVal, endVal) {
+                if (startVal && endVal && startVal > endVal) {
+                    return [endVal, startVal];
+                }
+                return [startVal, endVal];
+            }
 
             function setActive(status) {
+                if (!status) return;
                 tabs.forEach(tab => {
                     tab.classList.toggle('active', tab.dataset.tab === status);
                 });
                 lists.forEach(list => {
                     list.classList.toggle('is-active', list.dataset.status === status);
                 });
+                applyFilters();
+            }
+
+            function applyFilters() {
+                const activeList = document.querySelector('.bookings-list.is-active') || lists[0];
+                if (!activeList) return;
+
+                let startVal = startInput ? startInput.value : '';
+                let endVal = endInput ? endInput.value : '';
+                [startVal, endVal] = normalizeRange(startVal, endVal);
+
+                if (startInput && startVal !== startInput.value) startInput.value = startVal;
+                if (endInput && endVal !== endInput.value) endInput.value = endVal;
+
+                const filterActive = Boolean(startVal || endVal);
+                const rows = activeList.querySelectorAll('.booking-row');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const rowDate = row.dataset.date || '';
+                    let visible = true;
+
+                    if (filterActive) {
+                        if (!rowDate) visible = false;
+                        if (startVal && rowDate < startVal) visible = false;
+                        if (endVal && rowDate > endVal) visible = false;
+                    }
+
+                    row.hidden = !visible;
+                    if (visible) visibleCount += 1;
+                });
+
+                const filteredEmpty = activeList.querySelector('.empty-inline--filtered');
+                if (filteredEmpty) {
+                    const shouldShow = filterActive && rows.length > 0 && visibleCount === 0;
+                    filteredEmpty.hidden = !shouldShow;
+                }
+
+                if (filterToggle) {
+                    filterToggle.classList.toggle('filter-btn--active', filterActive);
+                }
+            }
+
+            function toggleFilterPanel(force) {
+                if (!filterPanel || !filterToggle) return;
+                const open = typeof force === 'boolean' ? force : filterPanel.hasAttribute('hidden');
+                if (open) {
+                    filterPanel.removeAttribute('hidden');
+                    filterToggle.setAttribute('aria-expanded', 'true');
+                } else {
+                    filterPanel.setAttribute('hidden', '');
+                    filterToggle.setAttribute('aria-expanded', 'false');
+                }
             }
 
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => setActive(tab.dataset.tab));
             });
+
+            if (filterToggle) {
+                filterToggle.addEventListener('click', () => toggleFilterPanel());
+            }
+
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    applyFilters();
+                    toggleFilterPanel(false);
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (startInput) startInput.value = '';
+                    if (endInput) endInput.value = '';
+                    applyFilters();
+                    toggleFilterPanel(false);
+                });
+            }
+
+            if (startInput) startInput.addEventListener('change', applyFilters);
+            if (endInput) endInput.addEventListener('change', applyFilters);
+
+            document.addEventListener('click', (e) => {
+                if (!filterPanel || filterPanel.hasAttribute('hidden')) return;
+                if (filterPanel.contains(e.target) || (filterToggle && filterToggle.contains(e.target))) return;
+                toggleFilterPanel(false);
+            });
+
+            const initialTab = document.querySelector('.tab-btn.active');
+            if (initialTab) {
+                setActive(initialTab.dataset.tab);
+            } else if (tabs[0]) {
+                setActive(tabs[0].dataset.tab);
+            } else {
+                applyFilters();
+            }
         })();
     </script>
 

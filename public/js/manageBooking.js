@@ -120,6 +120,15 @@ async function confirmCancel(id) {
                 badge.className = 'status-badge status-cancelled';
             }
 
+            // Disable download button for cancelled bookings
+            const downloadBtn = document.querySelector('.btn-download');
+            if (downloadBtn) {
+                downloadBtn.disabled = true;
+                downloadBtn.classList.add('btn-download--disabled');
+                downloadBtn.setAttribute('aria-disabled', 'true');
+                downloadBtn.removeAttribute('onclick');
+            }
+
             // Remove cancel button and show cancelled notice
             const cancelSection = document.querySelector('.cancel-section');
             if (cancelSection) {
