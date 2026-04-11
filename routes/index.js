@@ -8,8 +8,10 @@ const eventModel = require('../models/event');
 const mongoose = require('mongoose');
 
 // --- PUBLIC / GUEST ROUTES ---
-router.get('/', redirectIfLoggedIn, userController.getGuestDashboard);
-router.get("/guest", (req, res) => res.render("guest"));
+router.get('/', (req, res) => {
+    res.redirect('/guest');
+});
+router.get("/guest", userController.getGuestDashboard);
 router.get("/event", async (req, res) => {
     try {
         let event = null;
@@ -51,7 +53,7 @@ router.post(
 router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
 router.get("/bookings/manage/:bookingId", isLoggedIn, bookingController.getManageBooking);
 
-router.get("/catalog", isLoggedIn, userController.getCatalog);
+router.get("/catalog", userController.getCatalog);
 
 
 router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('avatar'), userController.updateAvatar);

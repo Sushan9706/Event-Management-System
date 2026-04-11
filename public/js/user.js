@@ -31,19 +31,19 @@
     overlay?.addEventListener("click", () => toggleSidebar(false));
 
     // --- 3. NOTIFICATION DROPDOWN ---
-    const bellBtn = document.getElementById("bellBtn");
-    const bellDropdown = document.getElementById("bellDropdown");
+    const notifBtn = document.getElementById("notifBtn");
+    const notifDropdown = document.getElementById("notifDropdown");
 
-    bellBtn?.addEventListener("click", (e) => {
+    notifBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (bellDropdown) {
-        const isHidden = bellDropdown.style.display === "none" || bellDropdown.style.display === "";
-        bellDropdown.style.display = isHidden ? "block" : "none";
-      }
+      notifDropdown?.classList.toggle("open");
     });
 
-    document.addEventListener("click", () => {
-      if (bellDropdown) bellDropdown.style.display = "none";
+    document.addEventListener("click", (e) => {
+      if (!notifDropdown) return;
+      if (!notifDropdown.contains(e.target) && !notifBtn?.contains(e.target)) {
+        notifDropdown.classList.remove("open");
+      }
     });
 
     // --- 4. BOOKING CANCELLATION ---

@@ -83,19 +83,47 @@ exports.getLogin = (req, res) => {
 exports.postLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await userModel.findOne({ email });
+        const identifier = (email || "").trim().toLowerCase();
 
-        if (!user) {
-            return res.render('login', { 
-                error: 'Invalid Credentials',
-                formData: { email }
+        if (!identifier || !password) {
+            return res.render('login', {
+                error: 'Please provide both email/username and password.',
+                formData: { email: identifier }
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const query = identifier.includes("@")
+            ? { email: identifier }
+            : { username: identifier };
+
+        const user = await userModel.findOne(query);
+
+        if (!user) {
+            return res.render('login', {
+                error: 'Invalid Credentials',
+                formData: { email: identifier }
+            });
+        }
+
+        const looksHashed = typeof user.password === "string" && user.password.startsWith("$2");
+        let isMatch = false;
+
+        if (looksHashed) {
+            isMatch = await bcrypt.compare(password, user.password);
+        } else {
+            // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
+            isMatch = password === user.password;
+            if (isMatch) {
+                const salt = await bcrypt.genSalt(10);
+                const hash = await bcrypt.hash(password, salt);
+                user.password = hash;
+                await user.save();
+            }
+        }
+
         if (isMatch) {
             const token = jwt.sign(
-                { email: user.email, userId: user._id, role: user.role }, 
+                { email: user.email, userId: user._id, role: user.role },
                 "shhhhhhhhh"
             );
             res.cookie("token", token);
@@ -104,14 +132,15 @@ exports.postLogin = async (req, res) => {
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
             }
-            return res.redirect('/user'); // Regular user dashboard
-        } else {
-            return res.render('login', { 
-                error: 'Invalid Credentials',
-                formData: { email }
-            });
+            return res.redirect('/catalog'); // Regular user landing page
         }
+
+        return res.render('login', {
+            error: 'Invalid Credentials',
+            formData: { email: identifier }
+        });
     } catch (err) {
+        console.error("Login Error:", err);
         res.redirect('/login');
     }
 };
@@ -334,12 +363,27 @@ exports.getGuestDashboard = async (req, res) => {
 exports.getCatalog = async (req, res) => {
     try {
         const events = await eventModel.find({}).populate('categoryId');
-        
-        // Fetch the full user document to get the profile image and username
-        const fullUser = await userModel.findById(req.user.userId);
 
-        res.render("catalog", { 
-            events: events, 
+        // Fetch the full user document if logged in; otherwise allow guest view
+        let fullUser = null;
+        if (!req.user) {
+            const token = req.cookies && req.cookies.token;
+            if (token) {
+                try {
+                    const jwt = require("jsonwebtoken");
+                    req.user = jwt.verify(token, "shhhhhhhhh");
+                } catch (err) {
+                    req.user = null;
+                }
+            }
+        }
+
+        if (req.user && req.user.userId) {
+            fullUser = await userModel.findById(req.user.userId);
+        }
+
+        res.render("catalog", {
+            events: events,
             user: fullUser // Pass the full database object instead of just req.user
         });
     } catch (err) {

@@ -51,6 +51,12 @@
       const eventDetailsLink = event && event._id ? `/event?eventId=${event._id}` : "/catalog";
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+      const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      };
     %>
 
     <header class="navbar">
@@ -77,10 +83,12 @@
                     const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
                     const eventTitle = note.eventName || 'Event';
                     const countLabel = formatTicketCount(note.ticketCount || 1);
+                    const timeLabel = formatNotifTime(note.createdAt);
                 %>
                   <div class="notif-item">
                     <p class="notif-title"><%= title %></p>
                     <p class="notif-sub"><%= eventTitle %> · <%= countLabel %></p>
+                    <p class="notif-time"><%= timeLabel %></p>
                   </div>
                 <% }) %>
               <% } %>
@@ -268,7 +276,7 @@
 
     <div class="print-tickets" aria-hidden="true">
       <% ticketList.forEach(function(ticketCode, index) { %>
-        <section class="print-ticket">
+        <section class="print-ticket" data-ticket-index="<%= index %>" data-ticket-code="<%= ticketCode %>">
           <div class="print-ticket-header">
             <div>
               <p class="print-ticket-label">EMS EVENT TICKET</p>
@@ -416,12 +424,18 @@
       const confirmModal = document.getElementById('confirmModal');
       const confirmCancel = document.getElementById('confirmCancel');
       const confirmSave = document.getElementById('confirmSave');
+      const printTickets = Array.from(document.querySelectorAll('.print-ticket'));
+      const clearPrintSelection = () => {
+        document.body.classList.remove('print-selection');
+        printTickets.forEach((ticket) => ticket.classList.remove('print-selected'));
+      };
       const closeModal = () => {
         confirmModal.classList.remove('open');
         confirmModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
       };
       const openModal = () => {
+        clearPrintSelection();
         confirmModal.classList.add('open');
         confirmModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
@@ -433,6 +447,9 @@
           window.print();
           closeModal();
         });
+      }
+      if (window && window.addEventListener) {
+        window.addEventListener('afterprint', clearPrintSelection);
       }
       if (confirmModal) {
         confirmModal.addEventListener('click', (event) => {

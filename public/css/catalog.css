@@ -24,6 +24,8 @@ body {
   font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 a {
@@ -41,7 +43,7 @@ button {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 52px;
+  height: 60px;
 }
 .nav-inner {
   max-width: 1500px;
@@ -167,6 +169,8 @@ button {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
   z-index: 400;
   padding: 16px;
+  max-height: 260px;
+  overflow-y: auto;
 }
 .notif-dropdown.open {
   display: block;
@@ -194,6 +198,17 @@ button {
   margin-bottom: 2px;
 }
 .notif-item-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.notif-time {
+  font-size: 10px;
+  color: #9aa0a6;
+  margin-top: 3px;
+}
+
+.notif-empty {
   font-size: 11px;
   color: var(--muted);
 }
@@ -701,6 +716,8 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  margin-top: auto;
 }
 .footer-copy {
   font-size: 10px;

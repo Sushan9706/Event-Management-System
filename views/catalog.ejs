@@ -54,20 +54,34 @@
   </div>
 </header>
 
+    <%
+      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+      const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      };
+    %>
     <div class="notif-dropdown" id="notifDropdown">
       <p class="notif-title">NOTIFICATIONS</p>
-      <div class="notif-item">
-        <p class="notif-item-title">Booking Confirmed</p>
-        <p class="notif-item-sub">Modernist Expo 2026 · #EMS-29402</p>
-      </div>
-      <div class="notif-item">
-        <p class="notif-item-title">Event Reminder</p>
-        <p class="notif-item-sub">Global AI Summit starts in 3 days</p>
-      </div>
-      <div class="notif-item">
-        <p class="notif-item-title">New Event Added</p>
-        <p class="notif-item-sub">The Artisan's Table: Winter Solstice</p>
-      </div>
+      <% if (notifications.length === 0) { %>
+        <p class="notif-empty">No new notifications</p>
+      <% } else { %>
+        <% notifications.forEach(function(note) { 
+            const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
+            const eventTitle = note.eventName || 'Event';
+            const countLabel = formatTicketCount(note.ticketCount || 1);
+            const timeLabel = formatNotifTime(note.createdAt);
+        %>
+          <div class="notif-item">
+            <p class="notif-item-title"><%= title %></p>
+            <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
+            <p class="notif-time"><%= timeLabel %></p>
+          </div>
+        <% }) %>
+      <% } %>
     </div>
 
     <div class="search-overlay" id="searchOverlay">

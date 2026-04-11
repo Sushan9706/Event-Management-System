@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
         },
         eventId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "event"
+            ref: "Event"
         },
         eventName: {
             type: String,
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
     }],
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "event"
+        ref: "Event"
     }]
 }, {
     timestamps: true

@@ -44,8 +44,8 @@ body {
 .nav-inner {
   max-width: 1500px;
   margin: 0 auto;
-  padding: 0 24px;
-  height: 52px;
+  padding: 0 32px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
