@@ -30,10 +30,10 @@ const userSchema = new mongoose.Schema({
     }, 
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "event"
+        ref: "Event"
     }]
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model("User", userSchema);

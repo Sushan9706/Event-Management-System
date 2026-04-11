@@ -1,18 +1,21 @@
+// Check if user is logged in
 const jwt = require("jsonwebtoken");
 
-// Check if user is logged in
 exports.isLoggedIn = (req, res, next) => {
-    if (!req.cookies || !req.cookies.token) {
-        return res.redirect("/login");
-    }
-    try {
-        let data = jwt.verify(req.cookies.token, "shhhhhhhhh");
-        req.user = data;
-        next();
-    } catch (err) {
-        res.cookie("token", ""); 
-        return res.redirect("/login");
-    }
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.redirect("/login");
+  }
+
+  try {
+    const user = jwt.verify(token, "shhhhhhhhh");
+    req.user = user;
+    res.locals.user = user;
+    next();
+  } catch (err) {
+    return res.redirect("/login");
+  }
 };
 
 // NEW: Check if the logged-in user is an admin
@@ -27,22 +30,16 @@ exports.isAdmin = (req, res, next) => {
 };
 
 exports.redirectIfLoggedIn = (req, res, next) => {
-    const token = req.cookies.token;
+  const token = req.cookies.token;
 
-    if (!token) {
-        return next(); // Not logged in → stay on guest page
-    }
-
+  if (token) {
     try {
-        const decoded = jwt.verify(token, "shhhhhhhhh");
-
-        // Redirect based on role
-        if (decoded.role === "admin") {
-            return res.redirect("/admin/dashboard");
-        }
-
-        return res.redirect("/user");
+      jwt.verify(token, "shhhhhhhhh");
+      return res.redirect("/user"); // ONLY THIS
     } catch (err) {
-        return next(); // Invalid token → treat as guest
+      return next();
     }
+  }
+
+  next();
 };

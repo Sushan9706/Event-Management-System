@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const path = require("path");
 require("dotenv").config();
+const eventRoutes = require('./routes/eventRoutes');
 
 // 🔐 your additions
 const cookieParser = require("cookie-parser");
@@ -23,6 +24,7 @@ app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 
 // 🔐 auth-related middlewares (your part)
 app.use(cookieParser());
@@ -50,6 +52,7 @@ app.use((req, res, next) => {
     } else {
         res.locals.user = null;
     }
+    console.log("TOKEN:", req.cookies.token);
     res.locals.error = req.flash('error');
     res.locals.success = req.flash('success');
     next();
@@ -58,6 +61,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', indexRouter);
 app.use('/admin', adminRoutes);
+app.use('/event', eventRoutes);
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
