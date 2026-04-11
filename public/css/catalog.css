@@ -65,31 +65,47 @@ button {
   left: 50%;
   transform: translateX(-50%);
 }
+
 .nav-links a {
   font-size: 13px;
   font-weight: 500;
   color: var(--muted);
-  padding-bottom: 2px;
-  transition: color 0.2s;
+  padding: 4px 0;
+  transition: color 0.3s ease;
   position: relative;
+  display: inline-block;
 }
-.nav-links a:hover {
-  color: var(--dark);
-}
-.nav-links a.active {
-  color: var(--dark);
-  font-weight: 600;
-}
-.nav-links a.active::after {
+
+/* The Underline - Hidden by default (scaleX 0) */
+.nav-links a::after {
   content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
-  right: 0;
+  width: 100%;
   height: 2px;
-  background: var(--dark);
-  border-radius: 2px;
+  background: var(--dark); /* Or var(--blue) if you prefer the dashboard color */
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
 }
+
+/* Hover Effect: Scale to 1 */
+.nav-links a:hover {
+  color: var(--dark);
+}
+
+.nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Active State: Always show underline */
+.nav-links a.active {
+  color: var(--dark);
+  font-weight: 600;
+}
+
 .nav-right {
   display: flex;
   align-items: center;

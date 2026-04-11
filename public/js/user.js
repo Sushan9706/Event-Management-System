@@ -6,55 +6,60 @@ document.addEventListener("DOMContentLoaded", () => {
     const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
     
     cards.forEach((card) => {
-      const title = card.querySelector(".ecard-title")?.textContent.toLowerCase() || "";
+      const title = card.querySelector(".ecard-title")?.textContent.toLowerCase() || 
+                    card.querySelector(".ecard-title--sm")?.textContent.toLowerCase() || "";
       const isVisible = title.includes(search);
       card.style.display = isVisible ? "block" : "none";
     });
   }
 
-  ["searchInput"].forEach(id => {
-    document.getElementById(id)?.addEventListener("input", filterEvents);
-  });
+  document.getElementById("searchInput")?.addEventListener("input", filterEvents);
 
   // --- 2. SIDEBAR TOGGLE ---
-  const avatar = document.querySelector(".avatar-circle");
+  const avatar = document.getElementById("profileTrigger") || document.querySelector(".avatar-circle");
   const sidebar = document.getElementById("avatarSidebar");
   const overlay = document.getElementById("sidebarOverlay");
 
   const toggleSidebar = (state) => {
-    sidebar?.classList.toggle("open", state);
-    overlay?.classList.toggle("open", state);
+    if (sidebar && overlay) {
+      sidebar.classList.toggle("open", state);
+      overlay.classList.toggle("open", state);
+    }
   };
 
   avatar?.addEventListener("click", () => toggleSidebar(true));
   overlay?.addEventListener("click", () => toggleSidebar(false));
 
-  
-  // --- 4. NOTIFICATION DROPDOWN ---
+  // --- 3. NOTIFICATION DROPDOWN ---
   const bellBtn = document.getElementById("bellBtn");
   const bellDropdown = document.getElementById("bellDropdown");
 
   bellBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
-    const isHidden = bellDropdown.style.display === "none" || bellDropdown.style.display === "";
-    bellDropdown.style.display = isHidden ? "block" : "none";
+    if (bellDropdown) {
+      const isHidden = bellDropdown.style.display === "none" || bellDropdown.style.display === "";
+      bellDropdown.style.display = isHidden ? "block" : "none";
+    }
   });
 
   document.addEventListener("click", () => {
     if (bellDropdown) bellDropdown.style.display = "none";
   });
 
-  // --- 5. BOOKING CANCELLATION ---
+  // --- 4. BOOKING CANCELLATION ---
   document.querySelectorAll('.cancel-trigger').forEach(btn => {
     btn.addEventListener('click', async (e) => {
         const eventId = btn.getAttribute('data-id');
         
         if(confirm("Are you sure you want to cancel this booking?")) {
-            const response = await fetch(`/bookings/cancel/${eventId}`, { method: 'POST' });
-            const data = await response.json();
-            
-            if(data.success) {
-                window.location.reload();
+            try {
+                const response = await fetch(`/bookings/cancel/${eventId}`, { method: 'POST' });
+                const data = await response.json();
+                if(data.success) {
+                    window.location.reload();
+                }
+            } catch (err) {
+                console.error("Cancellation failed", err);
             }
         }
     });

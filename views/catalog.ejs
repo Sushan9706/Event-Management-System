@@ -11,80 +11,63 @@
     <link rel="stylesheet" href="/css/catalog.css" />
   </head>
   <body>
-    <%
-      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
-      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
-    %>
     <header class="navbar">
-      <div class="nav-inner">
-        <div class="nav-logo">EMS</div>
-        <nav class="nav-links">
-          <a href="/user">Home</a>
-          <a href="/catalog" class="active">Events</a>
-          <a href="/bookings">My Bookings</a>
-        </nav>
-        <div class="nav-right">
-          <button
-            class="icon-btn"
-            id="searchBtn"
-            aria-label="Search"
-            style="display: none"
-          >
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <span class="notif-dot"></span>
-          </button>
-          <div class="avatar-btn" id="avatarBtn">
-            <img
-              src="https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80"
-              alt="User"
-              onerror="this.style.background='#ccc'"
-            />
-          </div>
-        </div>
+  <div class="nav-inner">
+    <div class="nav-logo">EMS</div>
+    <nav class="nav-links">
+  <a href="/user" class="nav-item">Home</a>
+  <a href="/catalog" class="nav-item active">Events</a>
+  <a href="/bookings" class="nav-item">My Bookings</a>
+</nav>
+    <div class="nav-right">
+      <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span class="notif-dot"></span>
+      </button>
+
+      <div class="profile-menu-container" style="position: relative;">
+        <div class="avatar-btn" id="avatarBtn">
+  <img 
+    src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>" 
+    alt="User avatar" 
+  />
+</div>
+
+        <aside class="avatar-sidebar" id="avatarSidebar">
+    <div style="padding: 10px 22px; font-weight: 700; font-size: 12px; color: var(--dark);">
+        Hi, <%= user ? user.username : 'Guest' %>
+    </div>
+    <div class="sidebar-divider"></div>
+    
+    <a href="/profile" class="sidebar-link">
+        My Profile
+    </a>
+    <div class="sidebar-divider"></div>
+    <a href="/logout" class="sidebar-logout">
+        Log Out
+    </a>
+</aside>
       </div>
-    </header>
+    </div>
+  </div>
+</header>
 
     <div class="notif-dropdown" id="notifDropdown">
       <p class="notif-title">NOTIFICATIONS</p>
-      <% if (notifications.length === 0) { %>
-        <div class="notif-item">
-          <p class="notif-item-sub">No new notifications</p>
-        </div>
-      <% } else { %>
-        <% notifications.forEach(function(note) { 
-            const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
-            const eventTitle = note.eventName || 'Event';
-            const countLabel = formatTicketCount(note.ticketCount || 1);
-        %>
-          <div class="notif-item">
-            <p class="notif-item-title"><%= title %></p>
-            <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
-          </div>
-        <% }) %>
-      <% } %>
+      <div class="notif-item">
+        <p class="notif-item-title">Booking Confirmed</p>
+        <p class="notif-item-sub">Modernist Expo 2026 · #EMS-29402</p>
+      </div>
+      <div class="notif-item">
+        <p class="notif-item-title">Event Reminder</p>
+        <p class="notif-item-sub">Global AI Summit starts in 3 days</p>
+      </div>
+      <div class="notif-item">
+        <p class="notif-item-title">New Event Added</p>
+        <p class="notif-item-sub">The Artisan's Table: Winter Solstice</p>
+      </div>
     </div>
 
     <div class="search-overlay" id="searchOverlay">
