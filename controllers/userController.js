@@ -176,9 +176,13 @@ exports.getGuestDashboard = async (req, res) => {
 exports.getCatalog = async (req, res) => {
     try {
         const events = await eventModel.find({}).populate('categoryId');
+        
+        // Fetch the full user document to get the profile image and username
+        const fullUser = await userModel.findById(req.user.userId);
+
         res.render("catalog", { 
             events: events, 
-            user: req.user 
+            user: fullUser // Pass the full database object instead of just req.user
         });
     } catch (err) {
         console.error("Error loading catalog:", err);
