@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const path = require("path");
 require("dotenv").config();
+const eventRoutes = require('./routes/eventRoutes');
 
 // 🔐 your additions
 const cookieParser = require("cookie-parser");
@@ -94,6 +95,7 @@ app.use(async (req, res, next) => {
 // Routes
 app.use('/', indexRouter);
 app.use('/admin', adminRoutes);
+app.use('/event', eventRoutes);
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
