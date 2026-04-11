@@ -7,7 +7,6 @@ const upload = require('../middlewares/upload');
 // --- PUBLIC / GUEST ROUTES ---
 router.get('/', redirectIfLoggedIn, userController.getGuestDashboard);
 router.get("/guest", (req, res) => res.render("guest"));
-router.get("/event", (req, res) => res.render("event"));
 
 // --- AUTHENTICATION ROUTES ---
 router.get('/register', userController.getRegister);
