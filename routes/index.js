@@ -3,11 +3,29 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { isLoggedIn, isAdmin, redirectIfLoggedIn } = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
+const bookingController = require('../controllers/bookingController');
+const eventModel = require('../models/event');
+const mongoose = require('mongoose');
 
 // --- PUBLIC / GUEST ROUTES ---
-router.get('/', redirectIfLoggedIn, userController.getGuestDashboard);
-router.get("/guest", (req, res) => res.render("guest"));
-router.get("/event", (req, res) => res.render("event"));
+router.get('/', (req, res) => {
+    res.redirect('/guest');
+});
+router.get("/guest", userController.getGuestDashboard);
+router.get("/event", async (req, res) => {
+    try {
+        let event = null;
+        if (req.query.eventId && mongoose.Types.ObjectId.isValid(req.query.eventId)) {
+            event = await eventModel.findById(req.query.eventId);
+        }
+        if (!event) {
+            event = await eventModel.findOne().sort({ date: 1 });
+        }
+        res.render("event", { event });
+    } catch (err) {
+        res.render("event", { event: null });
+    }
+});
 
 // --- AUTHENTICATION ROUTES ---
 router.get('/register', userController.getRegister);
@@ -32,19 +50,18 @@ router.post(
     userController.updateProfileInfo
 );
 
-router.get("/bookings", isLoggedIn, (req, res) => {
-    res.render("bookings", { user: req.user });
-});
+router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
+router.get("/bookings/manage/:bookingId", isLoggedIn, bookingController.getManageBooking);
 
-router.get("/catalog", isLoggedIn, userController.getCatalog);
+router.get("/catalog", userController.getCatalog);
 
 
 router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('avatar'), userController.updateAvatar);
 
-const bookingController = require('../controllers/bookingController');
 // --- FUNCTIONAL ROUTES ---
 router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
+router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
 router.get('/events/search', userController.searchEvents);
 
 

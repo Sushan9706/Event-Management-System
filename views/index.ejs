@@ -16,8 +16,6 @@
     <div class="nav-inner">
       <span class="logo">EMS</span>
       <nav class="nav-links">
-        <a href="/" class="nav-link active">Events</a>
-        <a href="/login" class="nav-link">My Bookings</a>
         <a href="/login" class="nav-link">Login/Register</a>
         <a href="/login" class="btn-get-started">Get Started</a>
       </nav>
@@ -42,7 +40,8 @@
         </div>
 
         <div class="category-select-wrap" style="padding: 0 15px; border-left: 1px solid #eee;">
-          <select name="category" style="border:none; outline:none; background:transparent; font-family: inherit; color: #666; cursor: pointer;">
+          <select name="category"
+            style="border:none; outline:none; background:transparent; font-family: inherit; color: #666; cursor: pointer;">
             <option value="All">All Categories</option>
             <option value="Music">Music</option>
             <option value="Technology">Technology</option>
@@ -102,8 +101,6 @@
               <div class="card-img-wrap">
                 <img src="<%= event.imagePath || event.image || '/images/default-event.png' %>"
                   alt="<%= event.title || event.eventName || 'Event' %>" />
-
-
 
                 <% if (event.category) { %>
                   <span class="card-tag tag-<%= event.category.toLowerCase() %>">

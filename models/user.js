@@ -28,9 +28,33 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://tinyurl.com/3jjyxzj6"
     }, 
+    notifications: [{
+        type: {
+            type: String,
+            enum: ["booking_confirmed", "booking_cancelled"],
+            required: true
+        },
+        eventId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Event"
+        },
+        eventName: {
+            type: String,
+            trim: true
+        },
+        ticketCount: {
+            type: Number,
+            default: 1,
+            min: 1
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "event"
+        ref: "Event"
     }]
 }, {
     timestamps: true

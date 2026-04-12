@@ -103,41 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.scrollBy({ top: 300, behavior: "smooth" });
   });
 
-  // --- 5. MODAL & BOOKING LOGIC ---
-  let currentCard = null;
-
-  window.openModal = function(btn) {
-    currentCard = btn.closest(".event-card");
-
-    const name = currentCard.querySelector(".card-name").textContent;
-    const tag = currentCard.querySelector(".card-tag").textContent;
-    const tagClass = currentCard.querySelector(".card-tag").className;
-    const rows = currentCard.querySelectorAll(".card-meta-row");
-    const date = rows[0].textContent.trim();
-    const location = rows[1].textContent.trim();
-    const price = currentCard.querySelector(".card-price").textContent;
-    const isFree = currentCard.querySelector(".card-price").classList.contains("free");
-
-    document.getElementById("modalTag").textContent = tag;
-    document.getElementById("modalTag").className = "modal-tag " + tagClass.replace("card-tag ", "");
-    document.getElementById("modalName").textContent = name;
-    document.getElementById("modalDate").textContent = date;
-    document.getElementById("modalLocation").textContent = location;
-    document.getElementById("modalPrice").textContent = price;
-    document.getElementById("modalPrice").className = isFree ? "modal-price free" : "modal-price";
-
-    document.getElementById("eventModal").classList.add("open");
-  };
-
-  window.closeModal = function() {
-    document.getElementById("eventModal").classList.remove("open");
-    currentCard = null;
-  };
-
-  document.getElementById("eventModal")?.addEventListener("click", function (e) {
-    if (e.target === this) closeModal();
-  });
-
   window.confirmBooking = async function() {
     if (!currentCard) return;
 
@@ -178,14 +143,27 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "/user";
   };
 
-  // Card click should also open modal (except when clicking buttons)
-  document.querySelectorAll(".event-card").forEach((card) => {
-    card.addEventListener("click", (e) => {
-      if (!e.target.closest(".btn-details") && !e.target.closest(".btn-book")) {
-        openModal(card.querySelector(".btn-details"));
-      }
-    });
+
+document.querySelectorAll(".btn-details").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation(); // prevent double trigger
+    const card = btn.closest(".event-card");
+    const eventId = card.dataset.id;
+
+    if (eventId) {
+      window.location.href = `/event/${eventId}`;
+    }
   });
+});
+
+document.querySelectorAll(".event-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    const eventId = card.dataset.id;
+    if (eventId) {
+      window.location.href = `/event/${eventId}`;
+    }
+  });
+});
 
   // --- 6. UTILITIES ---
   document.addEventListener("keydown", (e) => {

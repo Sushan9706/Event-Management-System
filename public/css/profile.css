@@ -41,10 +41,10 @@ body {
 nav {
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  height: 58px;
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 40px 0 60px;
+  padding: 0 32px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -181,6 +181,17 @@ nav {
   display: block;
   font-size: 0.72rem;
   color: var(--muted);
+  margin-top: 2px;
+}
+
+.notif-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.notif-time {
+  font-size: 0.68rem;
+  color: #9aa0a6;
   margin-top: 2px;
 }
 

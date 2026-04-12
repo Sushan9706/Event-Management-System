@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const userModel = require("../models/user");
 const eventModel = require("../models/event");
 const categoryModel = require("../models/categoryModel");
+const mongoose = require("mongoose");
 
 exports.getRegister = (req, res) => {
     res.render("register");
@@ -82,19 +83,47 @@ exports.getLogin = (req, res) => {
 exports.postLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await userModel.findOne({ email });
+        const identifier = (email || "").trim().toLowerCase();
 
-        if (!user) {
-            return res.render('login', { 
-                error: 'Invalid Credentials',
-                formData: { email }
+        if (!identifier || !password) {
+            return res.render('login', {
+                error: 'Please provide both email/username and password.',
+                formData: { email: identifier }
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const query = identifier.includes("@")
+            ? { email: identifier }
+            : { username: identifier };
+
+        const user = await userModel.findOne(query);
+
+        if (!user) {
+            return res.render('login', {
+                error: 'Invalid Credentials',
+                formData: { email: identifier }
+            });
+        }
+
+        const looksHashed = typeof user.password === "string" && user.password.startsWith("$2");
+        let isMatch = false;
+
+        if (looksHashed) {
+            isMatch = await bcrypt.compare(password, user.password);
+        } else {
+            // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
+            isMatch = password === user.password;
+            if (isMatch) {
+                const salt = await bcrypt.genSalt(10);
+                const hash = await bcrypt.hash(password, salt);
+                user.password = hash;
+                await user.save();
+            }
+        }
+
         if (isMatch) {
             const token = jwt.sign(
-                { email: user.email, userId: user._id, role: user.role }, 
+                { email: user.email, userId: user._id, role: user.role },
                 "shhhhhhhhh"
             );
             res.cookie("token", token);
@@ -103,14 +132,15 @@ exports.postLogin = async (req, res) => {
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
             }
-            return res.redirect('/user'); // Regular user dashboard
-        } else {
-            return res.render('login', { 
-                error: 'Invalid Credentials',
-                formData: { email }
-            });
+            return res.redirect('/catalog'); // Regular user landing page
         }
+
+        return res.render('login', {
+            error: 'Invalid Credentials',
+            formData: { email: identifier }
+        });
     } catch (err) {
+        console.error("Login Error:", err);
         res.redirect('/login');
     }
 };
@@ -147,18 +177,175 @@ exports.cancelBooking = async (req, res) => {
 
         // 1. Get user to get email (for finding the specific booking)
         const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (!Array.isArray(user.bookedEvents)) {
+            user.bookedEvents = [];
+        }
 
         // 2. Remove from user's bookedEvents array
         user.bookedEvents = user.bookedEvents.filter(id => id.toString() !== eventId);
         await user.save();
 
-        // 3. Remove from Booking collection as well (or update status to cancelled)
+        // 3. Mark bookings as cancelled (keep record for history)
         const bookingModel = require("../models/bookingModel");
-        await bookingModel.deleteMany({ eventId, userEmail: user.email });
+        const activeBookings = await bookingModel.find({
+            eventId,
+            userEmail: user.email,
+            status: { $ne: 'cancelled' }
+        });
+        const totalCancelled = activeBookings.reduce((sum, booking) => {
+            const count = booking.ticketCount || 1;
+            return sum + count;
+        }, 0);
+
+        await bookingModel.updateMany(
+            { eventId, userEmail: user.email, status: { $ne: 'cancelled' } },
+            { $set: { status: 'cancelled' } }
+        );
+
+        if (!Array.isArray(user.notifications)) {
+            user.notifications = [];
+        }
+        if (totalCancelled > 0) {
+            let eventName = "Event";
+            try {
+                const eventDoc = await eventModel.findById(eventId).select("eventName title");
+                if (eventDoc) {
+                    eventName = eventDoc.eventName || eventDoc.title || eventName;
+                }
+            } catch (err) {
+                eventName = eventName;
+            }
+            user.notifications.unshift({
+                type: "booking_cancelled",
+                eventId,
+                eventName,
+                ticketCount: totalCancelled,
+                createdAt: new Date()
+            });
+            if (user.notifications.length > 20) {
+                user.notifications = user.notifications.slice(0, 20);
+            }
+        }
+        await user.save();
 
         res.json({ success: true, message: "Booking cancelled successfully" });
     } catch (err) {
         console.error("Cancel Booking Error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+exports.cancelBookingById = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { cancelCount: cancelCountRaw } = req.body || {};
+        const userId = req.user.userId;
+
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: "Invalid booking." });
+        }
+
+        const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (!Array.isArray(user.bookedEvents)) {
+            user.bookedEvents = [];
+        }
+
+        const bookingModel = require("../models/bookingModel");
+        const booking = await bookingModel.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
+        }
+        if (booking.userEmail !== user.email) {
+            return res.status(403).json({ success: false, message: "Not authorized to cancel this booking" });
+        }
+        if (booking.status === "cancelled") {
+            return res.status(400).json({ success: false, message: "Booking is already cancelled" });
+        }
+
+        const currentCount = Math.max(booking.ticketCount || 1, 1);
+        const normalizedCancel = Math.min(cancelCount, currentCount);
+
+        let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+        const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+        if (ticketCodes.length < currentCount) {
+            for (let i = ticketCodes.length; i < currentCount; i += 1) {
+                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+                ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
+            }
+            booking.referenceNumber = referenceNumber;
+            booking.bookingRef = booking.bookingRef || referenceNumber;
+        }
+
+        const isFullCancel = normalizedCancel >= currentCount;
+
+        if (isFullCancel) {
+            booking.status = "cancelled";
+        } else {
+            const remainingCount = currentCount - normalizedCancel;
+            booking.ticketCount = remainingCount;
+            booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
+            booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+        }
+
+        await booking.save();
+
+        if (!Array.isArray(user.notifications)) {
+            user.notifications = [];
+        }
+        let eventName = "Event";
+        try {
+            const eventDoc = await eventModel.findById(booking.eventId).select("eventName title");
+            if (eventDoc) {
+                eventName = eventDoc.eventName || eventDoc.title || eventName;
+            }
+        } catch (err) {
+            eventName = eventName;
+        }
+        user.notifications.unshift({
+            type: "booking_cancelled",
+            eventId: booking.eventId,
+            eventName,
+            ticketCount: normalizedCancel,
+            createdAt: new Date()
+        });
+        if (user.notifications.length > 20) {
+            user.notifications = user.notifications.slice(0, 20);
+        }
+
+        if (isFullCancel) {
+            const remainingActive = await bookingModel.countDocuments({
+                eventId: booking.eventId,
+                userEmail: user.email,
+                status: { $ne: "cancelled" }
+            });
+            if (remainingActive === 0) {
+                user.bookedEvents = user.bookedEvents.filter(
+                    id => id.toString() !== booking.eventId.toString()
+                );
+                await user.save();
+            } else {
+                await user.save();
+            }
+        } else {
+            await user.save();
+        }
+
+        res.json({
+            success: true,
+            message: isFullCancel ? "Booking cancelled successfully" : "Tickets cancelled successfully",
+            status: booking.status,
+            remainingTickets: isFullCancel ? 0 : booking.ticketCount
+        });
+    } catch (err) {
+        console.error("Cancel Booking (partial) Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -176,12 +363,27 @@ exports.getGuestDashboard = async (req, res) => {
 exports.getCatalog = async (req, res) => {
     try {
         const events = await eventModel.find({}).populate('categoryId');
-        
-        // Fetch the full user document to get the profile image and username
-        const fullUser = await userModel.findById(req.user.userId);
 
-        res.render("catalog", { 
-            events: events, 
+        // Fetch the full user document if logged in; otherwise allow guest view
+        let fullUser = null;
+        if (!req.user) {
+            const token = req.cookies && req.cookies.token;
+            if (token) {
+                try {
+                    const jwt = require("jsonwebtoken");
+                    req.user = jwt.verify(token, "shhhhhhhhh");
+                } catch (err) {
+                    req.user = null;
+                }
+            }
+        }
+
+        if (req.user && req.user.userId) {
+            fullUser = await userModel.findById(req.user.userId);
+        }
+
+        res.render("catalog", {
+            events: events,
             user: fullUser // Pass the full database object instead of just req.user
         });
     } catch (err) {

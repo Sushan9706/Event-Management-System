@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const path = require("path");
 require("dotenv").config();
+const eventRoutes = require('./routes/eventRoutes');
 
 // 🔐 your additions
 const cookieParser = require("cookie-parser");
@@ -37,19 +38,55 @@ app.use(
 
 app.use(flash());
 
-// make user and flash available in views
-app.use((req, res, next) => {
+// make user, notifications, and flash available in views
+app.use(async (req, res, next) => {
     const jwt = require('jsonwebtoken');
     const token = req.cookies.token;
+    res.locals.user = null;
     if (token) {
         try {
             res.locals.user = jwt.verify(token, "shhhhhhhhh");
         } catch (err) {
             res.locals.user = null;
         }
-    } else {
-        res.locals.user = null;
     }
+
+    res.locals.notifications = [];
+    if (res.locals.user && res.locals.user.userId) {
+        try {
+            const User = require("./models/user");
+            const Booking = require("./models/bookingModel");
+            const userDoc = await User.findById(res.locals.user.userId).select("notifications email");
+            if (userDoc && Array.isArray(userDoc.notifications) && userDoc.notifications.length > 0) {
+                res.locals.notifications = userDoc.notifications
+                    .slice()
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .slice(0, 5);
+            } else if (userDoc && userDoc.email) {
+                const recentBookings = await Booking.find({ userEmail: userDoc.email })
+                    .populate("eventId")
+                    .sort({ createdAt: -1 })
+                    .limit(5);
+                const fallbackNotifications = recentBookings.map(booking => ({
+                    type: booking.status === "cancelled" ? "booking_cancelled" : "booking_confirmed",
+                    eventId: booking.eventId ? booking.eventId._id : booking.eventId,
+                    eventName: booking.eventId
+                        ? (booking.eventId.eventName || booking.eventId.title || "Event")
+                        : "Event",
+                    ticketCount: booking.ticketCount || 1,
+                    createdAt: booking.createdAt
+                }));
+                res.locals.notifications = fallbackNotifications;
+                if (fallbackNotifications.length > 0) {
+                    userDoc.notifications = fallbackNotifications;
+                    await userDoc.save();
+                }
+            }
+        } catch (err) {
+            res.locals.notifications = [];
+        }
+    }
+
     res.locals.error = req.flash('error');
     res.locals.success = req.flash('success');
     next();
@@ -58,6 +95,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', indexRouter);
 app.use('/admin', adminRoutes);
+app.use('/event', eventRoutes);
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
@@ -69,5 +107,3 @@ app.use((req, res) => {
 });
 
 module.exports = app;
-
-

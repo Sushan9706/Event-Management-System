@@ -32,8 +32,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48px;
-  height: 58px;
+  padding: 0 32px;
+  height: 60px;
   background: var(--bg-white);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -472,6 +472,251 @@ body {
   color: #bbb;
   text-align: center;
   line-height: 1.6;
+}
+
+.booking-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(12, 14, 24, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 800;
+}
+
+.booking-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.booking-card {
+  width: min(560px, 92vw);
+  background: var(--bg-white);
+  border-radius: 18px;
+  padding: 26px 28px 24px;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(8, 10, 20, 0.28);
+}
+
+.booking-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: none;
+  font-size: 26px;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.booking-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.booking-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.booking-summary {
+  background: #f7f7fa;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.summary-row strong {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.booking-form {
+  display: grid;
+  gap: 10px;
+}
+
+.booking-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.booking-input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: "DM Sans", sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.booking-input:focus {
+  border-color: #9aa4c7;
+  box-shadow: 0 0 0 3px rgba(74, 94, 150, 0.15);
+}
+
+.ticket-input {
+  max-width: 140px;
+}
+
+.booking-error {
+  min-height: 18px;
+  font-size: 12px;
+  color: #c0392b;
+}
+
+.booking-submit {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.booking-submit:hover {
+  background: #2a2d50;
+  transform: translateY(-1px);
+}
+
+.booking-secondary {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.booking-success-view {
+  display: none;
+  text-align: center;
+}
+
+.booking-success-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e7f3e7;
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.booking-success-detail {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.booking-success-actions {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .booking-card {
+    padding: 22px 20px 20px;
+  }
+
+  .booking-summary {
+    gap: 8px;
+  }
+}
+
+.notif-dropdown {
+  display: none;
+  position: fixed;
+  top: 66px;
+  right: 80px;
+  width: 280px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 400;
+  padding: 16px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.notif-dropdown.open {
+  display: block;
+}
+
+.notif-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.notif-item {
+  padding: 10px 12px;
+  background: #f7f7f9;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.notif-item:last-child {
+  margin-bottom: 0;
+}
+
+.notif-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.notif-item-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.notif-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.notif-empty {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .footer {
