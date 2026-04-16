@@ -333,3 +333,19 @@ exports.exportBookingsCsv = async (req, res) => {
         res.status(500).send('Failed to export');
     }
 };
+
+// ─── GET NOTIFICATIONS (AJAX) ────────────────────────────────
+exports.getNotifications = async (req, res) => {
+    try {
+        // Fetch last 10 bookings as notifications
+        const notifications = await Booking.find()
+            .populate('eventId')
+            .sort({ createdAt: -1 })
+            .limit(10);
+            
+        res.json(notifications);
+    } catch (err) {
+        console.error('Error fetching notifications:', err);
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+};
