@@ -68,7 +68,13 @@
                 <div class="capacity-info">
                     <span><%= event.currentBookings %> / <%= event.maxCapacity %> Registered</span>
                     <div class="capacity-bar">
-                        <div class="capacity-fill" style="width: <%= Math.min((event.currentBookings / event.maxCapacity) * 100, 100) %>%"></div>
+                        <%
+  const capacityPercent = event.maxCapacity
+    ? Math.min((event.currentBookings / event.maxCapacity) * 100, 100)
+    : 0;
+%>
+
+<div class="capacity-fill" style="width: <%= capacityPercent %>%"></div>
                     </div>
                 </div>
             </div>

@@ -49,6 +49,8 @@ nav {
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow-sm);
+
+  justify-content: space-between; /* ADD THIS */
 }
 
 .nav-logo {
@@ -58,7 +60,8 @@ nav {
   color: var(--navy);
   letter-spacing: -0.5px;
   text-decoration: none;
-  margin-right: auto;
+
+  margin-right: auto; /* RESTORE THIS */
 }
 
 .nav-links {
@@ -66,8 +69,12 @@ nav {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-right: 20px;
+
+  position: absolute;           /* ADD THIS */
+  left: 50%;                    /* ADD THIS */
+  transform: translateX(-50%);  /* ADD THIS */
 }
+
 
 .nav-links a {
   text-decoration: none;
