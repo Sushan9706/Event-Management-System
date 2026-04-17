@@ -579,7 +579,16 @@ body {
 }
 
 .ticket-input {
-  max-width: 140px;
+  width: 100%;
+  max-width: 100%;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.ticket-input::-webkit-outer-spin-button,
+.ticket-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .booking-error {

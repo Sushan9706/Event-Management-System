@@ -36,8 +36,10 @@ a {
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 60px;
 }
 
+.nav-inner,
 .nav-container {
   max-width: 1500px;
   margin: 0 auto;
@@ -58,35 +60,81 @@ a {
 .nav-links {
   display: flex;
   gap: 28px;
-  font-size: 13px;
-  color: var(--muted);
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.nav-links a.active {
-  color: var(--accent);
-  font-weight: 600;
-  border-bottom: 2px solid var(--accent);
-  padding-bottom: 6px;
+.nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 4px 0;
+  transition: color 0.3s ease;
+  position: relative;
+  display: inline-block;
 }
 
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+.nav-links a:hover {
+  color: var(--text);
+}
+
+.nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.nav-links a.active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.nav-right,
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: #fff;
-  display: grid;
-  place-items: center;
+  background: none;
+  border: none;
   color: var(--muted);
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+}
+
+.icon-btn:hover {
+  background: #f0f0ee;
+  color: var(--text);
+}
+
+.notif-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  background: #e74c3c;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
 }
 
 .notif-wrap {
@@ -137,14 +185,26 @@ a {
   margin-top: 3px;
 }
 
-.avatar-circle {
-  width: 28px;
-  height: 28px;
+.avatar-btn {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #2f354d;
-  border: 2px solid #505a70;
-  object-fit: cover;
+  overflow: hidden;
+  border: 2px solid var(--border);
   cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.avatar-btn:hover {
+  border-color: var(--text);
+}
+
+.avatar-btn img,
+.avatar-circle {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .page-shell {
@@ -323,6 +383,10 @@ a {
   color: #c0392b;
 }
 
+.status.expired {
+  color: #c27c0e;
+}
+
 .manage-btn {
   background: #3f465e;
   color: #fff;
@@ -437,14 +501,22 @@ a {
 }
 
 @media (max-width: 640px) {
+  .nav-inner,
   .nav-container {
     flex-direction: column;
     gap: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    height: auto;
   }
 
   .nav-links {
     position: static;
     transform: none;
+  }
+
+  .navbar {
+    height: auto;
   }
 
   .booking-controls {

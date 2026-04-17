@@ -24,10 +24,17 @@
       const eventImage = (event && (event.image || event.imagePath))
         ? (event.image || event.imagePath)
         : "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop";
-      const bookingStatus = (booking.status || "confirmed").toUpperCase();
-      const isCancelled = (booking.status || "confirmed") === "cancelled";
-      const backLabel = isCancelled ? "← Back to Cancelled Bookings" : "← Back to My Bookings";
-      const backHref = isCancelled ? "/bookings?status=cancelled" : "/bookings?status=confirmed";
+      const normalizedStatus = (booking.status || "confirmed").toLowerCase();
+      const bookingStatus = normalizedStatus.toUpperCase();
+      const isCancelled = normalizedStatus === "cancelled";
+      const isExpired = normalizedStatus === "expired";
+      const isInactive = isCancelled || isExpired;
+      const backLabel = isCancelled
+        ? "← Back to Cancelled Bookings"
+        : (isExpired ? "← Back to Expired Bookings" : "← Back to My Bookings");
+      const backHref = isCancelled
+        ? "/bookings?status=cancelled"
+        : (isExpired ? "/bookings?status=expired" : "/bookings?status=confirmed");
       const bookingTier = event && event.category ? event.category : "Premium";
       const ticketCount = booking.ticketCount || 1;
       const unitPrice = (typeof booking.unitPrice === "number")
@@ -48,7 +55,7 @@
         : "TBA";
       const attendeeName = booking.userName || (user && user.username) || "Guest";
       const attendeeEmail = booking.userEmail || (user && user.email) || "-";
-      const eventDetailsLink = event && event._id ? `/event?eventId=${event._id}` : "/catalog";
+      const eventDetailsLink = event && event._id ? `/event/${event._id}` : "/catalog";
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
       const formatNotifTime = (date) => {
@@ -111,7 +118,7 @@
         <section class="manage-content">
           <article class="hero-card">
             <div class="hero-image" style="background-image: url('<%= eventImage %>')">
-              <span class="status-pill"><%= bookingStatus %></span>
+              <span class="status-pill <%= normalizedStatus %>"><%= bookingStatus %></span>
             </div>
             <div class="hero-grid">
               <div class="info-block">
@@ -232,7 +239,7 @@
         <aside class="manage-sidebar">
           <div class="side-card">
             <h3>Manage Booking</h3>
-            <button class="download-btn" type="button" id="downloadBtn" <%= isCancelled ? 'disabled' : '' %>>
+            <button class="download-btn" type="button" id="downloadBtn" <%= isInactive ? 'disabled' : '' %>>
               Download Confirmation
             </button>
             <button
@@ -241,12 +248,14 @@
               data-event="<%= event && event._id ? event._id : '' %>"
               data-booking="<%= booking && booking._id ? booking._id.toString() : '' %>"
               data-count="<%= ticketCount %>"
-              <%= isCancelled ? 'disabled' : '' %>
+              <%= isInactive ? 'disabled' : '' %>
             >
-              <%= isCancelled ? 'Cancelled' : 'Cancel Booking' %>
+              <%= isCancelled ? 'Cancelled' : (isExpired ? 'Expired' : 'Cancel Booking') %>
             </button>
             <p class="side-note">
-              Cancellations are subject to the event terms and conditions. A 10% processing fee may apply.
+              <%= isExpired
+                ? 'This booking has expired because the event date has already passed.'
+                : 'Cancellations are subject to the event terms and conditions. A 10% processing fee may apply.' %>
             </p>
           </div>
 

@@ -2,12 +2,14 @@ const Booking = require('../models/bookingModel');
 const Event = require('../models/event');
 const User = require('../models/user');
 const mongoose = require('mongoose');
+const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
 
 exports.createBooking = async (req, res) => {
     try {
         const { eventId, name, firstName, lastName, email, ticketCount: ticketCountRaw } = req.body;
         const userId = req.user.userId;
-        const ticketCount = Math.max(1, parseInt(ticketCountRaw, 10) || 1);
+        const ticketCountValue = typeof ticketCountRaw === 'string' ? ticketCountRaw.trim() : String(ticketCountRaw || '').trim();
+        const ticketCount = Number(ticketCountValue);
         const trimmedFirst = (firstName || '').trim();
         const trimmedLast = (lastName || '').trim();
         const combinedName = [trimmedFirst, trimmedLast].filter(Boolean).join(' ').trim();
@@ -24,6 +26,9 @@ exports.createBooking = async (req, res) => {
         if (!emailPattern.test(emailValue)) {
             return res.status(400).json({ success: false, message: 'Please enter a valid email address with at least one letter before @.' });
         }
+        if (!/^[1-9]\d*$/.test(ticketCountValue) || !Number.isInteger(ticketCount)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid number of tickets.' });
+        }
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ success: false, message: 'Invalid event. Please reload the page.' });
         }
@@ -32,6 +37,9 @@ exports.createBooking = async (req, res) => {
         const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        if (isEventDatePassed(event)) {
+            return res.status(400).json({ success: false, message: 'Booking closed. This event date has passed.' });
         }
 
         // 2. Load user (each purchase becomes its own booking/order)
@@ -46,7 +54,7 @@ exports.createBooking = async (req, res) => {
         // 3. Capacity check (by seats)
         if (event.maxCapacity && event.maxCapacity > 0) {
             const seatAgg = await Booking.aggregate([
-                { $match: { eventId: event._id, status: { $ne: 'cancelled' } } },
+                { $match: { eventId: event._id, status: { $nin: ['cancelled', 'expired'] } } },
                 { $group: { _id: null, total: { $sum: { $ifNull: ["$ticketCount", 1] } } } }
             ]);
             const bookedSeats = seatAgg.length > 0 ? seatAgg[0].total : 0;
@@ -71,7 +79,7 @@ exports.createBooking = async (req, res) => {
         let booking = await Booking.findOne({
             eventId: event._id,
             userEmail: user.email,
-            status: { $ne: 'cancelled' }
+            status: { $nin: ['cancelled', 'expired'] }
         }).sort({ createdAt: -1 });
 
         if (booking) {
@@ -167,7 +175,7 @@ exports.createBooking = async (req, res) => {
 
 exports.getBookingsPage = async (req, res) => {
     try {
-        const requestedStatus = req.query && req.query.status === 'cancelled' ? 'cancelled' : 'confirmed';
+        const requestedStatus = req.query && ['cancelled', 'expired'].includes(req.query.status) ? req.query.status : 'confirmed';
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.render("bookings", { user: null, bookings: [], initialStatus: requestedStatus });
@@ -176,6 +184,8 @@ exports.getBookingsPage = async (req, res) => {
         let bookings = await Booking.find({ userEmail: user.email })
             .populate('eventId')
             .sort({ createdAt: -1 });
+
+        await syncBookingsExpiry(bookings);
 
         bookings = bookings
             .filter(booking => booking.eventId)
@@ -195,7 +205,7 @@ exports.getBookingsPage = async (req, res) => {
         return res.render("bookings", { user, bookings, initialStatus: requestedStatus });
     } catch (err) {
         console.error("Get Bookings Error:", err);
-        const requestedStatus = req.query && req.query.status === 'cancelled' ? 'cancelled' : 'confirmed';
+        const requestedStatus = req.query && ['cancelled', 'expired'].includes(req.query.status) ? req.query.status : 'confirmed';
         return res.render("bookings", { user: req.user || null, bookings: [], initialStatus: requestedStatus });
     }
 };
@@ -206,6 +216,8 @@ exports.getManageBooking = async (req, res) => {
         if (!booking || !booking.eventId) {
             return res.status(404).render("404", { title: "404 - Page Not Found" });
         }
+
+        await syncBookingExpiry(booking);
 
         const user = await User.findById(req.user.userId);
         if (!user || booking.userEmail !== user.email) {

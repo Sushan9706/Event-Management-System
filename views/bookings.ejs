@@ -15,9 +15,14 @@
   <body>
     <%
       const bookingList = bookings || [];
-      const confirmedCount = bookingList.filter(b => (b.status || 'confirmed') !== 'cancelled').length;
-      const cancelledCount = bookingList.filter(b => (b.status || 'confirmed') === 'cancelled').length;
-      const activeStatus = (typeof initialStatus === 'string' && initialStatus === 'cancelled') ? 'cancelled' : 'confirmed';
+      const normalizeStatus = (status) => {
+        const value = (status || 'confirmed').toLowerCase();
+        return ['cancelled', 'expired'].includes(value) ? value : 'confirmed';
+      };
+      const confirmedCount = bookingList.filter(b => normalizeStatus(b.status) === 'confirmed').length;
+      const expiredCount = bookingList.filter(b => normalizeStatus(b.status) === 'expired').length;
+      const cancelledCount = bookingList.filter(b => normalizeStatus(b.status) === 'cancelled').length;
+      const activeStatus = (typeof initialStatus === 'string' && ['cancelled', 'expired'].includes(initialStatus)) ? initialStatus : 'confirmed';
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
       const formatNotifTime = (date) => {
@@ -28,20 +33,23 @@
       };
     %>
     <header class="navbar">
-      <div class="nav-container">
+      <div class="nav-inner">
         <div class="nav-logo">EMS</div>
         <nav class="nav-links">
-          <a href="/catalog">Events</a>
-          <a href="/bookings" class="active">My Bookings</a>
-          <a href="/profile">Profile</a>
+          <a href="/user" class="nav-item">Home</a>
+          <a href="/catalog" class="nav-item">Events</a>
+          <a href="/bookings" class="nav-item active">My Bookings</a>
         </nav>
-        <div class="nav-actions">
+        <div class="nav-right">
           <div class="notif-wrap">
             <button class="icon-btn" aria-label="Notifications" id="bellBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
+              <% if (notifications.length > 0) { %>
+                <span class="notif-dot"></span>
+              <% } %>
             </button>
             <div class="bell-dropdown" id="bellDropdown">
               <% if (notifications.length === 0) { %>
@@ -62,12 +70,14 @@
               <% } %>
             </div>
           </div>
-          <img
-            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-            alt="User avatar"
-            class="avatar-circle"
-            onerror="this.style.background='#3b4254';this.removeAttribute('src')"
-          />
+          <div class="avatar-btn" id="avatarBtn">
+            <img
+              src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+              alt="User avatar"
+              class="avatar-circle"
+              onerror="this.style.background='#3b4254';this.removeAttribute('src')"
+            />
+          </div>
         </div>
       </div>
     </header>
@@ -81,6 +91,7 @@
       <section class="booking-controls">
         <div class="tabs">
           <button class="tab <%= activeStatus === 'confirmed' ? 'active' : '' %>" data-status="confirmed">CONFIRMED <span><%= confirmedCount %></span></button>
+          <button class="tab <%= activeStatus === 'expired' ? 'active' : '' %>" data-status="expired">EXPIRED <span><%= expiredCount %></span></button>
           <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">CANCELLED <span><%= cancelledCount %></span></button>
         </div>
         <div class="filters">
@@ -115,8 +126,8 @@
               const ticketCount = booking.ticketCount || 1;
               const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
               const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
-              const statusGroup = (booking.status || 'confirmed') === 'cancelled' ? 'cancelled' : 'confirmed';
-              const actionLabel = statusGroup === 'cancelled' ? 'View' : 'Manage';
+              const statusGroup = normalizeStatus(booking.status);
+              const actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
           %>
             <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
               <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>" onerror="this.style.display='none'" />
@@ -180,7 +191,7 @@
       }
 
       const urlStatus = new URLSearchParams(window.location.search).get('status');
-      if (urlStatus === 'cancelled' || urlStatus === 'confirmed') {
+      if (urlStatus === 'cancelled' || urlStatus === 'confirmed' || urlStatus === 'expired') {
         setActiveTab(urlStatus);
       }
 
@@ -227,7 +238,7 @@
         });
       }
 
-      const avatar = document.querySelector('.avatar-circle');
+      const avatar = document.getElementById('avatarBtn') || document.querySelector('.avatar-circle');
       const sidebar = document.getElementById('avatarSidebar');
       const overlay = document.getElementById('sidebarOverlay');
       const toggleSidebar = (state) => {

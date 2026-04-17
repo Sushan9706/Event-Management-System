@@ -196,6 +196,14 @@ a {
   letter-spacing: 0.12em;
 }
 
+.status-pill.cancelled {
+  color: #c0392b;
+}
+
+.status-pill.expired {
+  color: #c27c0e;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

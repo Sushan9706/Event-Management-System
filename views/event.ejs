@@ -37,6 +37,20 @@
       const locationMain = locationParts[0] ? locationParts[0].trim() : eventLocation;
       const locationSub = locationParts.length > 1 ? locationParts.slice(1).join(",").trim() : "";
       const eventId = (typeof event !== "undefined" && event) ? event._id : "";
+      const rawMaxCapacity = (typeof event !== "undefined" && event && (typeof event.maxCapacity === "number" || typeof event.maxCapacity === "string"))
+        ? parseInt(event.maxCapacity, 10)
+        : 0;
+      const eventMaxCapacity = Number.isFinite(rawMaxCapacity) ? rawMaxCapacity : 0;
+      const rawAvailableTickets = (typeof event !== "undefined" && event && (typeof event.availableTickets === "number" || typeof event.availableTickets === "string"))
+        ? parseInt(event.availableTickets, 10)
+        : NaN;
+      const hasCapacityLimit = eventMaxCapacity > 0;
+      const availableTickets = hasCapacityLimit
+        ? Math.max(Number.isFinite(rawAvailableTickets) ? rawAvailableTickets : eventMaxCapacity, 0)
+        : null;
+      const availableTicketsLabel = hasCapacityLimit ? String(availableTickets) : "Unlimited";
+      const isSoldOut = hasCapacityLimit ? availableTickets <= 0 : false;
+      const hasEnded = !!(typeof event !== "undefined" && event && event.hasEnded);
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
       const formatNotifTime = (date) => {
@@ -194,7 +208,13 @@
             Digital Certification of Attendance
           </li>
         </ul>
-        <button class="book-btn" onclick="handleBooking()">Book Now</button>
+        <% if (hasEnded) { %>
+          <button class="book-btn" type="button" disabled>Event Closed</button>
+        <% } else if (isSoldOut) { %>
+          <button class="book-btn" type="button" disabled>Sold Out</button>
+        <% } else { %>
+          <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
+        <% } %>
         <p class="secure-note">
           SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
         </p>
@@ -361,6 +381,9 @@
       data-event-date="<%= eventDate %>"
       data-event-location="<%= eventLocation %>"
       data-event-price="<%= eventPrice %>"
+      data-available-tickets="<%= hasCapacityLimit ? availableTickets : "" %>"
+      data-has-capacity-limit="<%= hasCapacityLimit %>"
+      data-has-ended="<%= hasEnded %>"
       data-authenticated="<%= isAuthenticated %>"
     >
       <div class="booking-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
@@ -387,11 +410,15 @@
             </div>
             <div class="summary-row">
               <span>Tickets</span>
-              <strong id="bookingTicketSummary">1</strong>
+              <strong id="bookingTicketSummary">0</strong>
+            </div>
+            <div class="summary-row">
+              <span>Available</span>
+              <strong id="bookingAvailableTickets"><%= availableTicketsLabel %></strong>
             </div>
             <div class="summary-row">
               <span>Total</span>
-              <strong id="bookingTotalPrice"><%= eventPrice === 0 ? "Free" : "$" + eventPrice %></strong>
+              <strong id="bookingTotalPrice"><%= eventPrice === 0 ? "Free" : "$0" %></strong>
             </div>
           </div>
 
@@ -443,8 +470,12 @@
               type="number"
               name="ticketCount"
               min="1"
-              value="1"
+              step="1"
+              inputmode="numeric"
+              placeholder="Enter tickets"
+              required
             />
+            <p class="booking-label">Available now: <strong id="ticketAvailabilityNote"><%= availableTicketsLabel %></strong></p>
 
             <p class="booking-error" id="bookingError" aria-live="polite"></p>
             <button class="booking-submit" type="submit">Confirm Booking</button>
@@ -523,10 +554,13 @@
       const downloadTicketBtn = document.getElementById("downloadTicketBtn");
       const ticketInput = document.getElementById("ticketCount");
       const ticketSummary = document.getElementById("bookingTicketSummary");
+      const availableTicketsEl = document.getElementById("bookingAvailableTickets");
+      const ticketAvailabilityNote = document.getElementById("ticketAvailabilityNote");
       const totalPriceEl = document.getElementById("bookingTotalPrice");
       let lastBookingId = null;
       const searchOverlay = document.getElementById("searchOverlay");
       const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
+      const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
 
       function formatAmount(amount, pricePerTicket) {
         if (pricePerTicket === 0) return "Free";
@@ -534,21 +568,56 @@
         return `$${fixed}`;
       }
 
+      function getAvailableTickets() {
+        if (bookingModal.dataset.hasCapacityLimit !== "true") return null;
+        const rawValue = Number.parseInt(bookingModal.dataset.availableTickets || "", 10);
+        return Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+      }
+
+      function getTicketCount() {
+        const rawValue = ticketInput.value.trim();
+        if (!/^[1-9]\d*$/.test(rawValue)) return null;
+        let count = Number(rawValue);
+        const availableTickets = getAvailableTickets();
+        if (availableTickets !== null && count > availableTickets) {
+          count = availableTickets;
+          ticketInput.value = availableTickets > 0 ? String(availableTickets) : "";
+        }
+        return count > 0 ? count : null;
+      }
+
       function updateTicketSummary() {
         const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
-        let count = parseInt(ticketInput.value, 10);
-        if (Number.isNaN(count) || count < 1) count = 1;
-        ticketInput.value = count;
-        ticketSummary.textContent = count;
-        totalPriceEl.textContent = formatAmount(pricePerTicket * count, pricePerTicket);
+        const count = getTicketCount();
+        const safeCount = count || 0;
+        ticketSummary.textContent = safeCount;
+        totalPriceEl.textContent = formatAmount(pricePerTicket * safeCount, pricePerTicket);
       }
 
       function handleBooking() {
+        if (bookingClosed) {
+          return;
+        }
         const { eventName, eventDate, eventLocation } = bookingModal.dataset;
+        const availableTickets = getAvailableTickets();
         document.getElementById("bookingEventName").textContent = eventName;
         document.getElementById("bookingEventDate").textContent = eventDate;
         document.getElementById("bookingEventLocation").textContent = eventLocation;
-        ticketInput.value = 1;
+        if (availableTicketsEl) {
+          availableTicketsEl.textContent = availableTickets === null ? "Unlimited" : availableTickets;
+        }
+        if (ticketAvailabilityNote) {
+          ticketAvailabilityNote.textContent = availableTickets === null
+            ? "Unlimited"
+            : availableTickets;
+        }
+        if (availableTickets !== null) {
+          if (availableTickets <= 0) return;
+          ticketInput.max = String(availableTickets);
+        } else {
+          ticketInput.removeAttribute("max");
+        }
+        ticketInput.value = "";
         updateTicketSummary();
 
         bookingFormView.style.display = "block";
@@ -566,6 +635,7 @@
         bookingModal.classList.remove("open");
         bookingModal.setAttribute("aria-hidden", "true");
         bookingForm.reset();
+        updateTicketSummary();
       }
 
       bookingModal.addEventListener("click", function (e) {
@@ -581,7 +651,8 @@
         const firstName = document.getElementById("bookingFirstName").value.trim();
         const lastName = document.getElementById("bookingLastName").value.trim();
         const email = document.getElementById("bookingEmail").value.trim();
-        const ticketCount = parseInt(ticketInput.value, 10) || 1;
+        const ticketCount = getTicketCount();
+        const availableTickets = getAvailableTickets();
         const namePattern = /^[A-Za-z][A-Za-z' -]{1,39}$/;
         const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
         if (!firstName || !lastName || !email) {
@@ -594,6 +665,24 @@
         }
         if (!emailPattern.test(email)) {
           bookingError.textContent = "Please enter a valid email address with at least one letter before @.";
+          return;
+        }
+        if (!ticketCount) {
+          bookingError.textContent = "Please enter a valid number of tickets.";
+          ticketInput.focus();
+          return;
+        }
+        if (bookingClosed) {
+          bookingError.textContent = "Booking closed. This event date has passed.";
+          return;
+        }
+        if (availableTickets !== null && availableTickets <= 0) {
+          bookingError.textContent = "No tickets are available for this event.";
+          return;
+        }
+        if (availableTickets !== null && ticketCount > availableTickets) {
+          bookingError.textContent = `Only ${availableTickets} tickets available for this event.`;
+          ticketInput.focus();
           return;
         }
 

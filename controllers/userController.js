@@ -4,6 +4,7 @@ const userModel = require("../models/user");
 const eventModel = require("../models/event");
 const categoryModel = require("../models/categoryModel");
 const mongoose = require("mongoose");
+const { syncBookingExpiry, syncBookingsExpiry } = require("../utils/bookingStatus");
 
 exports.getRegister = (req, res) => {
     res.render("register");
@@ -194,14 +195,24 @@ exports.cancelBooking = async (req, res) => {
             eventId,
             userEmail: user.email,
             status: { $ne: 'cancelled' }
+        }).populate('eventId', 'date');
+        await syncBookingsExpiry(activeBookings);
+
+        const cancellableBookings = activeBookings.filter(booking => {
+            const status = (booking.status || '').toLowerCase();
+            return status !== 'cancelled' && status !== 'expired';
         });
-        const totalCancelled = activeBookings.reduce((sum, booking) => {
+        if (cancellableBookings.length === 0) {
+            return res.status(400).json({ success: false, message: "This booking has expired and can no longer be cancelled." });
+        }
+
+        const totalCancelled = cancellableBookings.reduce((sum, booking) => {
             const count = booking.ticketCount || 1;
             return sum + count;
         }, 0);
 
         await bookingModel.updateMany(
-            { eventId, userEmail: user.email, status: { $ne: 'cancelled' } },
+            { _id: { $in: cancellableBookings.map(booking => booking._id) } },
             { $set: { status: 'cancelled' } }
         );
 
@@ -258,15 +269,19 @@ exports.cancelBookingById = async (req, res) => {
         }
 
         const bookingModel = require("../models/bookingModel");
-        const booking = await bookingModel.findById(bookingId);
+        const booking = await bookingModel.findById(bookingId).populate('eventId', 'date');
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found" });
         }
+        await syncBookingExpiry(booking);
         if (booking.userEmail !== user.email) {
             return res.status(403).json({ success: false, message: "Not authorized to cancel this booking" });
         }
         if (booking.status === "cancelled") {
             return res.status(400).json({ success: false, message: "Booking is already cancelled" });
+        }
+        if (booking.status === "expired") {
+            return res.status(400).json({ success: false, message: "Booking has expired and can no longer be cancelled" });
         }
 
         const currentCount = Math.max(booking.ticketCount || 1, 1);
@@ -324,7 +339,7 @@ exports.cancelBookingById = async (req, res) => {
             const remainingActive = await bookingModel.countDocuments({
                 eventId: booking.eventId,
                 userEmail: user.email,
-                status: { $ne: "cancelled" }
+                status: { $nin: ["cancelled", "expired"] }
             });
             if (remainingActive === 0) {
                 user.bookedEvents = user.bookedEvents.filter(
