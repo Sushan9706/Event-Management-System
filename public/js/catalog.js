@@ -39,20 +39,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleHeroSearch(value) {
     const val = value.trim().toLowerCase();
+    const selectedDate = document.getElementById("heroDate").value;
+
     const cards = document.querySelectorAll(".event-card");
 
     cards.forEach((card) => {
       const name = card.querySelector(".card-name").textContent.toLowerCase();
-      const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
+      const location = card
+        .querySelectorAll(".card-meta-row")[1]
+        .textContent.toLowerCase();
 
-      if (!val || name.includes(val) || location.includes(val)) {
+      const cardDateRaw = card.dataset.date;
+      if (!cardDateRaw) {
+        card.style.display = "none";
+        return;
+      }
+
+      let matchesSearch = !val || name.includes(val) || location.includes(val);
+
+      let matchesDate = true;
+
+      if (selectedDate) {
+        const eventDate = cardDateRaw.split("T")[0]; // "2026-04-17"
+        matchesDate = selectedDate === eventDate;
+      }
+
+      if (matchesSearch && matchesDate) {
         card.style.display = "block";
       } else {
         card.style.display = "none";
       }
     });
 
-    document.querySelector(".events-section")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .querySelector(".events-section")
+      ?.scrollIntoView({ behavior: "smooth" });
   }
 
   // --- 2. DROPDOWN LOGIC (NOTIFICATIONS & PROFILE) ---
@@ -83,7 +104,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filters")?.addEventListener("click", (e) => {
     if (!e.target.classList.contains("filter-tag")) return;
 
-    document.querySelectorAll(".filter-tag").forEach((t) => t.classList.remove("active"));
+    document
+      .querySelectorAll(".filter-tag")
+      .forEach((t) => t.classList.remove("active"));
     e.target.classList.add("active");
 
     const filter = e.target.dataset.filter;
@@ -103,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.scrollBy({ top: 300, behavior: "smooth" });
   });
 
-  window.confirmBooking = async function() {
+  window.confirmBooking = async function () {
     if (!currentCard) return;
 
     const eventId = currentCard.dataset.id;
@@ -113,10 +136,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const location = rows[1].textContent.trim();
 
     try {
-      const response = await fetch('/bookings/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId })
+      const response = await fetch("/bookings/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId }),
       });
 
       const data = await response.json();
@@ -125,45 +148,44 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("bookingEventName").textContent = name;
         document.getElementById("bookingDetail").textContent =
           date + " · " + location + " (Ref: " + data.referenceNumber + ")";
-        
+
         closeModal();
         document.getElementById("bookingModal").classList.add("open");
       } else {
-        alert(data.message || 'Booking failed');
+        alert(data.message || "Booking failed");
         closeModal();
       }
     } catch (err) {
-      console.error('Booking Error:', err);
-      alert('Something went wrong. Please try again.');
+      console.error("Booking Error:", err);
+      alert("Something went wrong. Please try again.");
     }
   };
 
-  window.closeBooking = function() {
+  window.closeBooking = function () {
     document.getElementById("bookingModal").classList.remove("open");
     window.location.href = "/user";
   };
 
+  document.querySelectorAll(".btn-details").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent double trigger
+      const card = btn.closest(".event-card");
+      const eventId = card.dataset.id;
 
-document.querySelectorAll(".btn-details").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation(); // prevent double trigger
-    const card = btn.closest(".event-card");
-    const eventId = card.dataset.id;
-
-    if (eventId) {
-      window.location.href = `/event/${eventId}`;
-    }
+      if (eventId) {
+        window.location.href = `/event/${eventId}`;
+      }
+    });
   });
-});
 
-document.querySelectorAll(".event-card").forEach((card) => {
-  card.addEventListener("click", () => {
-    const eventId = card.dataset.id;
-    if (eventId) {
-      window.location.href = `/event/${eventId}`;
-    }
+  document.querySelectorAll(".event-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const eventId = card.dataset.id;
+      if (eventId) {
+        window.location.href = `/event/${eventId}`;
+      }
+    });
   });
-});
 
   // --- 6. UTILITIES ---
   document.addEventListener("keydown", (e) => {

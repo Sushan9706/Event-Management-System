@@ -86,16 +86,7 @@
           <p class="stat-label">UPCOMING EVENTS</p>
           <p class="stat-num"><%= (user.bookedEvents) ? user.bookedEvents.filter(e => new Date(e.date) > new Date()).length : 0 %></p>
         </div>
-        <div class="stat-card stat-card--member">
-          <div class="member-row-top">
-            <p class="member-eyebrow">MEMBERSHIP</p>
-            <div class="gem-icon">
-              <svg viewBox="0 0 50 50" fill="none" width="36" height="36"><polygon points="25,3 47,17 47,39 25,49 3,39 3,17" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" /><circle cx="25" cy="28" r="5" fill="rgba(255,255,255,0.18)" /></svg>
-            </div>
-          </div>
-          <p class="member-title">Elite Curator</p>
-          <a href="#" class="member-link">VIEW BENEFITS →</a>
-        </div>
+        
       </div>
     </section>
 
