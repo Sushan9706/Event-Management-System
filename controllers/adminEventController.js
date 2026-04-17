@@ -131,8 +131,8 @@ exports.postCreateEvent = async (req, res) => {
             date,
             time,
             location,
-            maxCapacity: parseInt(maxCapacity) || 0,
-            ticketPrice: parseFloat(ticketPrice) || 0,
+            maxCapacity: Math.max(0, parseInt(maxCapacity) || 0),
+            ticketPrice: Math.max(0, parseFloat(ticketPrice) || 0),
             status: status || 'upcoming',
             createdBy: req.user ? req.user.userId : null
         };
@@ -199,8 +199,8 @@ exports.postEditEvent = async (req, res) => {
         event.date = date;
         event.time = time;
         event.location = location;
-        event.maxCapacity = parseInt(maxCapacity) || 0;
-        event.ticketPrice = parseFloat(ticketPrice) || 0;
+        event.maxCapacity = Math.max(0, parseInt(maxCapacity) || 0);
+        event.ticketPrice = Math.max(0, parseFloat(ticketPrice) || 0);
         event.status = status || 'upcoming';
 
         if (req.file) {
@@ -289,7 +289,7 @@ exports.getBookingDetails = async (req, res) => {
             query.$or = [
                 { userName: { $regex: search, $options: 'i' } },
                 { userEmail: { $regex: search, $options: 'i' } },
-                { referenceNumber: { $regex: search, $options: 'i' } }
+                { reference_number: { $regex: search, $options: 'i' } }
             ];
         }
 
@@ -348,7 +348,7 @@ exports.exportBookingsCsv = async (req, res) => {
 
         let csv = 'Name,Email,Reference,Status,Booking Date\n';
         bookings.forEach(b => {
-            csv += `"${b.userName}","${b.userEmail}","${b.referenceNumber}","${b.status}","${b.createdAt}"\n`;
+            csv += `"${b.userName}","${b.userEmail}","${b.reference_number}","${b.status}","${b.createdAt}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');

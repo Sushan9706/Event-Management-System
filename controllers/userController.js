@@ -367,8 +367,9 @@ exports.cancelBookingById = async (req, res) => {
 
 exports.getGuestDashboard = async (req, res) => {
     try {
-        // Fetch ALL events to show by default and populate categoryId
-        const events = await eventModel.find({}).populate('categoryId');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
         res.render("index", { events: events, user: null });
     } catch (err) {
         res.status(500).send("Error loading dashboard");
@@ -377,7 +378,9 @@ exports.getGuestDashboard = async (req, res) => {
 
 exports.getCatalog = async (req, res) => {
     try {
-        const events = await eventModel.find({}).populate('categoryId');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
 
         // Fetch the full user document if logged in; otherwise allow guest view
         let fullUser = null;
@@ -436,6 +439,13 @@ exports.searchEvents = async (req, res) => {
             if (catDoc) {
                 queryObj.categoryId = catDoc._id;
             }
+        }
+
+        // Ensure we only show future events for general search unless a specific date is requested
+        if (!date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            queryObj.date = { $gte: today };
         }
 
         // Fetch events from DB and populate categoryId

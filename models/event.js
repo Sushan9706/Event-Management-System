@@ -18,7 +18,7 @@ const eventSchema = new mongoose.Schema({
     image: { type: String },
     imagePath: { type: String },
 
-    maxCapacity: { type: Number, default: 0 },
+    maxCapacity: { type: Number, required: true, default: 0 },
     ticketPrice: { type: Number, default: 0 },
     status: { type: String, enum: ['upcoming', 'ongoing', 'completed', 'cancelled'], default: 'upcoming' },
 
