@@ -1,98 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMS – Curated Experiences</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/css/catalog.css" />
-  </head>
-  <body>
-    <header class="navbar">
-      <div class="nav-inner">
-        <div class="nav-logo">EMS</div>
-        <nav class="nav-links">
-          <a href="/user" class="nav-item">Home</a>
-          <a href="/catalog" class="nav-item active">Events</a>
-          <a href="/bookings" class="nav-item">My Bookings</a>
-        </nav>
-        <div class="nav-right">
-          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <span class="notif-dot"></span>
-          </button>
 
-          <div class="profile-menu-container" style="position: relative">
-            <div class="avatar-btn" id="avatarBtn">
-              <img
-                src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-                alt="User avatar"
-              />
-            </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS – Curated Experiences</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/css/catalog.css" />
+</head>
 
-            <aside class="avatar-sidebar" id="avatarSidebar">
-              <div
-                style="
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">EMS</div>
+      <nav class="nav-links">
+        <a href="/user" class="nav-item">Home</a>
+        <a href="/catalog" class="nav-item active">Events</a>
+        <a href="/bookings" class="nav-item">My Bookings</a>
+      </nav>
+      <div class="nav-right">
+        <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span class="notif-dot"></span>
+        </button>
+
+        <div class="profile-menu-container" style="position: relative">
+          <div class="avatar-btn" id="avatarBtn">
+            <img
+              src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+              alt="User avatar" />
+          </div>
+
+          <aside class="avatar-sidebar" id="avatarSidebar">
+            <div style="
                   padding: 10px 22px;
                   font-weight: 700;
                   font-size: 12px;
                   color: var(--dark);
-                "
-              >
-                Hi, <%= user ? user.username : 'Guest' %>
-              </div>
-              <div class="sidebar-divider"></div>
+                ">
+              Hi, <%= user ? user.username : 'Guest' %>
+            </div>
+            <div class="sidebar-divider"></div>
 
-              <a href="/profile" class="sidebar-link"> My Profile </a>
-              <div class="sidebar-divider"></div>
-              <a href="/logout" class="sidebar-logout"> Log Out </a>
-            </aside>
-          </div>
+            <a href="/profile" class="sidebar-link"> My Profile </a>
+            <div class="sidebar-divider"></div>
+            <a href="/logout" class="sidebar-logout"> Log Out </a>
+          </aside>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <% 
-      const notifications = Array.isArray(locals.notifications) ? locals.notifications : []; 
-      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`; 
-      const formatNotifTime = (date) => { 
-        if (!date) return "Just now"; 
-        const d = new Date(date); 
-        if (Number.isNaN(d.getTime())) return "Just now"; 
-        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }); 
-      }; 
+  <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
+    formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
+    const formatNotifTime = (date) => {
+    if (!date) return "Just now";
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return "Just now";
+    return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    };
     %>
     <div class="notif-dropdown" id="notifDropdown">
       <p class="notif-title">NOTIFICATIONS</p>
-      <% if (notifications.length === 0) { %>
-      <p class="notif-empty">No new notifications</p>
-      <% } else { %> 
-        <% notifications.forEach(function(note) { 
-          const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed'; 
-          const eventTitle = note.eventName || 'Event'; 
-          const countLabel = formatTicketCount(note.ticketCount || 1); 
-          const timeLabel = formatNotifTime(note.createdAt); 
-        %>
-        <div class="notif-item">
-          <p class="notif-item-title"><%= title %></p>
-          <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
-          <p class="notif-time"><%= timeLabel %></p>
-        </div>
-        <% }) %> 
-      <% } %>
+      <% if (notifications.length===0) { %>
+        <p class="notif-empty">No new notifications</p>
+        <% } else { %>
+          <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled' ? 'Booking Cancelled'
+            : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
+            countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
+            <div class="notif-item">
+              <p class="notif-item-title">
+                <%= title %>
+              </p>
+              <p class="notif-item-sub">
+                <%= eventTitle %> · <%= countLabel %>
+              </p>
+              <p class="notif-time">
+                <%= timeLabel %>
+              </p>
+            </div>
+            <% }) %>
+              <% } %>
     </div>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -101,48 +94,15 @@
       <h1>Curated <span>Experiences.</span></h1>
       <div class="search-bar">
         <div class="search-bar-input">
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input
-            type="text"
-            id="heroSearch"
-            placeholder="Search for events, venues, or cities..."
-          />
-        </div>
-        <div class="date-filter-row">
-          <span class="date-filter-label">Filter by</span>
-          <div class="date-filter-group">
-            <button class="date-filter-btn active" data-period="all">
-              All
-            </button>
-            <button class="date-filter-btn" data-period="today">Today</button>
-            <button class="date-filter-btn" data-period="week">
-              This Week
-            </button>
-            <button class="date-filter-btn" data-period="month">
-              This Month
-            </button>
-            <button class="date-filter-btn" data-period="year">
-              This Year
-            </button>
-          </div>
-          <div class="date-filter-divider"></div>
-          <div class="date-picker-wrap">
-            <input type="date" id="heroDate" />
-            <button class="date-clear-btn" id="dateClearBtn">✕</button>
-          </div>
+          <input type="text" id="heroSearch" placeholder="Search for events, venues, or cities..." />
         </div>
 
-        <button class="btn-find" id="findBtn">Find Events</button>
+
+
       </div>
     </section>
 
@@ -161,98 +121,80 @@
     </div>
 
     <section class="events-section">
+      <div id="noResults"
+        style="display: none; text-align: center; padding: 4rem 2rem; background: #fff; border-radius: 12px; border: 1px dashed var(--border); grid-column: 1 / -1; margin-bottom: 2rem;">
+        <div style="font-size: 40px; margin-bottom: 1rem;">🔍</div>
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">No matches found</h3>
+        <p style="font-size: 14px; color: var(--muted);">Try adjusting your search or category filters to find what
+          you're looking for.</p>
+      </div>
       <div class="events-grid" id="eventsGrid">
-        <% if (typeof events !== 'undefined' && events.length > 0) { %> 
-          <% events.forEach(event => { 
-            let catStr = (event.category || 'other').toLowerCase(); 
-            if(event.categoryId && event.categoryId.name) { 
-              catStr = event.categoryId.name.toLowerCase(); 
+        <% if (typeof events !=='undefined' && events.length> 0) { %>
+          <% events.forEach(event=> {
+            let catStr = (event.category || 'other').toLowerCase().trim().replace(/\s+/g, '-');
+            if(event.categoryId && event.categoryId.name) {
+            catStr = event.categoryId.name.toLowerCase().trim().replace(/\s+/g, '-');
             }
-            let imgUrl = event.imagePath || event.image || '/images/default-event.png'; 
-            if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) { 
-              imgUrl = '/' + imgUrl; 
-            } 
-            let eventDate = new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }); 
-            let isFree = event.ticketPrice === 0; 
-            let displayPrice = isFree ? "Free Admission" : "$" + event.ticketPrice.toFixed(2); 
-          %>
-          <div
-            class="event-card"
-            data-id="<%= event._id %>"
-            data-category="<%= catStr %>"
-            data-date="<%= event.date %>"
-          >
-            <div class="card-img">
-              <img
-                src="<%= imgUrl %>"
-                alt="<%= event.eventName || event.title %>"
-              />
-              <span class="card-tag tag-<%= catStr %>"
-                ><%= (event.categoryId && event.categoryId.name) ?
-                event.categoryId.name : (event.category || 'Other') %></span
-              >
-            </div>
-            <div class="card-body">
-              <p class="card-name"><%= event.eventName || event.title %></p>
-              <div class="card-meta">
-                <div class="card-meta-row">
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  <%= eventDate %>
+            let imgUrl = event.imagePath || event.image || '/images/default-event.png';
+            if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+            imgUrl = '/' + imgUrl;
+            }
+            let eventDate = new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year:
+            'numeric' });
+            let isFree = event.ticketPrice === 0;
+            let displayPrice = isFree ? "Free Admission" : "$" + event.ticketPrice.toFixed(2);
+            %>
+            <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
+              data-date="<%= event.date %>">
+              <div class="card-img">
+                <img src="<%= imgUrl %>" alt="<%= event.eventName || event.title %>" />
+                <span class="card-tag tag-<%= catStr %>">
+                  <%= (event.categoryId && event.categoryId.name) ? event.categoryId.name : (event.category || 'Other' )
+                    %>
+                </span>
+              </div>
+              <div class="card-body">
+                <p class="card-name">
+                  <%= event.eventName || event.title %>
+                </p>
+                <div class="card-meta">
+                  <div class="card-meta-row">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <%= eventDate %>
+                  </div>
+                  <div class="card-meta-row">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <%= event.location %>
+                  </div>
                 </div>
-                <div class="card-meta-row">
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  <%= event.location %>
+                <div class="card-footer">
+                  <span class="card-price <%= isFree ? 'free' : '' %>">
+                    <%= displayPrice %>
+                  </span>
+                  <button class="btn-details">Details →</button>
                 </div>
               </div>
-              <div class="card-footer">
-                <span class="card-price <%= isFree ? 'free' : '' %>"
-                  ><%= displayPrice %></span
-                >
-                <button class="btn-details">Details →</button>
-              </div>
             </div>
-          </div>
-          <% }); %> 
-        <% } else { %>
-          <p style="text-align: center; grid-column: 1 / -1; margin-top: 2rem">
-            No events found dynamically. Create some in the admin panel!
-          </p>
-        <% } %>
+            <% }); %>
+              <% } else { %>
+                <p style="text-align: center; grid-column: 1 / -1; margin-top: 2rem">
+                  No events found dynamically. Create some in the admin panel!
+                </p>
+                <% } %>
       </div>
 
       <div class="load-more-wrap">
         <button class="btn-load" id="loadMoreBtn">
           Load More Events
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
@@ -295,5 +237,6 @@
     </footer>
 
     <script src="/js/catalog.js"></script>
-  </body>
+</body>
+
 </html>

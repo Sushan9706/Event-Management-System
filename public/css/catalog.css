@@ -13,8 +13,8 @@
   --mid: #555555;
   --muted: #888888;
   --border: #e4e4e0;
-  --blue: #3b5bdb;
-  --sans: "DM Sans", sans-serif;
+  --blue: #2563eb;
+  --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
@@ -32,6 +32,7 @@ a {
   text-decoration: none;
   color: inherit;
 }
+
 button {
   cursor: pointer;
   font-family: var(--sans);
@@ -45,6 +46,7 @@ button {
   z-index: 100;
   height: 60px;
 }
+
 .nav-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -54,12 +56,14 @@ button {
   align-items: center;
   justify-content: space-between;
 }
+
 .nav-logo {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.08em;
   color: var(--dark);
 }
+
 .nav-links {
   display: flex;
   gap: 28px;
@@ -86,9 +90,8 @@ button {
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(
-    --dark
-  ); /* Or var(--blue) if you prefer the dashboard color */
+  background: var(--dark);
+  /* Or var(--blue) if you prefer the dashboard color */
   transform: scaleX(0);
   transform-origin: bottom right;
   transition: transform 0.3s ease-out;
@@ -115,6 +118,7 @@ button {
   align-items: center;
   gap: 8px;
 }
+
 .icon-btn {
   background: none;
   border: none;
@@ -126,10 +130,12 @@ button {
   transition: background 0.2s, color 0.2s;
   position: relative;
 }
+
 .icon-btn:hover {
   background: #f0f0ee;
   color: var(--dark);
 }
+
 .notif-dot {
   position: absolute;
   top: 4px;
@@ -140,6 +146,7 @@ button {
   border-radius: 50%;
   border: 1.5px solid var(--white);
 }
+
 .avatar-btn {
   width: 32px;
   height: 32px;
@@ -149,9 +156,11 @@ button {
   cursor: pointer;
   transition: border-color 0.2s;
 }
+
 .avatar-btn:hover {
   border-color: var(--dark);
 }
+
 .avatar-btn img {
   width: 100%;
   height: 100%;
@@ -174,9 +183,11 @@ button {
   max-height: 260px;
   overflow-y: auto;
 }
+
 .notif-dropdown.open {
   display: block;
 }
+
 .notif-title {
   font-size: 10px;
   font-weight: 700;
@@ -184,21 +195,25 @@ button {
   color: var(--muted);
   margin-bottom: 12px;
 }
+
 .notif-item {
   padding: 10px 12px;
   background: var(--bg);
   border-radius: 7px;
   margin-bottom: 8px;
 }
+
 .notif-item:last-child {
   margin-bottom: 0;
 }
+
 .notif-item-title {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--dark);
   margin-bottom: 2px;
 }
+
 .notif-item-sub {
   font-size: 11px;
   color: var(--muted);
@@ -225,9 +240,11 @@ button {
   justify-content: center;
   padding-top: 80px;
 }
+
 .search-overlay.open {
   display: flex;
 }
+
 .search-box {
   background: var(--white);
   border-radius: 12px;
@@ -235,6 +252,7 @@ button {
   width: 520px;
   max-width: 90%;
 }
+
 .search-box input {
   width: 100%;
   padding: 11px 14px;
@@ -245,9 +263,11 @@ button {
   outline: none;
   color: var(--dark);
 }
+
 .search-box input:focus {
   border-color: var(--dark);
 }
+
 .search-hint {
   font-size: 11px;
   color: var(--muted);
@@ -261,9 +281,11 @@ button {
   inset: 0;
   z-index: 300;
 }
+
 .sidebar-overlay.open {
   display: block;
 }
+
 .avatar-sidebar {
   position: fixed;
   top: 52px;
@@ -281,9 +303,11 @@ button {
   transition: right 0.22s ease;
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.07);
 }
+
 .avatar-sidebar.open {
   right: 0;
 }
+
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -294,14 +318,17 @@ button {
   color: var(--dark);
   transition: background 0.15s;
 }
+
 .sidebar-link:hover {
   background: var(--bg);
 }
+
 .sidebar-divider {
   height: 1px;
   background: var(--border);
   margin: 6px 22px;
 }
+
 .sidebar-logout {
   display: flex;
   align-items: center;
@@ -317,6 +344,7 @@ button {
   cursor: pointer;
   transition: background 0.15s;
 }
+
 .sidebar-logout:hover {
   background: #fff5f5;
 }
@@ -324,8 +352,13 @@ button {
 .hero {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 32px 28px;
+  padding: 48px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
+
 .hero h1 {
   font-family: var(--sans);
   font-size: 52px;
@@ -333,8 +366,9 @@ button {
   line-height: 1.05;
   letter-spacing: -0.02em;
   color: var(--dark);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
+
 .hero h1 span {
   color: var(--blue);
 }
@@ -343,59 +377,57 @@ button {
   display: flex;
   align-items: center;
   background: var(--white);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
+  border: none;
+  border-radius: 50px;
   overflow: hidden;
-  max-width: 520px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-width: 540px;
+  width: 100%;
+  height: 52px;
+  margin: 0 auto 8px;
+  padding: 0;
+  box-shadow: 0 0 0 1px var(--border), 0 4px 20px rgba(0, 0, 0, 0.08);
 }
+
 .search-bar-input {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 16px;
+  gap: 12px;
+  padding: 0 0 0 28px;
   flex: 1;
 }
+
 .search-bar-input svg {
   color: var(--muted);
   flex-shrink: 0;
 }
+
 .search-bar-input input {
   border: none;
   outline: none;
   font-family: var(--sans);
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--dark);
   background: transparent;
   width: 100%;
-  padding: 11px 0;
+  padding: 0;
 }
+
 .search-bar-input input::placeholder {
-  color: #aaa;
+  color: #bbb;
 }
-.btn-find {
-  background: var(--dark);
-  color: var(--white);
-  border: none;
-  padding: 0 22px;
-  height: 44px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-.btn-find:hover {
-  background: #333;
-}
+
+/* Find button removed - using real-time Ajax instead */
 
 .filters {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px 28px;
+  padding: 0 32px 40px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
+
 .filter-tag {
   padding: 8px 18px;
   border-radius: 30px;
@@ -407,10 +439,12 @@ button {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .filter-tag:hover {
   border-color: var(--dark);
   color: var(--dark);
 }
+
 .filter-tag.active {
   background: var(--dark);
   color: var(--white);
@@ -420,24 +454,32 @@ button {
 .events-section {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px 48px;
+  padding: 0 32px 64px;
 }
+
 .events-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 32px;
+  width: 100%;
 }
+
 .event-card {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
+
 .event-card:hover {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
+
 .event-card.hidden {
   display: none;
 }
@@ -445,10 +487,11 @@ button {
 .card-img {
   position: relative;
   width: 100%;
-  height: 190px;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: #ddd;
+  background: #f0f0f0;
 }
+
 .card-img img {
   width: 100%;
   height: 100%;
@@ -456,6 +499,7 @@ button {
   display: block;
   transition: transform 0.35s ease;
 }
+
 .event-card:hover .card-img img {
   transform: scale(1.04);
 }
@@ -472,34 +516,46 @@ button {
   color: var(--white);
   text-transform: uppercase;
 }
+
 .tag-music {
   background: #8b5cf6;
 }
+
 .tag-tech {
   background: #3b82f6;
 }
+
 .tag-food {
   background: #f59e0b;
 }
+
 .tag-arts {
   background: #10b981;
 }
+
 .tag-sports {
   background: #ef4444;
 }
+
 .tag-networking {
   background: #06b6d4;
 }
+
 .tag-education {
   background: #f97316;
 }
+
 .tag-other {
   background: #6b7280;
 }
 
 .card-body {
-  padding: 16px 18px 18px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
+
 .card-name {
   font-size: 15px;
   font-weight: 700;
@@ -507,12 +563,14 @@ button {
   margin-bottom: 6px;
   line-height: 1.3;
 }
+
 .card-meta {
   display: flex;
   flex-direction: column;
   gap: 3px;
   margin-bottom: 14px;
 }
+
 .card-meta-row {
   display: flex;
   align-items: center;
@@ -520,6 +578,7 @@ button {
   font-size: 12px;
   color: var(--muted);
 }
+
 .card-footer {
   display: flex;
   align-items: center;
@@ -527,14 +586,17 @@ button {
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+
 .card-price {
   font-size: 15px;
   font-weight: 700;
   color: var(--dark);
 }
+
 .card-price.free {
   color: #10b981;
 }
+
 .btn-details {
   font-size: 12px;
   font-weight: 600;
@@ -543,6 +605,7 @@ button {
   border: none;
   transition: color 0.2s;
 }
+
 .btn-details:hover {
   color: var(--dark);
 }
@@ -551,6 +614,7 @@ button {
   text-align: center;
   padding: 8px 0 48px;
 }
+
 .btn-load {
   display: inline-flex;
   align-items: center;
@@ -564,6 +628,7 @@ button {
   color: var(--dark);
   transition: border-color 0.2s, background 0.2s;
 }
+
 .btn-load:hover {
   border-color: var(--dark);
 }
@@ -577,9 +642,11 @@ button {
   align-items: center;
   justify-content: center;
 }
+
 .event-modal.open {
   display: flex;
 }
+
 .modal-box {
   background: var(--white);
   border-radius: 14px;
@@ -587,6 +654,7 @@ button {
   width: 420px;
   max-width: 90%;
 }
+
 .modal-tag {
   font-size: 9px;
   font-weight: 700;
@@ -597,6 +665,7 @@ button {
   display: inline-block;
   margin-bottom: 12px;
 }
+
 .modal-name {
   font-size: 20px;
   font-weight: 700;
@@ -604,12 +673,14 @@ button {
   margin-bottom: 10px;
   line-height: 1.2;
 }
+
 .modal-meta {
   display: flex;
   flex-direction: column;
   gap: 5px;
   margin-bottom: 18px;
 }
+
 .modal-meta-row {
   display: flex;
   align-items: center;
@@ -617,19 +688,23 @@ button {
   font-size: 12.5px;
   color: var(--muted);
 }
+
 .modal-price {
   font-size: 26px;
   font-weight: 700;
   color: var(--dark);
   margin-bottom: 20px;
 }
+
 .modal-price.free {
   color: #10b981;
 }
+
 .modal-actions {
   display: flex;
   gap: 10px;
 }
+
 .btn-book {
   flex: 1;
   padding: 12px;
@@ -641,9 +716,11 @@ button {
   font-weight: 600;
   transition: background 0.2s;
 }
+
 .btn-book:hover {
   background: #333;
 }
+
 .btn-close-modal {
   padding: 12px 18px;
   border: 1.5px solid var(--border);
@@ -654,6 +731,7 @@ button {
   color: var(--mid);
   transition: border-color 0.2s;
 }
+
 .btn-close-modal:hover {
   border-color: var(--dark);
 }
@@ -667,9 +745,11 @@ button {
   align-items: center;
   justify-content: center;
 }
+
 .booking-modal.open {
   display: flex;
 }
+
 .booking-box {
   background: var(--white);
   border-radius: 14px;
@@ -677,26 +757,31 @@ button {
   width: 340px;
   text-align: center;
 }
+
 .booking-emoji {
   font-size: 42px;
   margin-bottom: 14px;
 }
+
 .booking-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--dark);
   margin-bottom: 8px;
 }
+
 .booking-sub {
   font-size: 13px;
   color: var(--mid);
   margin-bottom: 4px;
 }
+
 .booking-detail {
   font-size: 12px;
   color: var(--muted);
   margin-bottom: 24px;
 }
+
 .btn-done {
   background: var(--dark);
   color: var(--white);
@@ -707,6 +792,7 @@ button {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn-done:hover {
   background: #333;
 }
@@ -721,27 +807,33 @@ button {
   width: 100%;
   margin-top: auto;
 }
+
 .footer-copy {
   font-size: 10px;
   letter-spacing: 0.07em;
   color: var(--muted);
 }
+
 .footer-links {
   display: flex;
   gap: 20px;
 }
+
 .footer-links a {
   font-size: 10px;
   letter-spacing: 0.07em;
   color: var(--muted);
   transition: color 0.2s;
 }
+
 .footer-links a:hover {
   color: var(--dark);
 }
+
 #searchBtn {
   display: none;
 }
+
 .search-bar-date-wrap {
   padding: 0 14px;
   display: flex;
