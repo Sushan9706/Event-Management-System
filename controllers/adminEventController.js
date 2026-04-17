@@ -114,6 +114,16 @@ exports.postCreateEvent = async (req, res) => {
     try {
         const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
 
+        // --- Date Validation: Cannot go past today ---
+        const eventDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        if (eventDate < today) {
+            req.flash('error', 'Event date cannot be in the past');
+            return res.redirect('/admin/events/create');
+        }
+
         const eventData = {
             eventName,
             description,
@@ -129,6 +139,9 @@ exports.postCreateEvent = async (req, res) => {
 
         if (req.file) {
             eventData.imagePath = '/images/events/' + req.file.filename;
+        } else {
+            // Default image if no image Provided
+            eventData.imagePath = 'https://www.cvent.com/sites/default/files/styles/column_content_width/public/image/2023-11/53322146052_90bc13d238_c.jpg.webp?itok=YayCFh_V';
         }
 
         await Event.create(eventData);
@@ -169,6 +182,16 @@ exports.postEditEvent = async (req, res) => {
             return res.redirect('/admin/dashboard');
         }
 
+        // --- Date Validation: Cannot go past today ---
+        const eventDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        if (eventDate < today) {
+            req.flash('error', 'Event date cannot be in the past');
+            return res.redirect(`/admin/events/edit/${req.params.id}`);
+        }
+
         // Update fields
         event.eventName = eventName;
         event.description = description;
@@ -181,11 +204,14 @@ exports.postEditEvent = async (req, res) => {
         event.status = status || 'upcoming';
 
         if (req.file) {
-            if (event.imagePath) {
+            if (event.imagePath && !event.imagePath.startsWith('http')) {
                 const oldPath = path.join(__dirname, '..', 'public', event.imagePath);
                 if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
             }
             event.imagePath = '/images/events/' + req.file.filename;
+        } else if (!event.imagePath) {
+            // Default image if no image Provided
+            event.imagePath = 'https://www.cvent.com/sites/default/files/styles/column_content_width/public/image/2023-11/53322146052_90bc13d238_c.jpg.webp?itok=YayCFh_V';
         }
 
         await event.save();

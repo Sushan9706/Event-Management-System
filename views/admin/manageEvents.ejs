@@ -21,7 +21,22 @@
             </div>
             <nav class="nav-links">
                 <a href="/admin/dashboard" class="nav-link active">Events</a>
-                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                
+                <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span class="notif-dot" id="notifDot" style="display: none;"></span>
+                </button>
+
+                <div class="notif-dropdown" id="notifDropdown">
+                    <p class="notif-title">RECENT BOOKINGS</p>
+                    <div id="notifList">
+                        <!-- Notifications populate here -->
+                        <p class="notif-empty">Loading notifications...</p>
+                    </div>
+                </div>
 
                 <!-- Replace Register button with User Symbol Dropdown -->
                 <div class="user-menu-container">
@@ -293,18 +308,75 @@
     </main>
 
     <script>
-        // ─── Navbar User Dropdown ───
+        // ─── Navbar Elements ───
         const userTrigger = document.getElementById('userTrigger');
         const userDropdown = document.getElementById('userDropdown');
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+        const notifList = document.getElementById('notifList');
+        const notifDot = document.getElementById('notifDot');
 
+        // ─── Dropdown Toggles ───
         userTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
             userDropdown.classList.toggle('show');
+            notifDropdown.classList.remove('show');
+        });
+
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('show');
+            userDropdown.classList.remove('show');
+            if (notifDropdown.classList.contains('show')) {
+                fetchNotifications();
+            }
         });
 
         document.addEventListener('click', () => {
             userDropdown.classList.remove('show');
+            notifDropdown.classList.remove('show');
         });
+
+        // ─── Notifications Fetch ───
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/admin/notifications');
+                const data = await response.json();
+                renderNotifications(data);
+            } catch (err) {
+                console.error('Error fetching notifications:', err);
+                notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
+            }
+        }
+
+        function renderNotifications(notifications) {
+            if (!notifications || notifications.length === 0) {
+                notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
+                notifDot.style.display = 'none';
+                return;
+            }
+
+            // Show dot if there are notifications (simplified logic)
+            notifDot.style.display = 'block';
+
+            notifList.innerHTML = notifications.map(n => {
+                const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
+                const date = new Date(n.createdAt).toLocaleString('en-US', { 
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                });
+                return `
+                    <div class="notif-item">
+                        <p class="notif-item-title">New Booking: ${n.userName}</p>
+                        <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
+                        <p class="notif-time">${date}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Fetch once on load to show dot if needed
+        fetchNotifications();
 
         // ─── Real-time Search & Filter (AJAX) ───
         const searchInput = document.getElementById('searchInput');

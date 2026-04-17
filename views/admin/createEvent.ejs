@@ -15,10 +15,26 @@
     <!-- ── Navbar ── -->
     <header class="navbar">
         <div class="nav-inner">
-            <span class="logo">EMS</span>
+            <div class="nav-brand">
+                <span class="logo">EMS</span>
+            </div>
             <nav class="nav-links">
                 <a href="/admin/dashboard" class="nav-link">Events</a>
-                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+
+                <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span class="notif-dot" id="notifDot" style="display: none;"></span>
+                </button>
+
+                <div class="notif-dropdown" id="notifDropdown" style="right: 50px;">
+                    <p class="notif-title">RECENT BOOKINGS</p>
+                    <div id="notifList">
+                        <p class="notif-empty">Loading notifications...</p>
+                    </div>
+                </div>
 
                 <!-- Replace Register button with User Symbol Dropdown -->
                 <div class="user-menu-container">
@@ -35,7 +51,7 @@
                                 stroke-width="2">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path
-                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1-2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                                 </path>
                             </svg>
                             Profile
@@ -81,6 +97,16 @@
 
         <!-- ── Right Panel (Form) ── -->
         <section class="right-panel">
+            <div style="margin-bottom: 32px;">
+                <a href="/admin/dashboard"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    BACK TO EVENTS
+                </a>
+            </div>
             <% if (locals.error && error.length> 0) { %>
                 <div class="flash-error"
                     style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; margin-bottom: 24px;">
@@ -213,6 +239,14 @@
     </main>
 
     <script>
+        // Enforce today or future date for selection
+        const dateInput = document.getElementById('date');
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.min = `${year}-${month}-${day}`;
+
         // File upload handling
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('banner_image');
@@ -260,19 +294,71 @@
             placeholder.style.display = 'block';
         });
 
-        // ─── Navbar User Dropdown ───
+        // ─── Navbar Elements ───
         const userTrigger = document.getElementById('userTrigger');
         const userDropdown = document.getElementById('userDropdown');
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+        const notifList = document.getElementById('notifList');
+        const notifDot = document.getElementById('notifDot');
 
         if (userTrigger) {
             userTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 userDropdown.classList.toggle('show');
+                notifDropdown.classList.remove('show');
             });
             document.addEventListener('click', () => {
                 userDropdown.classList.remove('show');
+                notifDropdown.classList.remove('show');
             });
         }
+
+        // ─── Notifications Toggle & Fetch ───
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('show');
+            userDropdown.classList.remove('show');
+            if (notifDropdown.classList.contains('show')) {
+                fetchNotifications();
+            }
+        });
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/admin/notifications');
+                const data = await response.json();
+                renderNotifications(data);
+            } catch (err) {
+                console.error('Error fetching notifications:', err);
+                notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
+            }
+        }
+
+        function renderNotifications(notifications) {
+            if (!notifications || notifications.length === 0) {
+                notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
+                notifDot.style.display = 'none';
+                return;
+            }
+
+            notifDot.style.display = 'block';
+
+            notifList.innerHTML = notifications.map(n => {
+                const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
+                const date = new Date(n.createdAt).toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                return `
+                    <div class="notif-item">
+                        <p class="notif-item-title">New Booking: ${n.userName}</p>
+                        <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
+                        <p class="notif-time">${date}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        fetchNotifications();
     </script>
 </body>
 

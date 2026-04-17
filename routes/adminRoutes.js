@@ -27,6 +27,9 @@ router.post('/events/remove-image/:id', adminEventController.removeEventImage);
 // ─── BOOKING DETAILS ─────────────────────────────────────────
 router.get('/events/:id/bookings', adminEventController.getBookingDetails);
 
+// ─── NOTIFICATIONS ──────────────────────────────────────────
+router.get('/notifications', adminEventController.getNotifications);
+
 // ─── EXPORT CSV ──────────────────────────────────────────────
 router.get('/events/:id/bookings/export', adminEventController.exportBookingsCsv);
 
