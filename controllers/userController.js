@@ -1,10 +1,18 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 const userModel = require("../models/user");
 const eventModel = require("../models/event");
 const categoryModel = require("../models/categoryModel");
-const mongoose = require("mongoose");
+const PasswordReset = require("../models/passwordReset");
+
+// IMPORT UTILS
+const { generateOTP } = require("../utils/otp");
+const { sendOTP } = require("../utils/email");
 const { syncBookingExpiry, syncBookingsExpiry } = require("../utils/bookingStatus");
+
+
+const email = (req.body.email || "").toLowerCase().trim();
 
 exports.getRegister = (req, res) => {
     res.render("register");
@@ -154,8 +162,7 @@ exports.getUserDashboard = async (req, res) => {
         // 2. Populate 'bookedEvents' BUT with a match filter for the date
         const user = await userModel.findById(req.user.userId).populate({
             path: 'bookedEvents',
-            match: { date: { $gte: now } }, // Only fetch events happening today or later
-            options: { sort: { date: 1 } }  // Sort them so the soonest is first
+            match: { date: { $gte: now } } // Only fetch events happening today or later
         });
 
         if (!user) {
@@ -163,7 +170,12 @@ exports.getUserDashboard = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Now, user.bookedEvents only contains active, future events.
+        // Show most recently booked events first
+        if (user.bookedEvents) {
+            user.bookedEvents.reverse();
+        }
+
+        // Now, user.bookedEvents only contains active, future events, ordered by recent booking.
         res.render('user', { user }); 
     } catch (err) {
         console.error("Dashboard Error:", err);
@@ -369,7 +381,11 @@ exports.getGuestDashboard = async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
+        // Only show upcoming events that haven't passed or been cancelled/completed
+        const events = await eventModel.find({ 
+            date: { $gte: today },
+            status: { $nin: ['completed', 'cancelled'] }
+        }).populate('categoryId');
         res.render("index", { events: events, user: null });
     } catch (err) {
         res.status(500).send("Error loading dashboard");
@@ -380,7 +396,11 @@ exports.getCatalog = async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
+        // Only show upcoming events that haven't passed or been cancelled/completed
+        const events = await eventModel.find({ 
+            date: { $gte: today },
+            status: { $nin: ['completed', 'cancelled'] }
+        }).populate('categoryId');
 
         // Fetch the full user document if logged in; otherwise allow guest view
         let fullUser = null;
@@ -441,12 +461,15 @@ exports.searchEvents = async (req, res) => {
             }
         }
 
-        // Ensure we only show future events for general search unless a specific date is requested
+        // Ensure we only show upcoming events for general search unless a specific date is requested
         if (!date) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             queryObj.date = { $gte: today };
         }
+        
+        // Never show cancelled or completed events to regular users in the catalog
+        queryObj.status = { $nin: ['completed', 'cancelled'] };
 
         // Fetch events from DB and populate categoryId
         const events = await eventModel.find(queryObj).populate('categoryId');
@@ -459,7 +482,6 @@ exports.searchEvents = async (req, res) => {
     }
 };
 
-// Add this to your userController.js
 exports.getProfile = async (req, res) => {
     try {
         // req.user.userId comes from your auth middleware
@@ -563,7 +585,117 @@ exports.updateProfileInfo = async (req, res) => {
     }
 };
 
+exports.getForgotPassword = (req, res) => {
+    res.render("forgot-password");
+};
 
+
+exports.postForgotPassword = async (req, res) => {
+    try {
+        const email = (req.body.email || "").toLowerCase().trim();
+
+        const user = await userModel.findOne({ email });
+
+        // Always respond same (security)
+        if (!user) {
+            req.flash("success", "If this email exists, OTP has been sent.");
+            return res.redirect("/login");
+        }
+
+        const otp = generateOTP();
+        const otpHash = await bcrypt.hash(otp, 10);
+
+        // remove previous OTPs
+        await PasswordReset.deleteMany({ email });
+
+        await PasswordReset.create({
+            email,
+            otpHash,
+            expiresAt: Date.now() + 10 * 60 * 1000 // 10 min
+        });
+
+        try {
+            await sendOTP(email, otp);
+        } catch (err) {
+            console.error("Email error:", err);
+            req.flash("error", "Failed to send OTP. Try again.");
+            return res.redirect("/forgot-password");
+        }
+
+        req.flash("success", "OTP sent to your email.");
+        res.redirect(`/verify-otp?email=${email}`);
+
+    } catch (err) {
+        console.error("Forgot Password Error:", err);
+        res.redirect("/login");
+    }
+};
+
+exports.getVerifyOTP = (req, res) => {
+    const { email } = req.query;
+    res.render("verify-otp", { email });
+};
+
+// POST Verify OTP + Reset Password
+exports.postVerifyOTP = async (req, res) => {
+    try {
+        const { email, otp, newPassword, confirmPassword } = req.body;
+        const cleanEmail = (email || "").toLowerCase().trim();
+
+        // validate passwords match
+        if (newPassword !== confirmPassword) {
+            req.flash("error", "Passwords do not match");
+            return res.redirect(`/verify-otp?email=${cleanEmail}`);
+        }
+
+        // password strength check
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])(?!.*\s).{8,}$/;
+
+        if (!passwordRegex.test(newPassword)) {
+            req.flash("error", "Password must be strong (8+ chars, number, symbol).");
+            return res.redirect(`/verify-otp?email=${cleanEmail}`);
+        }
+
+        const record = await PasswordReset.findOne({ email: cleanEmail });
+
+        if (!record) {
+            req.flash("error", "Invalid or expired OTP");
+            return res.redirect("/login");
+        }
+
+        if (Date.now() > record.expiresAt) {
+            await PasswordReset.deleteMany({ email: cleanEmail });
+            req.flash("error", "OTP expired");
+            return res.redirect("/login");
+        }
+
+        const isValid = await bcrypt.compare(otp, record.otpHash);
+
+        if (!isValid) {
+            req.flash("error", "Invalid OTP");
+            return res.redirect(`/verify-otp?email=${cleanEmail}`);
+        }
+
+        // hash new password
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(newPassword, salt);
+
+        await userModel.updateOne(
+            { email: cleanEmail },
+            { password: newHash }
+        );
+
+        // delete OTP after success
+        await PasswordReset.deleteMany({ email: cleanEmail });
+
+        req.flash("success", "Password reset successful!");
+        res.redirect("/login");
+
+    } catch (err) {
+        console.error("OTP Verify Error:", err);
+        res.redirect("/login");
+    }
+};
 
 exports.logout = (req, res) => {
     res.cookie("token", "");

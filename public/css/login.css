@@ -243,6 +243,22 @@ input::placeholder {
     }
 }
 
+/* Smooth Exit Animation */
+@keyframes fadeOutSlide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+.flash-message.fade-out {
+    animation: fadeOutSlide 0.5s ease forwards;
+}
+
 /* Container for input and button */
 .password-wrapper {
     position: relative;

@@ -108,5 +108,15 @@
             this.textContent = type === 'password' ? 'SHOW' : 'HIDE';
         });
     });
+
+    // Auto-dismiss flash messages after 2 seconds
+    document.querySelectorAll('.flash-message').forEach(el => {
+        setTimeout(() => {
+            el.classList.add('fade-out');
+            setTimeout(() => {
+                el.remove();
+            }, 500); // Wait for the fade-out animation to finish
+        }, 2000); // 2 seconds delay
+    });
 </script>
 </html>

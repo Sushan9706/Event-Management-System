@@ -30,12 +30,27 @@ exports.isAdmin = (req, res, next) => {
     }
 };
 
+// Ensure the logged-in user is a regular user
+exports.isUser = (req, res, next) => {
+    if (req.user && req.user.role === 'user') {
+        next();
+    } else if (req.user && req.user.role === 'admin') {
+        // Redirect admins away from user-specific pages
+        res.redirect('/admin/dashboard');
+    } else {
+        res.redirect('/login');
+    }
+};
+
 exports.redirectIfLoggedIn = (req, res, next) => {
     const token = req.cookies && req.cookies.token;
 
     if (token) {
         try {
-            jwt.verify(token, "shhhhhhhhh");
+            const user = jwt.verify(token, "shhhhhhhhh");
+            if (user.role === 'admin') {
+                return res.redirect("/admin/dashboard");
+            }
             return res.redirect("/user");
         } catch (err) {
             return next();

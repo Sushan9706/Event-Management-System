@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Event = require('./models/eventModel');
+const Event = require('./models/event');
 
 mongoose.connect('mongodb://127.0.0.1:27017/eventManagement')
     .then(async () => {

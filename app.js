@@ -46,8 +46,10 @@ app.use(async (req, res, next) => {
     if (token) {
         try {
             res.locals.user = jwt.verify(token, "shhhhhhhhh");
+            req.user = res.locals.user; // Ensure req.user is populated for controllers
         } catch (err) {
             res.locals.user = null;
+            req.user = null;
         }
     }
 
@@ -56,7 +58,12 @@ app.use(async (req, res, next) => {
         try {
             const User = require("./models/user");
             const Booking = require("./models/bookingModel");
-            const userDoc = await User.findById(res.locals.user.userId).select("notifications email");
+            const userDoc = await User.findById(res.locals.user.userId).select("notifications email profileImage username");
+            if (userDoc) {
+                // Attach real DB data back to the local user object
+                res.locals.user.profileImage = userDoc.profileImage;
+                res.locals.user.username = userDoc.username;
+            }
             if (userDoc && Array.isArray(userDoc.notifications) && userDoc.notifications.length > 0) {
                 res.locals.notifications = userDoc.notifications
                     .slice()

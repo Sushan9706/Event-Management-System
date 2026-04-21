@@ -59,7 +59,7 @@
         if (Number.isNaN(d.getTime())) return "Just now";
         return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
       };
-      const isAuthenticated = !!(locals && locals.user && locals.user.userId);
+      const isAuthenticated = !!(typeof user !== 'undefined' && user && user.userId);
     %>
     <title><%= eventTitle %> – EMS</title>
     <link rel="stylesheet" href="/css/event.css" />
@@ -92,9 +92,9 @@
         </button>
         <div class="avatar" id="avatarBtn" style="cursor: pointer">
           <img
-            src="https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80"
+            src="<%= (typeof user !== 'undefined' && user && user.profileImage) ? user.profileImage : 'https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80' %>"
             alt="User"
-            onerror="this.style.display='none'"
+            onerror="this.src='https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80'"
           />
         </div>
       </div>
@@ -314,7 +314,7 @@
       "
     >
       <a
-        href="user.html"
+        href="/profile"
         style="
           display: flex;
           align-items: center;
@@ -337,7 +337,7 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
-        Edit Profile
+        My Profile
       </a>
       <a
         id="evLogoutBtn"
