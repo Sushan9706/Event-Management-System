@@ -34,7 +34,7 @@ const getEventById = async (req, res) => {
         event.isSoldOut = hasCapacityLimit ? event.availableTickets <= 0 : false;
         event.hasEnded = hasEnded;
 
-        res.render('event', { event, user: req.user || null });
+        res.render('event', { event });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

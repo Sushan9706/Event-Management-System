@@ -108,5 +108,15 @@
             this.textContent = type === 'password' ? 'SHOW' : 'HIDE';
         });
     });
+
+    // Auto-dismiss flash messages
+    document.querySelectorAll('.flash-message').forEach(msg => {
+        setTimeout(() => {
+            msg.classList.add('fade-out');
+            setTimeout(() => {
+                msg.remove();
+            }, 400); // Wait for animation to finish
+        }, 2000); // 2 seconds delay
+    });
 </script>
 </html>
