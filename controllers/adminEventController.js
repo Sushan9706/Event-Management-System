@@ -289,7 +289,7 @@ exports.getBookingDetails = async (req, res) => {
             query.$or = [
                 { userName: { $regex: search, $options: 'i' } },
                 { userEmail: { $regex: search, $options: 'i' } },
-                { reference_number: { $regex: search, $options: 'i' } }
+                { referenceNumber: { $regex: search, $options: 'i' } }
             ];
         }
 
@@ -348,7 +348,7 @@ exports.exportBookingsCsv = async (req, res) => {
 
         let csv = 'Name,Email,Reference,Status,Booking Date\n';
         bookings.forEach(b => {
-            csv += `"${b.userName}","${b.userEmail}","${b.reference_number}","${b.status}","${b.createdAt}"\n`;
+            csv += `"${b.userName}","${b.userEmail}","${b.referenceNumber}","${b.status}","${b.createdAt}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');

@@ -86,7 +86,7 @@ exports.createBooking = async (req, res) => {
         if (booking) {
             const existingCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
             const baseCount = Math.max(booking.ticketCount || 0, existingCodes.length);
-            const ref_num = booking.reference_number || createRef();
+            const ref_num = booking.referenceNumber || createRef();
             const codes = [...existingCodes];
 
             if (codes.length < baseCount) {
@@ -97,7 +97,7 @@ exports.createBooking = async (req, res) => {
             const newCodes = buildTicketCodes(ref_num, codes.length + 1, ticketCount);
             const newCount = baseCount + ticketCount;
 
-            booking.reference_number = ref_num;
+            booking.referenceNumber = ref_num;
             booking.bookingRef = booking.bookingRef || ref_num;
             booking.userName = (displayName || booking.userName || user.username || '').trim() || user.username;
             booking.ticketCount = newCount;
@@ -118,7 +118,7 @@ exports.createBooking = async (req, res) => {
                 unitPrice,
                 totalAmount,
                 ticketCodes,
-                reference_number: ref_num,
+                referenceNumber: ref_num,
                 bookingRef: ref_num
             });
         }
@@ -151,7 +151,7 @@ exports.createBooking = async (req, res) => {
         res.json({
             success: true,
             message: 'Booking confirmed!',
-            reference_number: booking.reference_number,
+            referenceNumber: booking.referenceNumber,
             ticketCount: booking.ticketCount,
             totalAmount: booking.totalAmount,
             bookingId: booking._id,
@@ -227,13 +227,13 @@ exports.getManageBooking = async (req, res) => {
         const ticketCount = booking.ticketCount || 1;
         const existingCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
         if (existingCodes.length < ticketCount) {
-            const ref_num = booking.reference_number || `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+            const ref_num = booking.referenceNumber || `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
             const codes = [...existingCodes];
             for (let i = codes.length; i < ticketCount; i += 1) {
                 const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
                 codes.push(`${ref_num}-${String(i + 1).padStart(2, '0')}-${suffix}`);
             }
-            booking.reference_number = ref_num;
+            booking.referenceNumber = ref_num;
             booking.ticketCodes = codes;
             await booking.save();
         }
