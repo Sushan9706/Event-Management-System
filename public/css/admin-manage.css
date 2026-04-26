@@ -649,6 +649,21 @@ body {
     border: 1px solid #fecaca;
 }
 
+@keyframes fadeOutSlide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+.flash-msg.fade-out {
+    animation: fadeOutSlide 0.4s ease forwards;
+}
+
 /* ── Responsiveness ── */
 @media (max-width: 1024px) {
     .stats-grid {

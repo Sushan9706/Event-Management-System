@@ -149,22 +149,44 @@ exports.postLogin = async (req, res) => {
 exports.getUserDashboard = async (req, res) => {
     try {
         const now = new Date();
-
-        // 1. Find the user
-        // 2. Populate 'bookedEvents' BUT with a match filter for the date
-        const user = await userModel.findById(req.user.userId).populate({
-            path: 'bookedEvents',
-            match: { date: { $gte: now } }, // Only fetch events happening today or later
-            options: { sort: { date: 1 } }  // Sort them so the soonest is first
-        });
+        const user = await userModel.findById(req.user.userId);
 
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/login');
         }
 
-        // Now, user.bookedEvents only contains active, future events.
-        res.render('user', { user }); 
+        const bookingModel = require("../models/bookingModel");
+        
+        // Fetch recent confirmed bookings for future events
+        const recentBookings = await bookingModel.find({
+            userEmail: user.email,
+            status: 'confirmed'
+        })
+        .populate({
+            path: 'eventId',
+            match: { date: { $gte: now } }
+        })
+        .sort({ createdAt: -1 });
+
+        // Filter out those where eventId is null due to match filter failing (past events)
+        const allActiveBookings = recentBookings.filter(b => b.eventId !== null);
+        const topRecentBookings = allActiveBookings.slice(0, 5);
+
+        // Fetch stats
+        const totalBookings = await bookingModel.countDocuments({
+            userEmail: user.email,
+            status: 'confirmed'
+        });
+
+        const upcomingEvents = allActiveBookings.length;
+
+        res.render('user', { 
+            user, 
+            recentBookings: topRecentBookings,
+            totalBookings,
+            upcomingEvents
+        }); 
     } catch (err) {
         console.error("Dashboard Error:", err);
         res.redirect('/login');

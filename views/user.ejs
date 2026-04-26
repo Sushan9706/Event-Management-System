@@ -79,12 +79,12 @@
         <div class="stat-card">
           <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg></div>
           <p class="stat-label">TOTAL BOOKINGS</p>
-          <p class="stat-num"><%= (user.bookedEvents) ? user.bookedEvents.length : 0 %></p>
+          <p class="stat-num"><%= locals.totalBookings || 0 %></p>
         </div>
         <div class="stat-card">
           <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg></div>
           <p class="stat-label">UPCOMING EVENTS</p>
-          <p class="stat-num"><%= (user.bookedEvents) ? user.bookedEvents.filter(e => new Date(e.date) > new Date()).length : 0 %></p>
+          <p class="stat-num"><%= locals.upcomingEvents || 0 %></p>
         </div>
         
       </div>
@@ -132,20 +132,26 @@
             <span class="th">DATE</span>
             <span class="th">ACTION</span>
           </div>
-          <% if (user.bookedEvents && user.bookedEvents.length > 0) { %>
-            <% user.bookedEvents.forEach(event => { %>
+          <% if (locals.recentBookings && recentBookings.length > 0) { %>
+            <% recentBookings.forEach(booking => { 
+                const event = booking.eventId;
+            %>
               <div class="tbl-row">
                 <div class="td td-event">
-                  <div class="ri"><img src="<%= event.image %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
-                  <div><p class="rn"><%= event.title %></p><p class="rid"><%= event.location %></p></div>
+                  <div class="ri"><img src="<%= event.image || event.imagePath %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
+                  <div><p class="rn"><%= event.eventName || event.title %></p><p class="rid"><%= event.location %></p></div>
                 </div>
-                <div class="td"><span class="pill pill--ok">CONFIRMED</span></div>
+                <div class="td"><span class="pill pill--ok"><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
                 <div class="td"><%= new Date(event.date).toLocaleDateString() %></div>
-                <div class="td"><button class="act-btn">✕</button></div>
+                <div class="td">
+                   <a href="/bookings/manage/<%= booking._id %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                   </a>
+                </div>
               </div>
             <% }) %>
           <% } else { %>
-            <p style="padding: 20px; color: #999; text-align: center;">No recent bookings.</p>
+            <p style="padding: 20px; color: #999; text-align: center;">No recent bookings found.</p>
           <% } %>
         </div>
       </div>

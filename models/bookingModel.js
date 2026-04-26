@@ -34,7 +34,7 @@ const bookingSchema = new mongoose.Schema(
             type: [String],
             default: []
         },
-        reference_number: {
+        referenceNumber: {
             type: String,
             required: true,
             unique: true
