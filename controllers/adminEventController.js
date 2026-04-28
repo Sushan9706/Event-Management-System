@@ -53,7 +53,7 @@ exports.getManageEvents = async (req, res) => {
 
         // Stats for cards - based on ALL events not just filtered ones for accurate dashboard
         const totalEventsCount = await Event.countDocuments();
-        const activeEventsCount = await Event.countDocuments({ status: 'upcoming' }); // Using 'upcoming' as 'active' for now
+        const activeEventsCount = await Event.countDocuments({ status: { $nin: ['completed', 'cancelled'] } });
         const totalAttendees = await Booking.countDocuments({ status: 'confirmed' });
 
         // Avg Attendance (Mocked or calculated if possible)
@@ -112,24 +112,39 @@ exports.getCreateEvent = async (req, res) => {
 
 exports.postCreateEvent = async (req, res) => {
     try {
-        const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
-
+        const { eventName, description, categoryId, startDate, startTime, endDate, endTime, location, maxCapacity, ticketPrice, status } = req.body;
+ 
         // --- Date Validation: Cannot go past today ---
-        const eventDate = new Date(date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
-
-        if (eventDate < today) {
-            req.flash('error', 'Event date cannot be in the past');
+        today.setHours(0, 0, 0, 0);
+ 
+        if (start < today) {
+            req.flash('error', 'Start date cannot be in the past');
             return res.redirect('/admin/events/create');
         }
-
+ 
+        if (end < start) {
+            req.flash('error', 'End date cannot be before start date');
+            return res.redirect('/admin/events/create');
+        }
+ 
+        // Sync category for legacy support if needed
+        let category = 'other';
+        if (categoryId) {
+            const catDoc = await Category.findById(categoryId);
+            if (catDoc) category = catDoc.name;
+        }
+ 
         const eventData = {
             eventName,
             description,
             categoryId,
-            date,
-            time,
+            startDate,
+            startTime,
+            endDate,
+            endTime,
             location,
             maxCapacity: Math.max(0, parseInt(maxCapacity) || 0),
             ticketPrice: Math.max(0, parseFloat(ticketPrice) || 0),
@@ -174,30 +189,37 @@ exports.getEditEvent = async (req, res) => {
 
 exports.postEditEvent = async (req, res) => {
     try {
-        const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
+        const { eventName, description, categoryId, startDate, startTime, endDate, endTime, location, maxCapacity, ticketPrice, status } = req.body;
         const event = await Event.findById(req.params.id);
-
+ 
         if (!event) {
             req.flash('error', 'Event not found');
             return res.redirect('/admin/dashboard');
         }
-
-        // --- Date Validation: Cannot go past today ---
-        const eventDate = new Date(date);
+ 
+        // --- Date Validation ---
+        const start = new Date(startDate);
+        const end = new Date(endDate);
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
-
-        if (eventDate < today) {
-            req.flash('error', 'Event date cannot be in the past');
+        today.setHours(0, 0, 0, 0);
+ 
+        if (start < today) {
+            req.flash('error', 'Start date cannot be in the past');
             return res.redirect(`/admin/events/edit/${req.params.id}`);
         }
-
-        // Update fields
+ 
+        if (end < start) {
+            req.flash('error', 'End date cannot be before start date');
+            return res.redirect(`/admin/events/edit/${req.params.id}`);
+        }
+ 
         event.eventName = eventName;
         event.description = description;
         event.categoryId = categoryId;
-        event.date = date;
-        event.time = time;
+        event.startDate = startDate;
+        event.startTime = startTime;
+        event.endDate = endDate;
+        event.endTime = endTime;
         event.location = location;
         event.maxCapacity = Math.max(0, parseInt(maxCapacity) || 0);
         event.ticketPrice = Math.max(0, parseFloat(ticketPrice) || 0);
