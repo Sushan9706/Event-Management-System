@@ -116,7 +116,7 @@
         <% } else { %>
           <% bookingList.forEach(function(booking) { 
               const event = booking.eventId;
-              const eventName = event ? (event.eventName || event.title) : 'Event';
+              const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
               const eventDate = event && event.date 
                 ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
                 : 'TBA';

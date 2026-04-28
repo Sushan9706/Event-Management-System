@@ -327,9 +327,30 @@ exports.cancelBookingById = async (req, res) => {
             booking.status = "cancelled";
         } else {
             const remainingCount = currentCount - normalizedCancel;
+            const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
             booking.ticketCount = remainingCount;
             booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
             booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+
+            // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
+            const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+            try {
+                await bookingModel.create({
+                    eventId: booking.eventId,
+                    userName: booking.userName,
+                    userEmail: booking.userEmail,
+                    ticketCount: normalizedCancel,
+                    unitPrice: booking.unitPrice || 0,
+                    totalAmount: (booking.unitPrice || 0) * normalizedCancel,
+                    ticketCodes: cancelledCodes,
+                    referenceNumber: cancellationRef,
+                    // bookingRef is unique in the DB; keep it unique for the cancellation record.
+                    bookingRef: cancellationRef,
+                    status: "cancelled"
+                });
+            } catch (err) {
+                console.error("Cancel history insert failed:", err && err.message ? err.message : err);
+            }
         }
 
         await booking.save();

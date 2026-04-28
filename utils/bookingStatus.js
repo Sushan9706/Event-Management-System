@@ -41,8 +41,14 @@ const shouldExpireBooking = (booking, now = new Date()) => {
         return false;
     }
 
+    // booking.eventId may be an ObjectId if not populated; only expire when a real date is available.
     const eventDoc = booking.eventId || booking.event || null;
-    return isEventDatePassed(eventDoc, now);
+    if (!eventDoc) return false;
+    const dateValue = (typeof eventDoc === 'object' && eventDoc !== null && 'date' in eventDoc)
+        ? eventDoc.date
+        : null;
+    if (!dateValue) return false;
+    return isEventDatePassed({ date: dateValue }, now);
 };
 
 const syncBookingExpiry = async (booking, now = new Date()) => {
