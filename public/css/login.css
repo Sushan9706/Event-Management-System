@@ -1,0 +1,296 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+body {
+    background-color: #fcfcfc;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -1px;
+}
+
+.navbar nav a {
+    text-decoration: none;
+    color: #666;
+    margin-left: 30px;
+    font-size: 0.9rem;
+}
+
+.btn-get-started {
+    color: #000 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #000;
+    padding-bottom: 2px;
+}
+
+/* Main Content */
+.login-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 100px; /* Offset for visual balance */
+}
+
+.welcome-text {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.welcome-text h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+}
+
+.welcome-text p {
+    color: #777;
+    font-size: 1.1rem;
+}
+
+/* Login Card */
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.error-flash {
+    background-color: #fee2e2;
+    color: #dc2626;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #fecaca;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.forgot-link {
+    font-size: 0.7rem;
+    color: #aaa;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background-color: #f4f4f6;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+input::placeholder {
+    color: #ccc;
+}
+
+/* Button */
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: #4e596d; /* The slate color from the image */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #3d4655;
+}
+
+.register-text {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.register-text a {
+    color: #4e596d;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+/* Footer */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 30px 50px;
+    font-size: 0.75rem;
+    color: #aaa;
+    letter-spacing: 0.5px;
+}
+
+.footer-right a {
+    text-decoration: none;
+    color: #aaa;
+    margin-left: 20px;
+}
+
+/* General Flash Message Container */
+.flash-message {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid transparent;
+    animation: fadeInSlide 0.4s ease forwards;
+}
+
+/* Error Variant */
+.flash-message.error {
+    background-color: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+
+.flash-message.error .flash-icon {
+    background-color: #fb7185;
+    color: white;
+}
+
+/* Success Variant */
+.flash-message.success {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.flash-message.success .flash-icon {
+    background-color: #4ade80;
+    color: white;
+}
+
+/* Circular Icon inside the flash card */
+.flash-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Smooth Entrance Animation */
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOutSlide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+.flash-message.fade-out {
+    animation: fadeOutSlide 0.4s ease forwards;
+}
+
+/* Container for input and button */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 60px; /* Make space for the button */
+}
+
+/* Toggle Button Styling */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #777; /* Premium indigo color */
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #222;
+}
+
+/* Ensure input group doesn't break */
+.input-group {
+    margin-bottom: 20px;
+}

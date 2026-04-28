@@ -1,0 +1,259 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+body {
+    background-color: #fcfcfc;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -1px;
+}
+
+.navbar nav a {
+    text-decoration: none;
+    color: #666;
+    margin-left: 30px;
+    font-size: 0.9rem;
+}
+
+.btn-login-nav {
+    color: #000 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #000;
+    padding-bottom: 2px;
+}
+
+/* Layout */
+.register-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.welcome-text {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.welcome-text h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1.2px;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+}
+
+.welcome-text p {
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Register Card */
+.register-card {
+    background: white;
+    padding: 45px 40px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04);
+}
+
+.input-group {
+    margin-bottom: 22px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #999;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #f4f4f6;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+input::placeholder {
+    color: #bbb;
+}
+
+/* Button with Arrow */
+.register-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: #556073; /* Matches the slate blue */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s ease;
+}
+
+.register-btn:hover {
+    background-color: #465061;
+}
+
+.register-btn span {
+    font-size: 1.2rem;
+    line-height: 0;
+}
+
+/* Bottom Text */
+.login-link-text {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.login-link-text a {
+    color: #556073;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+/* Footer */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 30px 50px;
+    font-size: 0.7rem;
+    color: #bbb;
+    letter-spacing: 0.5px;
+}
+
+.footer-right a {
+    text-decoration: none;
+    color: #bbb;
+    margin-left: 20px;
+}
+
+/* Container for input and button */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 60px; /* Make space for the button */
+}
+
+/* Toggle Button Styling */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #777; /* Premium indigo color */
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #222;
+}
+
+/* Ensure input group doesn't break */
+.input-group {
+    margin-bottom: 20px;
+}
+
+/* Flash Messages */
+.flash-message {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid transparent;
+    animation: fadeInSlide 0.4s ease forwards;
+}
+
+.flash-message.error {
+    background-color: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+
+.flash-message.success {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOutSlide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+.flash-message.fade-out {
+    animation: fadeOutSlide 0.4s ease forwards;
+}
+

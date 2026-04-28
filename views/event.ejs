@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <%
+      const eventTitle = (typeof event !== "undefined" && event && (event.eventName || event.title || event.name || event.eventTitle))
+        ? (event.eventName || event.title || event.name || event.eventTitle)
+        : "Global Architecture Summit 2026";
+      const eventDate = (typeof event !== "undefined" && event && event.date)
+        ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        : "Oct 14–16";
+      const eventLocation = (typeof event !== "undefined" && event && event.location)
+        ? event.location
+        : "The Glass Pavilion, Tokyo, Japan";
+      const eventTime = (typeof event !== "undefined" && event && event.time)
+        ? event.time
+        : "09:00 AM – 06:00 PM";
+      const rawPrice = (typeof event !== "undefined" && event && (typeof event.ticketPrice === "number" || typeof event.ticketPrice === "string"))
+        ? parseFloat(event.ticketPrice)
+        : NaN;
+      const eventPrice = Number.isFinite(rawPrice) ? rawPrice : 850;
+      const rawHeroImage = (typeof event !== "undefined" && event && (event.imagePath || event.image))
+        ? (event.imagePath || event.image)
+        : "";
+      const eventHeroImage = rawHeroImage
+        ? (rawHeroImage.startsWith("http") || rawHeroImage.startsWith("/") ? rawHeroImage : "/" + rawHeroImage)
+        : "https://images.unsplash.com/photo-1633507170063-253c395b532c?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+      const eventDescription = (typeof event !== "undefined" && event && event.description)
+        ? event.description
+        : "The 2026 EMS Global Architecture Summit brings together visionaries, lead architects, and urban planners from across the globe to redefine the boundaries of structural integrity and aesthetic innovation.\n\nJoin us for immersive keynote sessions, hands-on workshops, and networking events designed to elevate the future of event management.";
+      const descParagraphs = eventDescription
+        .split(/\\n+/)
+        .map((p) => p.trim())
+        .filter(Boolean);
+      const locationParts = eventLocation.split(",");
+      const locationMain = locationParts[0] ? locationParts[0].trim() : eventLocation;
+      const locationSub = locationParts.length > 1 ? locationParts.slice(1).join(",").trim() : "";
+      const eventId = (typeof event !== "undefined" && event) ? event._id : "";
+      const rawMaxCapacity = (typeof event !== "undefined" && event && (typeof event.maxCapacity === "number" || typeof event.maxCapacity === "string"))
+        ? parseInt(event.maxCapacity, 10)
+        : 0;
+      const eventMaxCapacity = Number.isFinite(rawMaxCapacity) ? rawMaxCapacity : 0;
+      const rawAvailableTickets = (typeof event !== "undefined" && event && (typeof event.availableTickets === "number" || typeof event.availableTickets === "string"))
+        ? parseInt(event.availableTickets, 10)
+        : NaN;
+      const hasCapacityLimit = eventMaxCapacity > 0;
+      const availableTickets = hasCapacityLimit
+        ? Math.max(Number.isFinite(rawAvailableTickets) ? rawAvailableTickets : eventMaxCapacity, 0)
+        : null;
+      const availableTicketsLabel = hasCapacityLimit ? String(availableTickets) : "Unlimited";
+      const isSoldOut = hasCapacityLimit ? availableTickets <= 0 : false;
+      const hasEnded = !!(typeof event !== "undefined" && event && event.hasEnded);
+      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+      const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      };
+      const isAuthenticated = !!(locals && locals.user && locals.user.userId);
+    %>
+    <title><%= eventTitle %> – EMS</title>
+    <link rel="stylesheet" href="/css/event.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">EMS</div>
+      <nav class="nav-links">
+        <a href="/user">Home </a>
+        <a href="/catalog">Events</a>
+        <a href="/bookings">My Bookings</a>
+      </nav>
+      <div class="nav-icons">
+        <button class="icon-btn" aria-label="Notifications" id="notifBtn">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        </button>
+        <div class="avatar" id="avatarBtn" style="cursor: pointer">
+          <img
+            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
+            alt="User avatar"
+            onerror="this.style.display='none'"
+          />
+        </div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-bg">
+        <img
+          src="<%= eventHeroImage %>"
+          alt="Event hero"
+          class="hero-img"
+          onerror="this.style.display='none'"
+        />
+        <div class="hero-overlay"></div>
+      </div>
+      <div class="hero-content">
+        <span class="featured-badge">FEATURED EXPERIENCE</span>
+        <h1 class="hero-title"><%= eventTitle %></h1>
+      </div>
+    </section>
+
+    <div class="page-body">
+      <div class="content-col">
+        <div class="meta-cards">
+          <div class="meta-card">
+            <p class="meta-label">WHEN</p>
+            <p class="meta-value large"><%= eventDate %></p>
+            <p class="meta-sub"><%= eventTime %></p>
+          </div>
+          <div class="meta-card">
+            <p class="meta-label">WHERE</p>
+            <p class="meta-value large"><%= locationMain %></p>
+            <p class="meta-sub"><%= locationSub || eventLocation %></p>
+          </div>
+          <div class="meta-card">
+            <p class="meta-label">TIER</p>
+            <p class="meta-value large">Premium</p>
+            <p class="meta-sub">Access All Areas</p>
+          </div>
+        </div>
+
+        <div class="vision">
+          <h2>About this event</h2>
+          <% descParagraphs.forEach(function(p) { %>
+            <p><%= p %></p>
+          <% }) %>
+        </div>
+
+        <div class="location-section">
+          <div class="location-header">
+            <h2>Location</h2>
+            <a href="#" class="get-directions">
+              Get Directions
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
+          </div>
+          <div class="map-container">
+            <img
+              src="https://gisgeography.com/wp-content/uploads/2017/10/Japan-Map-1265x1223.jpg"
+              alt="Map of Tokyo, Japan"
+              class="map-img"
+              onerror="this.innerHTML=''"
+            />
+            <div class="map-pin">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="#1a1a2e"
+                stroke="white"
+                stroke-width="1.5"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" fill="white" stroke="none" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="booking-sidebar">
+        <p class="entry-label">STANDARD ENTRY</p>
+        <div class="price-row">
+          <span class="price"><%= eventPrice === 0 ? "Free" : "$" + eventPrice %></span>
+          <span class="price-per">/ per guest</span>
+        </div>
+        <ul class="perks">
+          <li>
+            <span class="check-icon">✔</span>
+            Full access to all keynote sessions
+          </li>
+          <li>
+            <span class="check-icon">✔</span>
+            Lunch &amp; Evening Networking Mixers
+          </li>
+          <li>
+            <span class="check-icon">✔</span>
+            Digital Certification of Attendance
+          </li>
+        </ul>
+        <% if (hasEnded) { %>
+          <button class="book-btn" type="button" disabled>Event Closed</button>
+        <% } else if (isSoldOut) { %>
+          <button class="book-btn" type="button" disabled>Sold Out</button>
+        <% } else { %>
+          <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
+        <% } %>
+        <p class="secure-note">
+          SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
+        </p>
+      </aside>
+    </div>
+
+    <div class="notif-dropdown" id="notifDropdown">
+      <p class="notif-title">NOTIFICATIONS</p>
+      <% if (notifications.length === 0) { %>
+        <p class="notif-empty">No new notifications</p>
+      <% } else { %>
+        <% notifications.forEach(function(note) { 
+            const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
+            const eventTitle = note.eventName || 'Event';
+            const countLabel = formatTicketCount(note.ticketCount || 1);
+            const timeLabel = formatNotifTime(note.createdAt);
+        %>
+          <div class="notif-item">
+            <p class="notif-item-title"><%= title %></p>
+            <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
+            <p class="notif-time"><%= timeLabel %></p>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <div
+      id="searchOverlay"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 100px;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 10px;
+          padding: 20px;
+          width: 500px;
+          max-width: 90%;
+        "
+      >
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search events..."
+          style="
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e4e8;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+          "
+        />
+        <p
+          style="
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            text-align: center;
+          "
+        >
+          Press ESC to close
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="evOverlay"
+      style="display: none; position: fixed; inset: 0; z-index: 300"
+    ></div>
+    <aside
+      id="evSidebar"
+      style="
+        position: fixed;
+        top: 58px;
+        right: -260px;
+        width: 200px;
+        height: auto;
+        background: #fff;
+        border: 1px solid #e2e4e8;
+        border-radius: 8px;
+        z-index: 301;
+        padding: 8px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        transition: right 0.22s ease;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <div style="padding: 12px 22px; font-size: 13px; font-weight: 600; color: #1a1a2e; border-bottom: 1px solid #f0f1f3; margin-bottom: 5px;">
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest' %>
+      </div>
+
+      <a
+        href="/profile"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 22px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #1a1a2e;
+          text-decoration: none;
+        "
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        My Profile
+      </a>
+      <a
+        id="evLogoutBtn"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 22px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #c0392b;
+          background: none;
+          border: none;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+        "
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Log Out
+      </a>
+    </aside>
+
+    <div
+      id="bookingModal"
+      class="booking-modal"
+      aria-hidden="true"
+      data-event-id="<%= eventId %>"
+      data-event-name="<%= eventTitle %>"
+      data-event-date="<%= eventDate %>"
+      data-event-location="<%= eventLocation %>"
+      data-event-price="<%= eventPrice %>"
+      data-available-tickets="<%= hasCapacityLimit ? availableTickets : "" %>"
+      data-has-capacity-limit="<%= hasCapacityLimit %>"
+      data-has-ended="<%= hasEnded %>"
+      data-authenticated="<%= isAuthenticated %>"
+      data-already-booked="<%= typeof userBookedCount !== 'undefined' ? userBookedCount : 0 %>"
+      data-max-per-purchase="5"
+    >
+      <div class="booking-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+        <button class="booking-close" type="button" onclick="closeBooking()" aria-label="Close booking form">
+          &times;
+        </button>
+
+        <div class="booking-form-view">
+          <p class="booking-eyebrow">BOOK YOUR SEAT</p>
+          <h3 id="bookingTitle" class="booking-heading">Complete Your Booking</h3>
+
+          <div class="booking-summary">
+            <div class="summary-row">
+              <span>Event</span>
+              <strong id="bookingEventName"><%= eventTitle %></strong>
+            </div>
+            <div class="summary-row">
+              <span>Date</span>
+              <strong id="bookingEventDate"><%= eventDate %></strong>
+            </div>
+            <div class="summary-row">
+              <span>Location</span>
+              <strong id="bookingEventLocation"><%= eventLocation %></strong>
+            </div>
+            <div class="summary-row">
+              <span>Tickets</span>
+              <strong id="bookingTicketSummary">0</strong>
+            </div>
+            <div class="summary-row">
+              <span>Available</span>
+              <strong id="bookingAvailableTickets"><%= availableTicketsLabel %></strong>
+            </div>
+            <div class="summary-row">
+              <span>Total</span>
+              <strong id="bookingTotalPrice"><%= eventPrice === 0 ? "Free" : "$0" %></strong>
+            </div>
+          </div>
+
+          <form id="bookingForm" class="booking-form" novalidate>
+            <label class="booking-label" for="bookingEmail">Email Address</label>
+            <input
+              id="bookingEmail"
+              class="booking-input"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              value="<%= (locals.user && locals.user.email) ? locals.user.email : '' %>"
+              pattern="[^@\\s]*[A-Za-z][^@\\s]*@[^@\\s]+\\.[^@\\s]+"
+              autocomplete="email"
+              required
+            />
+
+            <label class="booking-label" for="ticketCount">Number of Tickets</label>
+            <input
+              id="ticketCount"
+              class="booking-input ticket-input"
+              type="number"
+              name="ticketCount"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              placeholder="Enter tickets"
+              required
+            />
+            <p class="booking-label">Available now: <strong id="ticketAvailabilityNote"><%= availableTicketsLabel %></strong></p>
+            <p id="maxTicketNote" style="display:none;color:#b45309;font-size:0.82em;margin-top:2px;">Maximum 5 tickets per purchase. To buy more, place another order after this one.</p>
+            <p class="booking-label" id="alreadyBookedNote" style="display:none;color:#888;font-size:0.82em;margin-top:2px;"></p>
+
+            <p class="booking-error" id="bookingError" aria-live="polite"></p>
+            <button class="booking-submit" type="submit">Confirm Booking</button>
+          </form>
+        </div>
+
+        <div class="booking-success-view" aria-live="polite">
+          <div class="booking-success-icon">✓</div>
+          <h3 class="booking-heading">Booking Successful!</h3>
+          <p class="booking-success-detail" id="bookingSuccessDetail"></p>
+          <div class="booking-success-actions">
+            <button class="booking-secondary" type="button" id="downloadTicketBtn">
+              Download Confirmation
+            </button>
+            <button class="booking-submit" type="button" onclick="closeBooking()">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>COPYRIGHT 2026 EMS MANAGEMENT</p>
+      <div class="footer-links">
+        <a href="#">PRIVACY POLICY</a>
+        <a href="#">TERMS OF SERVICE</a>
+        <a href="#">CONTACT</a>
+      </div>
+    </footer>
+    <script>
+      const notifDropdown = document.getElementById("notifDropdown");
+      const notifBtn = document.getElementById("notifBtn");
+      if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle("open");
+        });
+        document.addEventListener("click", (e) => {
+          if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifDropdown.classList.remove("open");
+          }
+        });
+      }
+
+      const evSidebar = document.getElementById("evSidebar");
+      const evOverlay = document.getElementById("evOverlay");
+      function openSidebar() {
+        evSidebar.style.right = "0";
+        evOverlay.style.display = "block";
+      }
+      function closeSidebar() {
+        evSidebar.style.right = "-260px";
+        evOverlay.style.display = "none";
+      }
+      const avatarBtn = document.getElementById("avatarBtn");
+      if (avatarBtn && evSidebar && evOverlay) {
+        avatarBtn.addEventListener("click", () =>
+          evSidebar.style.right === "0px" ? closeSidebar() : openSidebar()
+        );
+        evOverlay.addEventListener("click", closeSidebar);
+      }
+
+      const evLogoutBtn = document.getElementById("evLogoutBtn");
+      if (evLogoutBtn) {
+        evLogoutBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to log out?"))
+            window.location.href = "/logout";
+        });
+      }
+
+      const bookingModal = document.getElementById("bookingModal");
+      const bookingFormView = document.querySelector(".booking-form-view");
+      const bookingSuccessView = document.querySelector(".booking-success-view");
+      const bookingForm = document.getElementById("bookingForm");
+      const bookingError = document.getElementById("bookingError");
+      const bookingSuccessDetail = document.getElementById("bookingSuccessDetail");
+      const downloadTicketBtn = document.getElementById("downloadTicketBtn");
+      const ticketInput = document.getElementById("ticketCount");
+      const ticketSummary = document.getElementById("bookingTicketSummary");
+      const availableTicketsEl = document.getElementById("bookingAvailableTickets");
+      const ticketAvailabilityNote = document.getElementById("ticketAvailabilityNote");
+      const totalPriceEl = document.getElementById("bookingTotalPrice");
+      let lastBookingId = null;
+      const searchOverlay = document.getElementById("searchOverlay");
+      const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
+      const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
+
+      function formatAmount(amount, pricePerTicket) {
+        if (pricePerTicket === 0) return "Free";
+        const fixed = Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
+        return `$${fixed}`;
+      }
+
+      function getAvailableTickets() {
+        if (bookingModal.dataset.hasCapacityLimit !== "true") return null;
+        const rawValue = Number.parseInt(bookingModal.dataset.availableTickets || "", 10);
+        return Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+      }
+
+      function getTicketCount() {
+        const rawValue = ticketInput.value.trim();
+        if (!/^[1-9]\d*$/.test(rawValue)) return null;
+        let count = Number(rawValue);
+        const maxPerPurchase = parseInt(bookingModal.dataset.maxPerPurchase || "5", 10);
+        const availableTickets = getAvailableTickets();
+        const cap = availableTickets !== null ? Math.min(maxPerPurchase, availableTickets) : maxPerPurchase;
+        if (count > cap) {
+          count = cap;
+          ticketInput.value = cap > 0 ? String(cap) : "";
+        }
+        return count > 0 ? count : null;
+      }
+
+      function updateTicketSummary() {
+        const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
+        const count = getTicketCount();
+        const safeCount = count || 0;
+        ticketSummary.textContent = safeCount;
+        totalPriceEl.textContent = formatAmount(pricePerTicket * safeCount, pricePerTicket);
+      }
+
+      function handleBooking() {
+        if (bookingClosed) {
+          return;
+        }
+        const { eventName, eventDate, eventLocation } = bookingModal.dataset;
+        const availableTickets = getAvailableTickets();
+        document.getElementById("bookingEventName").textContent = eventName;
+        document.getElementById("bookingEventDate").textContent = eventDate;
+        document.getElementById("bookingEventLocation").textContent = eventLocation;
+        if (availableTicketsEl) {
+          availableTicketsEl.textContent = availableTickets === null ? "Unlimited" : availableTickets;
+        }
+        if (ticketAvailabilityNote) {
+          ticketAvailabilityNote.textContent = availableTickets === null
+            ? "Unlimited"
+            : availableTickets;
+        }
+        const maxPerPurchase = parseInt(bookingModal.dataset.maxPerPurchase || "5", 10);
+        const effectiveMax = availableTickets !== null
+          ? Math.min(maxPerPurchase, availableTickets)
+          : maxPerPurchase;
+        if (availableTickets !== null && availableTickets <= 0) return;
+        ticketInput.max = String(effectiveMax);
+        ticketInput.value = "";
+        updateTicketSummary();
+
+        const alreadyBooked = parseInt(bookingModal.dataset.alreadyBooked || "0", 10);
+        const alreadyBookedNote = document.getElementById("alreadyBookedNote");
+        if (alreadyBookedNote) {
+          if (alreadyBooked > 0) {
+            alreadyBookedNote.textContent = `You already have ${alreadyBooked} ticket${alreadyBooked === 1 ? "" : "s"} booked for this event. Max ${maxPerPurchase} per purchase.`;
+            alreadyBookedNote.style.display = "block";
+          } else {
+            alreadyBookedNote.style.display = "none";
+          }
+        }
+
+        bookingFormView.style.display = "block";
+        bookingSuccessView.style.display = "none";
+        bookingError.textContent = "";
+        if (downloadTicketBtn) {
+          downloadTicketBtn.disabled = true;
+          downloadTicketBtn.dataset.bookingId = "";
+        }
+        bookingModal.classList.add("open");
+        bookingModal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeBooking() {
+        bookingModal.classList.remove("open");
+        bookingModal.setAttribute("aria-hidden", "true");
+        bookingForm.reset();
+        updateTicketSummary();
+        const maxTicketNote = document.getElementById("maxTicketNote");
+        if (maxTicketNote) maxTicketNote.style.display = "none";
+      }
+
+
+      ticketInput.addEventListener("input", () => {
+        updateTicketSummary();
+        const maxPerPurchase = parseInt(bookingModal.dataset.maxPerPurchase || "5", 10);
+        const raw = parseInt(ticketInput.value, 10);
+        const maxTicketNote = document.getElementById("maxTicketNote");
+        if (maxTicketNote) {
+          maxTicketNote.style.display = (!isNaN(raw) && raw >= maxPerPurchase) ? "block" : "none";
+        }
+      });
+
+      bookingForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        bookingError.textContent = "";
+
+        const email = document.getElementById("bookingEmail").value.trim();
+        const ticketCount = getTicketCount();
+        const availableTickets = getAvailableTickets();
+        const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+          bookingError.textContent = "Please enter your email address.";
+          return;
+        }
+        if (!emailPattern.test(email)) {
+          bookingError.textContent = "Please enter a valid email address with at least one letter before @.";
+          return;
+        }
+        if (!ticketCount) {
+          bookingError.textContent = "Please enter a valid number of tickets.";
+          ticketInput.focus();
+          return;
+        }
+        const maxPerPurchase = parseInt(bookingModal.dataset.maxPerPurchase || "5", 10);
+        if (ticketCount > maxPerPurchase) {
+          bookingError.textContent = `You can book a maximum of ${maxPerPurchase} tickets per purchase.`;
+          ticketInput.focus();
+          return;
+        }
+        if (bookingClosed) {
+          bookingError.textContent = "Booking closed. This event date has passed.";
+          return;
+        }
+        if (availableTickets !== null && availableTickets <= 0) {
+          bookingError.textContent = "No tickets are available for this event.";
+          return;
+        }
+        if (availableTickets !== null && ticketCount > availableTickets) {
+          bookingError.textContent = `Only ${availableTickets} tickets available for this event.`;
+          ticketInput.focus();
+          return;
+        }
+
+        const { eventId, eventName, eventDate, eventLocation } = bookingModal.dataset;
+        const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
+        const totalAmount = pricePerTicket * ticketCount;
+
+        if (!eventId) {
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
+          bookingFormView.style.display = "none";
+          bookingSuccessView.style.display = "block";
+          if (downloadTicketBtn) {
+            downloadTicketBtn.disabled = true;
+          }
+          return;
+        }
+
+        try {
+          const response = await fetch("/bookings/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ eventId, email, ticketCount }),
+          });
+          if (response.redirected && response.url.includes("/login")) {
+            window.location.href = "/login";
+            return;
+          }
+          if (response.status === 401 || response.status === 403) {
+            window.location.href = "/login";
+            return;
+          }
+          const data = await response.json();
+
+          if (!data.success) {
+            bookingError.textContent = data.message || "Booking failed. Please try again.";
+            return;
+          }
+
+          const serverTotal = typeof data.totalAmount === "number" ? data.totalAmount : totalAmount;
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
+          bookingFormView.style.display = "none";
+          bookingSuccessView.style.display = "block";
+          lastBookingId = data.bookingId || null;
+          if (downloadTicketBtn) {
+            if (lastBookingId) {
+              downloadTicketBtn.disabled = false;
+              downloadTicketBtn.dataset.bookingId = lastBookingId;
+            } else {
+              downloadTicketBtn.disabled = true;
+              downloadTicketBtn.dataset.bookingId = "";
+            }
+          }
+        } catch (err) {
+          bookingError.textContent = "Booking failed. Please try again.";
+        }
+      });
+
+      if (downloadTicketBtn) {
+        downloadTicketBtn.addEventListener("click", () => {
+          const bookingId = downloadTicketBtn.dataset.bookingId || lastBookingId;
+          window.location.href = bookingId ? `/bookings/manage/${bookingId}` : "/bookings";
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (searchOverlay) searchOverlay.style.display = "none";
+          if (notifDropdown) notifDropdown.classList.remove("open");
+          if (typeof closeSidebar === "function") closeSidebar();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+const Event = require('../models/event');
+const Booking = require('../models/bookingModel');
+const { ACTIVE_BOOKING_STATUSES, hasEventEnded } = require('../utils/bookingStatus');
+
+const getAllEvents = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const events = await Event.find({ date: { $gte: today } });
+        res.render('index', { title: 'Event Master - All Events', events });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+const getEventById = async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id).lean();
+        if (!event) return res.status(404).render('404', { title: '404 - Not Found' });
+
+        const seatAgg = await Booking.aggregate([
+            { $match: { eventId: event._id, status: { $in: ACTIVE_BOOKING_STATUSES } } },
+            { $group: { _id: null, total: { $sum: { $ifNull: ["$ticketCount", 1] } } } }
+        ]);
+
+        const currentBookings = seatAgg.length > 0 ? seatAgg[0].total : 0;
+        const maxCapacity = Number(event.maxCapacity) || 0;
+        const hasCapacityLimit = maxCapacity > 0;
+        const hasEnded = hasEventEnded(event);
+
+        event.currentBookings = currentBookings;
+        event.availableTickets = hasCapacityLimit ? Math.max(maxCapacity - currentBookings, 0) : null;
+        event.isSoldOut = hasCapacityLimit ? event.availableTickets <= 0 : false;
+        event.hasEnded = hasEnded;
+
+        let userBookedCount = 0;
+        if (req.user && req.user.userId) {
+            const userAgg = await Booking.aggregate([
+                { $match: { eventId: event._id, userEmail: req.user.email, status: { $in: ACTIVE_BOOKING_STATUSES } } },
+                { $group: { _id: null, total: { $sum: { $ifNull: ["$ticketCount", 1] } } } }
+            ]);
+            userBookedCount = userAgg.length > 0 ? userAgg[0].total : 0;
+        }
+
+        res.render('event', { event, userBookedCount });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+module.exports = {
+    getAllEvents,
+    getEventById
+};

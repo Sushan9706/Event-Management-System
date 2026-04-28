@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS – Manage Booking</title>
+    <link rel="stylesheet" href="/css/manageBooking.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <%
+      const event = booking.eventId;
+      const eventName = event ? (event.eventName || event.title || event.name) : "Event";
+      const eventDate = event && event.date
+        ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        : "TBA";
+      const eventTime = event && event.time ? event.time : "TBA";
+      const eventLocation = event && event.location ? event.location : "TBA";
+      const eventImage = (event && (event.image || event.imagePath))
+        ? (event.image || event.imagePath)
+        : "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop";
+      const normalizedStatus = (booking.status || "confirmed").toLowerCase();
+      const bookingStatus = normalizedStatus.toUpperCase();
+      const isCancelled = normalizedStatus === "cancelled";
+      const isExpired = normalizedStatus === "expired";
+      const isInactive = isCancelled || isExpired;
+      const backLabel = isCancelled
+        ? "← Back to Cancelled Bookings"
+        : (isExpired ? "← Back to Expired Bookings" : "← Back to My Bookings");
+      const backHref = isCancelled
+        ? "/bookings?status=cancelled"
+        : (isExpired ? "/bookings?status=expired" : "/bookings?status=confirmed");
+      const bookingTier = event && event.category ? event.category : "Premium";
+      const ticketCount = booking.ticketCount || 1;
+      const unitPrice = (typeof booking.unitPrice === "number")
+        ? booking.unitPrice
+        : (event && typeof event.ticketPrice === "number" ? event.ticketPrice : 0);
+      const totalAmount = (typeof booking.totalAmount === "number")
+        ? booking.totalAmount
+        : unitPrice * ticketCount;
+      const ticketCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
+      const ticketSlots = Math.max(ticketCount, ticketCodes.length, 1);
+      const ticketList = Array.from({ length: ticketSlots }, (_, index) => ticketCodes[index] || "TBA");
+      const ticketCodesDisplay = ticketList.length ? ticketList.join(", ") : "TBA";
+      const ticketIdLabel = ticketList.length > 1 ? "Ticket IDs" : "Ticket ID";
+      const unitPriceDisplay = unitPrice === 0 ? "Free" : `$${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`;
+      const totalDisplay = totalAmount === 0 ? "Free" : `$${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+      const bookingDate = booking.createdAt
+        ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        : "TBA";
+      const attendeeName = booking.userName || (user && user.username) || "Guest";
+      const attendeeEmail = booking.userEmail || (user && user.email) || "-";
+      const eventDetailsLink = event && event._id ? `/event/${event._id}` : "/catalog";
+      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+      const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      };
+    %>
+
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">EMS</div>
+        <nav class="nav-links">
+          <a href="/catalog">Events</a>
+          <a href="/bookings" class="active">My Bookings</a>
+          <a href="/profile">Profile</a>
+        </nav>
+        <div class="nav-actions">
+          <div class="notif-wrap">
+            <button class="icon-btn" aria-label="Notifications" id="bellBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </button>
+            <div class="bell-dropdown" id="bellDropdown">
+              <% if (notifications.length === 0) { %>
+                No new notifications
+              <% } else { %>
+                <% notifications.forEach(function(note) { 
+                    const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
+                    const eventTitle = note.eventName || 'Event';
+                    const countLabel = formatTicketCount(note.ticketCount || 1);
+                    const timeLabel = formatNotifTime(note.createdAt);
+                %>
+                  <div class="notif-item">
+                    <p class="notif-title"><%= title %></p>
+                    <p class="notif-sub"><%= eventTitle %> · <%= countLabel %></p>
+                    <p class="notif-time"><%= timeLabel %></p>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+          <img
+            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+            alt="User avatar"
+            class="avatar-circle"
+            onerror="this.style.background='#3b4254';this.removeAttribute('src')"
+          />
+        </div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <a href="<%= backHref %>" class="back-link"><%= backLabel %></a>
+
+      <div class="manage-layout">
+        <section class="manage-content">
+          <article class="hero-card">
+            <div class="hero-image" style="background-image: url('<%= eventImage %>')">
+              <span class="status-pill <%= normalizedStatus %>"><%= bookingStatus %></span>
+            </div>
+            <div class="hero-grid">
+              <div class="info-block">
+                <p class="label">EVENT NAME</p>
+                <h2><%= eventName %></h2>
+              </div>
+              <div class="info-block">
+                <p class="label">LOCATION</p>
+                <p class="value"><%= eventLocation %> <span class="link">View on map</span></p>
+              </div>
+              <div class="info-block">
+                <p class="label">DATE &amp; TIME</p>
+                <p class="value"><%= eventDate %></p>
+                <p class="muted"><%= eventTime %></p>
+              </div>
+              <div class="info-block">
+                <p class="label">BOOKING TIER</p>
+                <p class="value">
+                  <%= bookingTier %>
+                  <span class="tier-icon">✓</span>
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article class="attendee-card">
+            <p class="label">ATTENDEE INFORMATION</p>
+            <div class="attendee-grid">
+              <div>
+                <p class="meta-label">Full Name</p>
+                <p class="meta-value"><%= booking.userName || (user && user.username) || 'Guest' %></p>
+              </div>
+              <div>
+                <p class="meta-label">Email Address</p>
+                <p class="meta-value"><%= booking.userEmail || (user && user.email) || '-' %></p>
+              </div>
+            </div>
+          </article>
+
+          <article class="ticket-card">
+            <div class="ticket-header">
+              <div>
+                <p class="label">TICKET DETAILS</p>
+                <h3>EMS Event Ticket</h3>
+              </div>
+              <div class="ticket-ref">
+                <span>REFERENCE</span>
+                <strong><%= booking.referenceNumber || '-' %></strong>
+              </div>
+            </div>
+            <div class="ticket-grid">
+              <div>
+                <p class="meta-label">Event</p>
+                <p class="meta-value"><%= eventName %></p>
+              </div>
+              <div>
+                <p class="meta-label">Date</p>
+                <p class="meta-value"><%= eventDate %></p>
+              </div>
+              <div>
+                <p class="meta-label">Time</p>
+                <p class="meta-value"><%= eventTime %></p>
+              </div>
+              <div>
+                <p class="meta-label">Location</p>
+                <p class="meta-value"><%= eventLocation %></p>
+              </div>
+              <div>
+                <p class="meta-label">Tickets</p>
+                <p class="meta-value"><%= ticketCount %></p>
+              </div>
+              <div>
+                <p class="meta-label">Price / Ticket</p>
+                <p class="meta-value"><%= unitPriceDisplay %></p>
+              </div>
+              <div>
+                <p class="meta-label">Total</p>
+                <p class="meta-value"><%= totalDisplay %></p>
+              </div>
+              <div>
+                <p class="meta-label">Booked On</p>
+                <p class="meta-value"><%= bookingDate %></p>
+              </div>
+              <div>
+                <p class="meta-label">Attendee</p>
+                <p class="meta-value"><%= attendeeName %></p>
+              </div>
+              <div>
+                <p class="meta-label">Email</p>
+                <p class="meta-value"><%= attendeeEmail %></p>
+              </div>
+              <div class="ticket-codes">
+                <p class="meta-label"><%= ticketIdLabel %></p>
+                <p class="meta-value"><%= ticketCodesDisplay %></p>
+              </div>
+            </div>
+          </article>
+
+          <section class="about-section">
+            <p class="label">ABOUT THE EVENT</p>
+            <p class="about-text"><%= (event && event.description) ? event.description : 'Event details will be announced soon.' %></p>
+            <a href="<%= eventDetailsLink %>" class="inline-link">View Full Event Details →</a>
+          </section>
+
+          <article class="map-card">
+            <div class="map-header">
+              <span class="map-pill">MAP PREVIEW</span>
+            </div>
+            <div class="map-preview">
+              <div class="map-pin"></div>
+            </div>
+            <div class="map-footer">
+              <span class="map-location"><%= eventLocation %></span>
+            </div>
+          </article>
+        </section>
+
+        <aside class="manage-sidebar">
+          <div class="side-card">
+            <h3>Manage Booking</h3>
+            <button class="download-btn" type="button" id="downloadBtn" <%= isInactive ? 'disabled' : '' %>>
+              Download Confirmation
+            </button>
+            <button
+              class="cancel-btn"
+              id="cancelBookingBtn"
+              data-event="<%= event && event._id ? event._id : '' %>"
+              data-booking="<%= booking && booking._id ? booking._id.toString() : '' %>"
+              data-count="<%= ticketCount %>"
+              <%= isInactive ? 'disabled' : '' %>
+            >
+              <%= isCancelled ? 'Cancelled' : (isExpired ? 'Expired' : 'Cancel Booking') %>
+            </button>
+            <p class="side-note">
+              <%= isExpired
+                ? 'This booking has expired because the event date has already passed.'
+                : 'Cancellations are subject to the event terms and conditions. A 10% processing fee may apply.' %>
+            </p>
+          </div>
+
+        </aside>
+      </div>
+    </main>
+
+    <div class="avatar-sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="avatar-sidebar" id="avatarSidebar">
+      <a href="/profile" class="sidebar-item">
+        My Profile
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="/logout" class="sidebar-item sidebar-item--danger" id="logoutBtn">
+        Log Out
+      </a>
+    </aside>
+
+    <footer class="footer">
+      <span>COPYRIGHT 2026 EMS MANAGEMENT</span>
+      <div class="footer-links">
+        <a href="#">PRIVACY POLICY</a>
+        <a href="#">TERMS OF SERVICE</a>
+        <a href="#">CONTACT</a>
+      </div>
+    </footer>
+
+    <div class="print-tickets" aria-hidden="true">
+      <% ticketList.forEach(function(ticketCode, index) { %>
+        <section class="print-ticket" data-ticket-index="<%= index %>" data-ticket-code="<%= ticketCode %>">
+          <div class="print-ticket-header">
+            <div>
+              <p class="print-ticket-label">EMS EVENT TICKET</p>
+              <h2 class="print-ticket-title"><%= eventName %></h2>
+              <p class="print-ticket-meta"><%= eventDate %> · <%= eventTime %> · <%= eventLocation %></p>
+            </div>
+            <div class="print-ticket-id">
+              <span>Ticket <%= index + 1 %> of <%= ticketList.length %></span>
+              <strong><%= ticketCode %></strong>
+            </div>
+          </div>
+          <div class="print-ticket-grid">
+            <div>
+              <p class="meta-label">Attendee</p>
+              <p class="meta-value"><%= attendeeName %></p>
+            </div>
+            <div>
+              <p class="meta-label">Email</p>
+              <p class="meta-value"><%= attendeeEmail %></p>
+            </div>
+            <div>
+              <p class="meta-label">Date</p>
+              <p class="meta-value"><%= eventDate %></p>
+            </div>
+            <div>
+              <p class="meta-label">Time</p>
+              <p class="meta-value"><%= eventTime %></p>
+            </div>
+            <div>
+              <p class="meta-label">Location</p>
+              <p class="meta-value"><%= eventLocation %></p>
+            </div>
+            <div>
+              <p class="meta-label">Price</p>
+              <p class="meta-value"><%= unitPriceDisplay %></p>
+            </div>
+            <div>
+              <p class="meta-label">Booked On</p>
+              <p class="meta-value"><%= bookingDate %></p>
+            </div>
+            <div>
+              <p class="meta-label">Reference</p>
+              <p class="meta-value"><%= booking.referenceNumber || '-' %></p>
+            </div>
+          </div>
+        </section>
+      <% }); %>
+    </div>
+
+    <div class="confirm-modal" id="confirmModal" aria-hidden="true">
+      <div class="confirm-backdrop" data-close="true"></div>
+      <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <h3 id="confirmTitle">Download Confirmation</h3>
+        <p class="confirm-subtitle">
+          Review the ticket details for <strong><%= eventName %></strong> before saving.
+        </p>
+        <div class="confirm-details">
+          <div class="detail-row">
+            <span>Event</span>
+            <strong><%= eventName %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Date</span>
+            <strong><%= eventDate %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Time</span>
+            <strong><%= eventTime %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Location</span>
+            <strong><%= eventLocation %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Tickets</span>
+            <strong><%= ticketCount %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Price / Ticket</span>
+            <strong><%= unitPriceDisplay %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Total</span>
+            <strong><%= totalDisplay %></strong>
+          </div>
+          <div class="detail-divider"></div>
+          <div class="detail-row">
+            <span>Attendee</span>
+            <strong><%= attendeeName %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Email</span>
+            <strong><%= attendeeEmail %></strong>
+          </div>
+          <div class="detail-row detail-full">
+            <span><%= ticketIdLabel %></span>
+            <strong class="detail-codes"><%= ticketCodesDisplay %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Reference</span>
+            <strong><%= booking.referenceNumber || '-' %></strong>
+          </div>
+        </div>
+        <div class="confirm-actions">
+          <button class="ghost-btn" type="button" id="confirmCancel">Cancel</button>
+          <button class="primary-btn" type="button" id="confirmSave">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-modal" id="cancelModal" aria-hidden="true">
+      <div class="confirm-backdrop" data-close="true"></div>
+      <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+        <h3 id="cancelTitle">Cancel Booking</h3>
+        <p class="confirm-subtitle" id="cancelSubtitle">
+          Choose how many tickets to cancel. Cancelling all tickets will cancel the booking.
+        </p>
+        <div class="confirm-details" id="cancelTicketStep">
+          <div class="detail-row">
+            <span>Tickets booked</span>
+            <strong id="cancelTotalTickets"><%= ticketCount %></strong>
+          </div>
+          <div class="detail-row">
+            <span>Cancel tickets</span>
+            <input
+              id="cancelTicketCount"
+              class="confirm-input"
+              type="number"
+              min="1"
+              max="<%= ticketCount %>"
+              value="1"
+              step="1"
+            />
+          </div>
+        </div>
+        <div class="cancel-confirmation" id="cancelConfirmStep" hidden>
+          <p id="cancelConfirmText">Are you sure you want to cancel this booking?</p>
+        </div>
+        <div class="confirm-actions">
+          <button class="ghost-btn" type="button" id="cancelModalNo">Keep Booking</button>
+          <button class="primary-btn" type="button" id="cancelModalYes">Cancel Booking</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const downloadBtn = document.getElementById('downloadBtn');
+      const confirmModal = document.getElementById('confirmModal');
+      const confirmCancel = document.getElementById('confirmCancel');
+      const confirmSave = document.getElementById('confirmSave');
+      const printTickets = Array.from(document.querySelectorAll('.print-ticket'));
+      const clearPrintSelection = () => {
+        document.body.classList.remove('print-selection');
+        printTickets.forEach((ticket) => ticket.classList.remove('print-selected'));
+      };
+      const closeModal = () => {
+        confirmModal.classList.remove('open');
+        confirmModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      };
+      const openModal = () => {
+        clearPrintSelection();
+        confirmModal.classList.add('open');
+        confirmModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+      };
+      if (downloadBtn && !downloadBtn.disabled) downloadBtn.addEventListener('click', openModal);
+      if (confirmCancel) confirmCancel.addEventListener('click', closeModal);
+      if (confirmSave) {
+        confirmSave.addEventListener('click', () => {
+          window.print();
+          closeModal();
+        });
+      }
+      if (window && window.addEventListener) {
+        window.addEventListener('afterprint', clearPrintSelection);
+      }
+      if (confirmModal) {
+        confirmModal.addEventListener('click', (event) => {
+          if (event.target && event.target.dataset && event.target.dataset.close === 'true') {
+            closeModal();
+          }
+        });
+      }
+
+      const cancelModal = document.getElementById('cancelModal');
+      const cancelModalNo = document.getElementById('cancelModalNo');
+      const cancelModalYes = document.getElementById('cancelModalYes');
+      const cancelTicketCountInput = document.getElementById('cancelTicketCount');
+      const cancelTotalTickets = document.getElementById('cancelTotalTickets');
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const cancelTitle = document.getElementById('cancelTitle');
+      const cancelSubtitle = document.getElementById('cancelSubtitle');
+      const cancelTicketStep = document.getElementById('cancelTicketStep');
+      const cancelConfirmStep = document.getElementById('cancelConfirmStep');
+      const cancelConfirmText = document.getElementById('cancelConfirmText');
+      let isCancelConfirming = false;
+      const getCancelSelection = () => {
+        const totalTickets = cancelBtn ? (parseInt(cancelBtn.dataset.count, 10) || 1) : 1;
+        let cancelCount = cancelTicketCountInput ? (parseInt(cancelTicketCountInput.value, 10) || 1) : 1;
+        if (cancelCount < 1) cancelCount = 1;
+        if (cancelCount > totalTickets) cancelCount = totalTickets;
+        return { totalTickets, cancelCount };
+      };
+      const getCancelActionLabel = (cancelCount, totalTickets) => (
+        cancelCount >= totalTickets ? 'Cancel Booking' : `Cancel ${cancelCount} Ticket${cancelCount > 1 ? 's' : ''}`
+      );
+      const setCancelChoosing = () => {
+        const { totalTickets, cancelCount } = getCancelSelection();
+        isCancelConfirming = false;
+        if (cancelTitle) cancelTitle.textContent = 'Cancel Booking';
+        if (cancelSubtitle) {
+          cancelSubtitle.textContent = 'Choose how many tickets to cancel. Cancelling all tickets will cancel the booking.';
+        }
+        if (cancelTicketStep) cancelTicketStep.hidden = false;
+        if (cancelConfirmStep) cancelConfirmStep.hidden = true;
+        if (cancelModalNo) cancelModalNo.textContent = 'Keep Booking';
+        if (cancelModalYes) cancelModalYes.textContent = getCancelActionLabel(cancelCount, totalTickets);
+      };
+      const setCancelConfirming = () => {
+        const { totalTickets, cancelCount } = getCancelSelection();
+        const isFullCancel = cancelCount >= totalTickets;
+        isCancelConfirming = true;
+        if (cancelTitle) cancelTitle.textContent = 'Are you sure?';
+        if (cancelSubtitle) {
+          cancelSubtitle.textContent = isFullCancel
+            ? 'This will cancel your whole booking.'
+            : 'This will cancel only the selected ticket quantity.';
+        }
+        if (cancelConfirmText) {
+          cancelConfirmText.textContent = isFullCancel
+            ? 'Are you sure you want to cancel this booking?'
+            : `Are you sure you want to cancel ${cancelCount} ticket${cancelCount > 1 ? 's' : ''}?`;
+        }
+        if (cancelTicketStep) cancelTicketStep.hidden = true;
+        if (cancelConfirmStep) cancelConfirmStep.hidden = false;
+        if (cancelModalNo) cancelModalNo.textContent = 'No';
+        if (cancelModalYes) cancelModalYes.textContent = 'Yes, Cancel';
+      };
+      const openCancelModal = () => {
+        if (!cancelModal) return;
+        if (cancelBtn) {
+          const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+          if (cancelTotalTickets) cancelTotalTickets.textContent = totalTickets;
+          if (cancelTicketCountInput) {
+            cancelTicketCountInput.max = totalTickets;
+            cancelTicketCountInput.value = Math.min(1, totalTickets);
+          }
+        }
+        setCancelChoosing();
+        cancelModal.classList.add('open');
+        cancelModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+      };
+      const closeCancelModal = () => {
+        if (!cancelModal) return;
+        cancelModal.classList.remove('open');
+        cancelModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        setCancelChoosing();
+      };
+      if (cancelModalNo) cancelModalNo.addEventListener('click', closeCancelModal);
+      if (cancelModal) {
+        cancelModal.addEventListener('click', (event) => {
+          if (event.target && event.target.dataset && event.target.dataset.close === 'true') {
+            closeCancelModal();
+          }
+        });
+      }
+      if (cancelTicketCountInput && cancelModalYes && cancelBtn) {
+        cancelTicketCountInput.addEventListener('input', () => {
+          const totalTickets = cancelBtn ? (parseInt(cancelBtn.dataset.count, 10) || 1) : 1;
+          const raw = parseInt(cancelTicketCountInput.value, 10);
+          const count = isNaN(raw) || raw < 1 ? 1 : Math.min(raw, totalTickets);
+          if (cancelModalYes) cancelModalYes.textContent = getCancelActionLabel(count, totalTickets);
+        });
+      }
+
+      const bellBtn = document.getElementById('bellBtn');
+      const bellDropdown = document.getElementById('bellDropdown');
+      if (bellBtn && bellDropdown) {
+        bellBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = bellDropdown.style.display === 'block';
+          bellDropdown.style.display = isOpen ? 'none' : 'block';
+        });
+        document.addEventListener('click', () => {
+          bellDropdown.style.display = 'none';
+        });
+      }
+
+      const avatar = document.querySelector('.avatar-circle');
+      const sidebar = document.getElementById('avatarSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const toggleSidebar = (state) => {
+        if (sidebar) sidebar.classList.toggle('open', state);
+        if (overlay) overlay.classList.toggle('open', state);
+      };
+      if (avatar) avatar.addEventListener('click', () => toggleSidebar(true));
+      if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+          if (!confirm('Are you sure you want to log out?')) {
+            e.preventDefault();
+          }
+        });
+      }
+
+      if (cancelBtn && !cancelBtn.disabled) {
+        cancelBtn.addEventListener('click', async () => {
+          openCancelModal();
+        });
+      }
+
+      if (cancelModalYes && cancelBtn) {
+        cancelModalYes.addEventListener('click', async () => {
+          const bookingId = cancelBtn.dataset.booking;
+          if (!bookingId) return;
+          if (!isCancelConfirming) {
+            setCancelConfirming();
+            return;
+          }
+          const { cancelCount } = getCancelSelection();
+          try {
+            cancelModalYes.disabled = true;
+            const response = await fetch(`/bookings/cancel-booking/${bookingId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ cancelCount })
+            });
+            if (response.redirected && response.url && response.url.includes('/login')) {
+              window.location.href = '/login';
+              return;
+            }
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json')
+              ? await response.json()
+              : { success: false, message: await response.text() };
+            if (!response.ok || !data.success) {
+              alert(data.message || 'Unable to cancel booking.');
+              return;
+            }
+            if (data.success) {
+              if (data.status === 'cancelled' || data.remainingTickets === 0) {
+                window.location.href = '/bookings?status=cancelled';
+              } else {
+                window.location.href = `/bookings/manage/${bookingId}`;
+              }
+            }
+          } catch (err) {
+            alert('Unable to cancel booking.');
+          } finally {
+            cancelModalYes.disabled = false;
+            closeCancelModal();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

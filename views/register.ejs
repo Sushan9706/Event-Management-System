@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - EMS</title>
+    <link rel="stylesheet" href="/css/register.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">EMS</div>
+        <nav>
+            <a href="/">Events</a>
+            <a href="/login" class="btn-login-nav">Login/Sign In</a>
+        </nav>
+    </header>
+
+    <main class="register-container">
+        <section class="welcome-text">
+            <h1>Create Account</h1>
+            <p>Join the premium community of event curators.</p>
+        </section>
+
+        <div class="register-card">
+            <% if (error && error.length > 0) { %>
+                <% if (Array.isArray(error)) { %>
+                    <% error.forEach(function(err) { %>
+                        <div class="flash-message error">
+                            <%= err %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="flash-message error">
+                        <%= error %>
+                    </div>
+                <% } %>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success.length > 0) { %>
+                <div class="flash-message success">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <form action="/register" method="POST">
+                <div class="input-group">
+                    <label for="username">USERNAME</label>
+                    <input type="text" id="username" name="username" placeholder="John Doe" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.username : '' %>">
+                </div>
+
+                <div class="input-group">
+                    <label for="email">EMAIL</label>
+                    <input type="email" id="email" name="email" placeholder="abcd@gmail.com" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.email : '' %>">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">PASSWORD</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="off">
+                        <button type="button" class="toggle-password" data-target="password">SHOW</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="confirmPassword">CONFIRM PASSWORD</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required autocomplete="off">
+                        <button type="button" class="toggle-password" data-target="confirmPassword">SHOW</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="register-btn">
+                    Register <span>&rarr;</span>
+                </button>
+            </form>
+
+            <p class="login-link-text">
+                Already have an account? <a href="/login">Login</a>
+            </p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-left">
+            COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.
+        </div>
+        <div class="footer-right">
+            <a href="#">TERMS</a>
+            <a href="#">PRIVACY</a>
+        </div>
+    </footer>
+
+</body>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            // Get the target input ID from the data-target attribute
+            const targetId = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the button text
+            this.textContent = type === 'password' ? 'SHOW' : 'HIDE';
+        });
+    });
+
+    // Auto-dismiss flash messages
+    document.querySelectorAll('.flash-message').forEach(msg => {
+        setTimeout(() => {
+            msg.classList.add('fade-out');
+            setTimeout(() => {
+                msg.remove();
+            }, 400); // Wait for animation to finish
+        }, 2000); // 2 seconds delay
+    });
+</script>
+</html>
