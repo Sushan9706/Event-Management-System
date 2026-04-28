@@ -176,7 +176,7 @@ exports.postEditEvent = async (req, res) => {
     try {
         const { eventName, description, categoryId, date, time, location, maxCapacity, ticketPrice, status } = req.body;
         const event = await Event.findById(req.params.id);
-        
+
         if (!event) {
             req.flash('error', 'Event not found');
             return res.redirect('/admin/dashboard');
@@ -368,7 +368,7 @@ exports.getNotifications = async (req, res) => {
             .populate('eventId')
             .sort({ createdAt: -1 })
             .limit(10);
-            
+
         res.json(notifications);
     } catch (err) {
         console.error('Error fetching notifications:', err);

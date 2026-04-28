@@ -74,22 +74,39 @@
         <!-- ── Left Panel ── -->
         <aside class="left-panel">
             <div class="left-panel-content">
-                <div class="ai-tag">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+
+                <div class="sidebar-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                     </svg>
-                    AI ASSISTANCE ENABLED
                 </div>
                 <h1 class="left-heading">Refining the<br />Experience.</h1>
                 <p class="left-caption">Update your event details to keep your audience informed. Every change is
                     reflected in real-time.</p>
 
-                <div
-                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
-                    <p style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 8px;">Edit Mode</p>
-                    <p style="font-size: 13px; color: var(--text-light);">You are currently editing "<%= event.eventName
-                            %>".</p>
+                <div class="quality-checklist">
+                    <p class="checklist-title">Update Guidelines</p>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Ensure dates are in the future</span>
+                    </div>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Verify ticket price and capacity</span>
+                    </div>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Review status for visibility</span>
+                    </div>
                 </div>
+
+
             </div>
         </aside>
 
@@ -194,17 +211,33 @@
                 <div class="form-section">
                     <h2 class="form-section-title">Logistics & Venue</h2>
 
-                    <div class="form-row three-col" style="margin-top: 24px;">
+                    <div class="form-row" style="margin-top: 24px;">
                         <div class="form-group">
-                            <label for="date">Date</label>
-                            <input type="date" id="date" name="date"
-                                value="<%= event.date ? new Date(event.date).toISOString().split('T')[0] : '' %>"
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" name="startDate"
+                                value="<%= event.startDate ? new Date(event.startDate).toISOString().split('T')[0] : '' %>"
                                 required />
                         </div>
                         <div class="form-group">
-                            <label for="time">Time</label>
-                            <input type="time" id="time" name="time" value="<%= event.time %>" required />
+                            <label for="startTime">Start Time</label>
+                            <input type="time" id="startTime" name="startTime" value="<%= event.startTime %>" required />
                         </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="endDate"
+                                value="<%= event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : '' %>"
+                                required />
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">End Time</label>
+                            <input type="time" id="endTime" name="endTime" value="<%= event.endTime %>" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row three-col">
                         <div class="form-group">
                             <label for="maxCapacity">Max Capacity</label>
                             <input type="number" id="maxCapacity" name="maxCapacity" value="<%= event.maxCapacity %>" min="0" required />
@@ -235,12 +268,25 @@
 
     <script>
         // Enforce today or future date for selection
-        const dateInput = document.getElementById('date');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        dateInput.min = `${year}-${month}-${day}`;
+        const minDate = `${year}-${month}-${day}`;
+        
+        startDateInput.min = minDate;
+        endDateInput.min = minDate;
+
+        startDateInput.addEventListener('change', () => {
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+                if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+                }
+            }
+        });
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('banner_image');

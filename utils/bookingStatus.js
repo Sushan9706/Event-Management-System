@@ -15,9 +15,12 @@ const getEventExpiryCutoff = (eventDateValue) => {
 };
 
 const isEventDatePassed = (eventLike, now = new Date()) => {
-    const eventDateValue = eventLike && typeof eventLike === 'object' && 'date' in eventLike
-        ? eventLike.date
-        : eventLike;
+    let eventDateValue = null;
+    if (eventLike && typeof eventLike === 'object') {
+        eventDateValue = eventLike.endDate || eventLike.startDate || eventLike.date;
+    } else {
+        eventDateValue = eventLike;
+    }
     const cutoff = getEventExpiryCutoff(eventDateValue);
     if (!cutoff) {
         return false;

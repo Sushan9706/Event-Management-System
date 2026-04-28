@@ -6,7 +6,7 @@ const getAllEvents = async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await Event.find({ date: { $gte: today } });
+        const events = await Event.find({ startDate: { $gte: today } });
         res.render('index', { title: 'Event Master - All Events', events });
     } catch (err) {
         console.error(err);
