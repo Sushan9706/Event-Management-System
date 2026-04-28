@@ -133,7 +133,7 @@ exports.postLogin = async (req, res) => {
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
             }
-            return res.redirect('/catalog'); // Regular user landing page
+            return res.redirect('/user'); // Regular user landing page
         }
 
         return res.render('login', {
