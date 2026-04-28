@@ -92,33 +92,35 @@
 
     <section class="recommended">
       <div class="sec-header">
-        <h2 class="sec-title">Recommended for You</h2>
-        <a href="#" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg></a>
+        <h2 class="sec-title">Latest Events</h2>
+        <a href="/catalog" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg></a>
       </div>
       <div class="cards-grid">
-        <div class="ecard ecard--featured">
-          <div class="ecard-img-wrap"><img src="https://media.bitcot.com/wp-content/uploads/2025/04/Best-Tech-Conferences-2026.webp" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-meta">Oct 12, 2026 • Berlin, DE</p>
-            <h3 class="ecard-title">Global Synergy: Design & Ethics Summit</h3>
-          </div>
-        </div>
-        <div class="ecard ecard--sm">
-          <div class="ecard-img-wrap"><img src="https://covers.stocktune.com/public/a/2/f/a2f8dadf-ce7a-4158-bb72-82a31cc5b032_large/infinite-neon-soundscapes-stocktune.jpg" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-date-sm">Nov 04, 2026</p>
-            <h3 class="ecard-title--sm">Metropolis Night Series: Soundscapes</h3>
-          </div>
-        </div>
-        <div class="ecard ecard--sm">
-          <div class="ecard-img-wrap"><img src="https://nohoartsdistrict.com/wp-content/uploads/2025/11/Throw-a-Festive-Winter-Solstice-Dinner-With-These-Finishing-Touches-scaled.jpeg" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-date-sm">Dec 15, 2026</p>
-            <h3 class="ecard-title--sm">The Artisan's Table: Winter Solstice</h3>
-          </div>
-        </div>
+        <% if (locals.latestEvents && latestEvents.length > 0) { %>
+          <% latestEvents.forEach(function(event, i) { %>
+            <a href="/catalog/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--featured' : 'ecard--sm' %>" style="text-decoration:none; color:inherit;">
+              <div class="ecard-img-wrap">
+                <img src="<%= event.image || event.imagePath || 'https://via.placeholder.com/400x260?text=Event' %>" 
+                     class="ecard-img" 
+                     onerror="this.src='https://via.placeholder.com/400x260?text=Event'" />
+              </div>
+              <div class="ecard-body">
+                <p class="<%= i === 0 ? 'ecard-meta' : 'ecard-date-sm' %>">
+                  <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                  <% if (event.location) { %> • <%= event.location %><% } %>
+                </p>
+                <h3 class="<%= i === 0 ? 'ecard-title' : 'ecard-title--sm' %>">
+                  <%= event.eventName || event.title %>
+                </h3>
+              </div>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <p style="color: var(--text-mid); padding: 20px 0; grid-column: 1/-1;">No events available at the moment.</p>
+        <% } %>
       </div>
     </section>
+    
 
     <section class="bookings-wrap">
       <div class="bookings-box">
