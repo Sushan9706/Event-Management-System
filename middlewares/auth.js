@@ -13,7 +13,13 @@ exports.isLoggedIn = (req, res, next) => {
         req.user = user;
         res.locals.user = user;
 
-        if (user.role === 'admin' && !req.originalUrl.startsWith('/admin') && !req.originalUrl.startsWith('/logout')) {
+        // Allow admins to access /admin, /logout, and /profile routes
+        if (
+            user.role === 'admin' && 
+            !req.originalUrl.startsWith('/admin') && 
+            !req.originalUrl.startsWith('/logout') &&
+            !req.originalUrl.startsWith('/profile')
+        ) {
             return res.redirect('/admin/dashboard');
         }
 
