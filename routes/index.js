@@ -8,10 +8,10 @@ const eventModel = require('../models/event');
 const mongoose = require('mongoose');
 
 // --- PUBLIC / GUEST ROUTES ---
-router.get('/', (req, res) => {
+router.get('/', redirectIfLoggedIn, (req, res) => {
     res.redirect('/guest');
 });
-router.get("/guest", userController.getGuestDashboard);
+router.get("/guest", redirectIfLoggedIn, userController.getGuestDashboard);
 router.get("/event", async (req, res) => {
     try {
         let event = null;
@@ -28,10 +28,10 @@ router.get("/event", async (req, res) => {
 });
 
 // --- AUTHENTICATION ROUTES ---
-router.get('/register', userController.getRegister);
-router.post('/register', userController.postRegister);
-router.get('/login', userController.getLogin);
-router.post('/login', userController.postLogin);
+router.get('/register', redirectIfLoggedIn, userController.getRegister);
+router.post('/register', redirectIfLoggedIn, userController.postRegister);
+router.get('/login', redirectIfLoggedIn, userController.getLogin);
+router.post('/login', redirectIfLoggedIn, userController.postLogin);
 router.get('/logout', userController.logout);
 
 // --- PROTECTED USER ROUTES (Requires isLoggedIn) ---

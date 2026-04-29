@@ -12,6 +12,11 @@ exports.isLoggedIn = (req, res, next) => {
         const user = jwt.verify(token, "shhhhhhhhh");
         req.user = user;
         res.locals.user = user;
+
+        if (user.role === 'admin' && !req.originalUrl.startsWith('/admin') && !req.originalUrl.startsWith('/logout')) {
+            return res.redirect('/admin/dashboard');
+        }
+
         next();
     } catch (err) {
         res.cookie("token", "");
@@ -26,7 +31,7 @@ exports.isAdmin = (req, res, next) => {
         next(); // They are admin, proceed to the route
     } else {
         req.flash('error', 'Access Denied: Admins Only');
-        res.redirect('/'); // Send regular users back to the home page
+        res.redirect('/user'); // Send regular users back to their dashboard
     }
 };
 
@@ -35,7 +40,10 @@ exports.redirectIfLoggedIn = (req, res, next) => {
 
     if (token) {
         try {
-            jwt.verify(token, "shhhhhhhhh");
+            const user = jwt.verify(token, "shhhhhhhhh");
+            if (user.role === 'admin') {
+                return res.redirect("/admin/dashboard");
+            }
             return res.redirect("/user");
         } catch (err) {
             return next();
