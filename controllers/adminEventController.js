@@ -124,9 +124,24 @@ exports.postCreateEvent = async (req, res) => {
             req.flash('error', 'Start date cannot be in the past');
             return res.redirect('/admin/events/create');
         }
+
+        // Check if start time is in the past for today
+        const now = new Date();
+        const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        const minDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+        if (startDate === minDateStr && startTime < currentTime) {
+            req.flash('error', 'Start time cannot be in the past for events starting today');
+            return res.redirect('/admin/events/create');
+        }
  
         if (end < start) {
             req.flash('error', 'End date cannot be before start date');
+            return res.redirect('/admin/events/create');
+        }
+
+        if (startDate === endDate && startTime >= endTime) {
+            req.flash('error', 'End time must be after start time for same-day events');
             return res.redirect('/admin/events/create');
         }
  
@@ -207,9 +222,24 @@ exports.postEditEvent = async (req, res) => {
             req.flash('error', 'Start date cannot be in the past');
             return res.redirect(`/admin/events/edit/${req.params.id}`);
         }
+
+        // Check if start time is in the past for today
+        const now = new Date();
+        const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        const minDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+        if (startDate === minDateStr && startTime < currentTime) {
+            req.flash('error', 'Start time cannot be in the past for events starting today');
+            return res.redirect(`/admin/events/edit/${req.params.id}`);
+        }
  
         if (end < start) {
             req.flash('error', 'End date cannot be before start date');
+            return res.redirect(`/admin/events/edit/${req.params.id}`);
+        }
+
+        if (startDate === endDate && startTime >= endTime) {
+            req.flash('error', 'End time must be after start time for same-day events');
             return res.redirect(`/admin/events/edit/${req.params.id}`);
         }
  

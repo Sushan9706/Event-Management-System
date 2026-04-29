@@ -10,9 +10,29 @@
     --accent-indigo: #4f46e5;
     --accent-indigo-soft: #eef2ff;
     --border-soft: #e2e8f0;
+    --error-red: #ef4444;
     --card-radius: 16px;
     --font-heading: "DM Serif Display", serif;
     --font-body: "DM Sans", sans-serif;
+}
+
+.error-msg {
+    color: var(--error-red);
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: none;
+    animation: slideInError 0.2s ease-out;
+}
+
+@keyframes slideInError {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-group.has-error input {
+    border-color: var(--error-red);
+    background-color: #fef2f2;
 }
 
 *,

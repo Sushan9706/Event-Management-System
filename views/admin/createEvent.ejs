@@ -218,6 +218,7 @@
                                 <div class="form-group">
                                     <label for="startTime">Start Time</label>
                                     <input type="time" id="startTime" name="startTime" required />
+                                    <div class="error-msg" id="startTime-error"></div>
                                 </div>
                             </div>
 
@@ -229,6 +230,7 @@
                                 <div class="form-group">
                                     <label for="endTime">End Time</label>
                                     <input type="time" id="endTime" name="endTime" required />
+                                    <div class="error-msg" id="endTime-error"></div>
                                 </div>
                             </div>
 
@@ -275,11 +277,100 @@
         startDateInput.min = minDate;
         endDateInput.min = minDate;
 
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+
+        function updateTimeConstraints() {
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const selectedStartDate = startDateInput.value;
+            const selectedEndDate = endDateInput.value;
+
+            if (selectedStartDate === minDate) {
+                startTimeInput.min = currentTime;
+            } else {
+                startTimeInput.removeAttribute('min');
+            }
+
+            if (selectedStartDate && selectedEndDate && selectedStartDate === selectedEndDate) {
+                if (startTimeInput.value) {
+                    endTimeInput.min = startTimeInput.value;
+                } else {
+                    endTimeInput.removeAttribute('min');
+                }
+            } else {
+                endTimeInput.removeAttribute('min');
+            }
+        }
+
+        const startTimeError = document.getElementById('startTime-error');
+        const endTimeError = document.getElementById('endTime-error');
+
+        function showError(element, errorElement, message) {
+            element.closest('.form-group').classList.add('has-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.form-group').forEach(group => group.classList.remove('has-error'));
+            document.querySelectorAll('.error-msg').forEach(msg => {
+                msg.textContent = '';
+                msg.style.display = 'none';
+            });
+        }
+
+        function validateInputs() {
+            clearErrors();
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            let hasError = false;
+
+            if (startDate === minDate && startTime && startTime < currentTime) {
+                showError(startTimeInput, startTimeError, 'Start time cannot be in the past for today.');
+                hasError = true;
+            }
+
+            if (startDate === endDate && startTime && endTime) {
+                if (startTime >= endTime) {
+                    showError(endTimeInput, endTimeError, 'End time must be after the start time.');
+                    hasError = true;
+                }
+            }
+            return !hasError;
+        }
+
         startDateInput.addEventListener('change', () => {
             if (startDateInput.value) {
                 endDateInput.min = startDateInput.value;
                 if (endDateInput.value && endDateInput.value < startDateInput.value) {
                     endDateInput.value = startDateInput.value;
+                }
+            }
+            updateTimeConstraints();
+            validateInputs();
+        });
+
+        endDateInput.addEventListener('change', () => {
+            updateTimeConstraints();
+            validateInputs();
+        });
+
+        startTimeInput.addEventListener('input', validateInputs);
+        endTimeInput.addEventListener('input', validateInputs);
+
+        const eventForm = document.querySelector('form');
+        eventForm.addEventListener('submit', (e) => {
+            if (!validateInputs()) {
+                e.preventDefault();
+                const firstError = document.querySelector('.has-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
         });
