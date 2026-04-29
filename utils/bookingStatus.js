@@ -15,18 +15,27 @@ const getEventExpiryCutoff = (eventDateValue) => {
 };
 
 const isEventDatePassed = (eventLike, now = new Date()) => {
-    let eventDateValue = null;
-    if (eventLike && typeof eventLike === 'object') {
-        eventDateValue = eventLike.endDate || eventLike.startDate || eventLike.date;
-    } else {
-        eventDateValue = eventLike;
-    }
-    const cutoff = getEventExpiryCutoff(eventDateValue);
-    if (!cutoff) {
-        return false;
-    }
+    if (!eventLike || typeof eventLike !== 'object') return false;
 
-    return now > cutoff;
+    // Support new schema (endDate + endTime) and legacy schema (date + time)
+    const endDateVal = eventLike.endDate || eventLike.date;
+    const endTimeVal = eventLike.endTime || eventLike.time || '23:59';
+
+    if (!endDateVal) return false;
+
+    const endDateTime = new Date(endDateVal);
+    if (isNaN(endDateTime.getTime())) return false;
+
+    // Parse time string (HH:mm)
+    const [hours, minutes] = endTimeVal.split(':').map(Number);
+    if (!isNaN(hours)) endDateTime.setHours(hours);
+    if (!isNaN(minutes)) endDateTime.setMinutes(minutes);
+    else endDateTime.setMinutes(0);
+    
+    endDateTime.setSeconds(59);
+    endDateTime.setMilliseconds(999);
+
+    return now > endDateTime;
 };
 
 const hasEventEnded = (eventLike, now = new Date()) => isEventDatePassed(eventLike, now);

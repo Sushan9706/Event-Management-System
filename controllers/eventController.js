@@ -6,7 +6,16 @@ const getAllEvents = async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await Event.find({ startDate: { $gte: today } });
+
+        // Fetch events where endDate is today or in the future
+        let events = await Event.find({ 
+            endDate: { $gte: today },
+            status: { $ne: 'cancelled' }
+        }).lean();
+
+        // Filter out events that have already ended precisely (date + time)
+        events = events.filter(event => !hasEventEnded(event));
+
         res.render('index', { title: 'Event Master - All Events', events });
     } catch (err) {
         console.error(err);

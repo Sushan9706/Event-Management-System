@@ -410,20 +410,40 @@ exports.cancelBookingById = async (req, res) => {
 
 exports.getGuestDashboard = async (req, res) => {
     try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
+
+        // Fetch events where endDate is today or in the future
+        let events = await eventModel.find({ 
+            endDate: { $gte: today },
+            status: { $ne: 'cancelled' }
+        }).populate('categoryId').lean();
+
+        // Filter out events that have precisely ended (date + time)
+        events = events.filter(event => !hasEventEnded(event));
+
         res.render("index", { events: events, user: null });
     } catch (err) {
+        console.error("Error loading guest dashboard:", err);
         res.status(500).send("Error loading dashboard");
     }
 };
 
 exports.getCatalog = async (req, res) => {
     try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const events = await eventModel.find({ date: { $gte: today } }).populate('categoryId');
+
+        // Fetch events where endDate is today or in the future
+        let events = await eventModel.find({ 
+            endDate: { $gte: today },
+            status: { $ne: 'cancelled' }
+        }).populate('categoryId').lean();
+
+        // Filter out events that have already ended precisely (date + time)
+        events = events.filter(event => !hasEventEnded(event));
 
         // Fetch the full user document if logged in; otherwise allow guest view
         let fullUser = null;
@@ -455,10 +475,13 @@ exports.getCatalog = async (req, res) => {
 
 exports.searchEvents = async (req, res) => {
     try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
         let { q, date, category } = req.query;
-        let queryObj = {};
+        let queryObj = {
+            status: { $ne: 'cancelled' }
+        };
 
-        // 1. Text Search (Matches eventName regardless of case)
+        // 1. Text Search
         if (q) {
             queryObj.eventName = { $regex: q, $options: "i" };
         }
@@ -469,10 +492,10 @@ exports.searchEvents = async (req, res) => {
             const nextDay = new Date(date);
             nextDay.setDate(searchDate.getDate() + 1);
             
-            queryObj.date = { 
-                $gte: searchDate, 
-                $lt: nextDay 
-            };
+            queryObj.$or = [
+                { startDate: { $gte: searchDate, $lt: nextDay } },
+                { endDate: { $gte: searchDate, $lt: nextDay } }
+            ];
         }
 
         // 3. Category Filter
@@ -484,15 +507,18 @@ exports.searchEvents = async (req, res) => {
             }
         }
 
-        // Ensure we only show future events for general search unless a specific date is requested
+        // Ensure we show events that haven't ended yet unless a specific date is requested
         if (!date) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            queryObj.date = { $gte: today };
+            queryObj.endDate = { $gte: today };
         }
 
         // Fetch events from DB and populate categoryId
-        const events = await eventModel.find(queryObj).populate('categoryId');
+        let events = await eventModel.find(queryObj).populate('categoryId').lean();
+
+        // Filter out events that have precisely ended (date + time)
+        events = events.filter(event => !hasEventEnded(event));
 
         // Render the page with the found events
         res.render("index", { events: events });
