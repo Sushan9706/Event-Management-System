@@ -4,9 +4,7 @@ const { ACTIVE_BOOKING_STATUSES, hasEventEnded } = require('../utils/bookingStat
 
 const getAllEvents = async (req, res) => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const events = await Event.find({ date: { $gte: today } });
+        const events = await Event.find({});
         res.render('index', { title: 'Event Master - All Events', events });
     } catch (err) {
         console.error(err);
@@ -34,7 +32,7 @@ const getEventById = async (req, res) => {
         event.isSoldOut = hasCapacityLimit ? event.availableTickets <= 0 : false;
         event.hasEnded = hasEnded;
 
-        res.render('event', { event });
+        res.render('event', { event, user: req.user || null });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

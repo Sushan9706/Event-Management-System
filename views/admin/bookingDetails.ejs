@@ -117,8 +117,10 @@
                                             <line x1="3" y1="10" x2="21" y2="10"></line>
                                         </svg>
                                         <span>
-                                            <%= new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' ,
-                                                month: 'long' , day: 'numeric' , year: 'numeric' }) %>
+                                            <%= new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                            <% if (event.endDate && new Date(event.startDate).toDateString() !== new Date(event.endDate).toDateString()) { %>
+                                                - <%= new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                            <% } %>
                                         </span>
                                     </div>
                                     <div class="meta-row">
@@ -128,7 +130,7 @@
                                             <polyline points="12 6 12 12 16 14"></polyline>
                                         </svg>
                                         <span>
-                                            <%= event.time %>
+                                            <%= event.startTime %> - <%= event.endTime %>
                                         </span>
                                     </div>
                                     <div class="meta-row">

@@ -133,7 +133,7 @@
               </div>
               <div class="card-body">
                 <p class="card-date">
-                  <%= event.date ? new Date(event.date).toDateString() : 'Date TBD' %>
+                  <%= event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD' %>
                 </p>
                 <h3 class="card-title">
                   <%= event.title || event.eventName || 'Untitled Event' %>

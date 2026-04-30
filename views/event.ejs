@@ -7,15 +7,19 @@
       const eventTitle = (typeof event !== "undefined" && event && (event.eventName || event.title || event.name || event.eventTitle))
         ? (event.eventName || event.title || event.name || event.eventTitle)
         : "Global Architecture Summit 2026";
-      const eventDate = (typeof event !== "undefined" && event && event.date)
-        ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
-        : "Oct 14–16";
+      const eventStartDate = (typeof event !== "undefined" && event && event.startDate)
+        ? new Date(event.startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        : "Oct 14, 2026";
+      const eventEndDate = (typeof event !== "undefined" && event && event.endDate)
+        ? new Date(event.endDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        : "Oct 16, 2026";
+      const eventStartTime = (typeof event !== "undefined" && event && event.startTime) ? event.startTime : "09:00 AM";
+      const eventEndTime = (typeof event !== "undefined" && event && event.endTime) ? event.endTime : "06:00 PM";
+      const eventDateRange = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} – ${eventEndDate}`;
+      const eventTimeRange = `${eventStartTime} – ${eventEndTime}`;
       const eventLocation = (typeof event !== "undefined" && event && event.location)
         ? event.location
         : "The Glass Pavilion, Tokyo, Japan";
-      const eventTime = (typeof event !== "undefined" && event && event.time)
-        ? event.time
-        : "09:00 AM – 06:00 PM";
       const rawPrice = (typeof event !== "undefined" && event && (typeof event.ticketPrice === "number" || typeof event.ticketPrice === "string"))
         ? parseFloat(event.ticketPrice)
         : NaN;
@@ -121,8 +125,8 @@
         <div class="meta-cards">
           <div class="meta-card">
             <p class="meta-label">WHEN</p>
-            <p class="meta-value large"><%= eventDate %></p>
-            <p class="meta-sub"><%= eventTime %></p>
+            <p class="meta-value large"><%= eventDateRange %></p>
+            <p class="meta-sub"><%= eventTimeRange %></p>
           </div>
           <div class="meta-card">
             <p class="meta-label">WHERE</p>
@@ -382,7 +386,8 @@
       aria-hidden="true"
       data-event-id="<%= eventId %>"
       data-event-name="<%= eventTitle %>"
-      data-event-date="<%= eventDate %>"
+      data-event-date="<%= eventDateRange %>"
+      data-event-time="<%= eventTimeRange %>"
       data-event-location="<%= eventLocation %>"
       data-event-price="<%= eventPrice %>"
       data-available-tickets="<%= hasCapacityLimit ? availableTickets : "" %>"
@@ -406,7 +411,11 @@
             </div>
             <div class="summary-row">
               <span>Date</span>
-              <strong id="bookingEventDate"><%= eventDate %></strong>
+              <strong id="bookingEventDate"><%= eventDateRange %></strong>
+            </div>
+            <div class="summary-row">
+              <span>Time</span>
+              <strong id="bookingEventTime"><%= eventTimeRange %></strong>
             </div>
             <div class="summary-row">
               <span>Location</span>
@@ -602,10 +611,13 @@
         if (bookingClosed) {
           return;
         }
-        const { eventName, eventDate, eventLocation } = bookingModal.dataset;
+        const { eventName, eventDate, eventTime, eventLocation } = bookingModal.dataset;
         const availableTickets = getAvailableTickets();
         document.getElementById("bookingEventName").textContent = eventName;
         document.getElementById("bookingEventDate").textContent = eventDate;
+        if (document.getElementById("bookingEventTime")) {
+            document.getElementById("bookingEventTime").textContent = eventTime;
+        }
         document.getElementById("bookingEventLocation").textContent = eventLocation;
         if (availableTicketsEl) {
           availableTicketsEl.textContent = availableTickets === null ? "Unlimited" : availableTickets;
@@ -690,12 +702,12 @@
           return;
         }
 
-        const { eventId, eventName, eventDate, eventLocation } = bookingModal.dataset;
+        const { eventId, eventName, eventDate, eventTime, eventLocation } = bookingModal.dataset;
         const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
         const totalAmount = pricePerTicket * ticketCount;
 
         if (!eventId) {
-          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
           bookingFormView.style.display = "none";
           bookingSuccessView.style.display = "block";
           if (downloadTicketBtn) {
@@ -727,7 +739,7 @@
           }
 
           const serverTotal = typeof data.totalAmount === "number" ? data.totalAmount : totalAmount;
-          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
           bookingFormView.style.display = "none";
           bookingSuccessView.style.display = "block";
           lastBookingId = data.bookingId || null;

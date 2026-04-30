@@ -75,23 +75,39 @@
         <!-- ── Left Panel ── -->
         <aside class="left-panel">
             <div class="left-panel-content">
-                <div class="ai-tag">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                <div class="sidebar-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                    AI ASSISTANCE ENABLED
                 </div>
                 <h1 class="left-heading">Drafting the<br />Next Experience.</h1>
                 <p class="left-caption">Every great event begins with a vision. Fill in the details, upload your banner,
                     and let your audience discover something unforgettable.</p>
 
-                <div
-                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
-                    <p style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 8px;">Real-time Preview
-                    </p>
-                    <p style="font-size: 13px; color: var(--text-light);">Wait for changes to reflect on your landing
-                        page.</p>
+                <div class="quality-checklist">
+                    <p class="checklist-title">Publishing Checklist</p>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>High-resolution event banner</span>
+                    </div>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Compelling event description</span>
+                    </div>
+                    <div class="checklist-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Venue and timing accuracy</span>
+                    </div>
                 </div>
+
+
             </div>
         </aside>
 
@@ -152,13 +168,7 @@
                         <div class="form-section">
                             <div class="form-section-head">
                                 <h2 class="form-section-title">Core Information</h2>
-                                <button type="button" class="ai-btn-small">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                                    </svg>
-                                    AI GENERATED DESCRIPTION
-                                </button>
+
                             </div>
 
                             <div class="form-group">
@@ -200,15 +210,31 @@
                         <div class="form-section">
                             <h2 class="form-section-title">Logistics & Venue</h2>
 
-                            <div class="form-row three-col" style="margin-top: 24px;">
+                            <div class="form-row" style="margin-top: 24px;">
                                 <div class="form-group">
-                                    <label for="date">Date</label>
-                                    <input type="date" id="date" name="date" required />
+                                    <label for="startDate">Start Date</label>
+                                    <input type="date" id="startDate" name="startDate" required />
                                 </div>
                                 <div class="form-group">
-                                    <label for="time">Time</label>
-                                    <input type="time" id="time" name="time" required />
+                                    <label for="startTime">Start Time</label>
+                                    <input type="time" id="startTime" name="startTime" required />
+                                    <div class="error-msg" id="startTime-error"></div>
                                 </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" id="endDate" name="endDate" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="endTime">End Time</label>
+                                    <input type="time" id="endTime" name="endTime" required />
+                                    <div class="error-msg" id="endTime-error"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row three-col">
                                 <div class="form-group">
                                     <label for="maxCapacity">Max Capacity</label>
                                     <input type="number" id="maxCapacity" name="maxCapacity" placeholder="e.g., 500" min="0" required />
@@ -240,12 +266,114 @@
 
     <script>
         // Enforce today or future date for selection
-        const dateInput = document.getElementById('date');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        dateInput.min = `${year}-${month}-${day}`;
+        const minDate = `${year}-${month}-${day}`;
+        
+        startDateInput.min = minDate;
+        endDateInput.min = minDate;
+
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+
+        function updateTimeConstraints() {
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const selectedStartDate = startDateInput.value;
+            const selectedEndDate = endDateInput.value;
+
+            if (selectedStartDate === minDate) {
+                startTimeInput.min = currentTime;
+            } else {
+                startTimeInput.removeAttribute('min');
+            }
+
+            if (selectedStartDate && selectedEndDate && selectedStartDate === selectedEndDate) {
+                if (startTimeInput.value) {
+                    endTimeInput.min = startTimeInput.value;
+                } else {
+                    endTimeInput.removeAttribute('min');
+                }
+            } else {
+                endTimeInput.removeAttribute('min');
+            }
+        }
+
+        const startTimeError = document.getElementById('startTime-error');
+        const endTimeError = document.getElementById('endTime-error');
+
+        function showError(element, errorElement, message) {
+            element.closest('.form-group').classList.add('has-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.form-group').forEach(group => group.classList.remove('has-error'));
+            document.querySelectorAll('.error-msg').forEach(msg => {
+                msg.textContent = '';
+                msg.style.display = 'none';
+            });
+        }
+
+        function validateInputs() {
+            clearErrors();
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            let hasError = false;
+
+            if (startDate === minDate && startTime && startTime < currentTime) {
+                showError(startTimeInput, startTimeError, 'Start time cannot be in the past for today.');
+                hasError = true;
+            }
+
+            if (startDate === endDate && startTime && endTime) {
+                if (startTime >= endTime) {
+                    showError(endTimeInput, endTimeError, 'End time must be after the start time.');
+                    hasError = true;
+                }
+            }
+            return !hasError;
+        }
+
+        startDateInput.addEventListener('change', () => {
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+                if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+                }
+            }
+            updateTimeConstraints();
+            validateInputs();
+        });
+
+        endDateInput.addEventListener('change', () => {
+            updateTimeConstraints();
+            validateInputs();
+        });
+
+        startTimeInput.addEventListener('input', validateInputs);
+        endTimeInput.addEventListener('input', validateInputs);
+
+        const eventForm = document.querySelector('form');
+        eventForm.addEventListener('submit', (e) => {
+            if (!validateInputs()) {
+                e.preventDefault();
+                const firstError = document.querySelector('.has-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
 
         // File upload handling
         const uploadArea = document.getElementById('uploadArea');

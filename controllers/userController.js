@@ -360,15 +360,140 @@ exports.cancelBooking = async (req, res) => {
 };
 
 exports.cancelBookingById = async (req, res) => {
+  try{
   try {
     const { bookingId } = req.params;
     const { cancelCount: cancelCountRaw } = req.body || {};
     const userId = req.user.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid booking." });
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(400).json({ success: false, message: "Invalid booking." });
+        }
+
+        const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (!Array.isArray(user.bookedEvents)) {
+            user.bookedEvents = [];
+        }
+
+        const bookingModel = require("../models/bookingModel");
+        const booking = await bookingModel.findById(bookingId).populate('eventId', 'date');
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
+        }
+        await syncBookingExpiry(booking);
+        if (booking.userEmail !== user.email) {
+            return res.status(403).json({ success: false, message: "Not authorized to cancel this booking" });
+        }
+        if (booking.status === "cancelled") {
+            return res.status(400).json({ success: false, message: "Booking is already cancelled" });
+        }
+        if (booking.status === "expired") {
+            return res.status(400).json({ success: false, message: "Booking has expired and can no longer be cancelled" });
+        }
+
+        const currentCount = Math.max(booking.ticketCount || 1, 1);
+        const normalizedCancel = Math.min(cancelCount, currentCount);
+
+        let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+        const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+        if (ticketCodes.length < currentCount) {
+            for (let i = ticketCodes.length; i < currentCount; i += 1) {
+                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+                ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
+            }
+            booking.referenceNumber = referenceNumber;
+            booking.bookingRef = booking.bookingRef || referenceNumber;
+        }
+
+        const isFullCancel = normalizedCancel >= currentCount;
+
+        if (isFullCancel) {
+            booking.status = "cancelled";
+        } else {
+            const remainingCount = currentCount - normalizedCancel;
+            const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
+            booking.ticketCount = remainingCount;
+            booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
+            booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+
+            // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
+            const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+            try {
+                await bookingModel.create({
+                    eventId: booking.eventId,
+                    userName: booking.userName,
+                    userEmail: booking.userEmail,
+                    ticketCount: normalizedCancel,
+                    unitPrice: booking.unitPrice || 0,
+                    totalAmount: (booking.unitPrice || 0) * normalizedCancel,
+                    ticketCodes: cancelledCodes,
+                    referenceNumber: cancellationRef,
+                    // bookingRef is unique in the DB; keep it unique for the cancellation record.
+                    bookingRef: cancellationRef,
+                    status: "cancelled"
+                });
+            } catch (err) {
+                console.error("Cancel history insert failed:", err && err.message ? err.message : err);
+            }
+        }
+
+        await booking.save();
+
+        if (!Array.isArray(user.notifications)) {
+            user.notifications = [];
+        }
+        let eventName = "Event";
+        try {
+            const eventDoc = await eventModel.findById(booking.eventId).select("eventName title");
+            if (eventDoc) {
+                eventName = eventDoc.eventName || eventDoc.title || eventName;
+            }
+        } catch (err) {
+            eventName = eventName;
+        }
+        user.notifications.unshift({
+            type: "booking_cancelled",
+            eventId: booking.eventId,
+            eventName,
+            ticketCount: normalizedCancel,
+            createdAt: new Date()
+        });
+        if (user.notifications.length > 20) {
+            user.notifications = user.notifications.slice(0, 20);
+        }
+
+        if (isFullCancel) {
+            const remainingActive = await bookingModel.countDocuments({
+                eventId: booking.eventId,
+                userEmail: user.email,
+                status: { $nin: ["cancelled", "expired"] }
+            });
+            if (remainingActive === 0) {
+                user.bookedEvents = user.bookedEvents.filter(
+                    id => id.toString() !== booking.eventId.toString()
+                );
+                await user.save();
+            } else {
+                await user.save();
+            }
+        } else {
+            await user.save();
+        }
+
+        res.json({
+            success: true,
+            message: isFullCancel ? "Booking cancelled successfully" : "Tickets cancelled successfully",
+            status: booking.status,
+            remainingTickets: isFullCancel ? 0 : booking.ticketCount
+        });
+    } catch (err) {
+        console.error("Cancel Booking (partial) Error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 
     const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
@@ -502,25 +627,41 @@ exports.cancelBookingById = async (req, res) => {
 };
 
 exports.getGuestDashboard = async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const events = await eventModel
-      .find({ date: { $gte: today } })
-      .populate("categoryId");
-    res.render("index", { events: events, user: null });
-  } catch (err) {
-    res.status(500).send("Error loading dashboard");
-  }
+    try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Fetch events where endDate is today or in the future
+        let events = await eventModel.find({ 
+            endDate: { $gte: today },
+            status: { $ne: 'cancelled' }
+        }).populate('categoryId').lean();
+
+        // Filter out events that have precisely ended (date + time)
+        events = events.filter(event => !hasEventEnded(event));
+
+        res.render("index", { events: events, user: null });
+    } catch (err) {
+        console.error("Error loading guest dashboard:", err);
+        res.status(500).send("Error loading dashboard");
+    }
 };
 
 exports.getCatalog = async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const events = await eventModel
-      .find({ date: { $gte: today } })
-      .populate("categoryId");
+    try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Fetch events where endDate is today or in the future
+        let events = await eventModel.find({ 
+            endDate: { $gte: today },
+            status: { $ne: 'cancelled' }
+        }).populate('categoryId').lean();
+
+        // Filter out events that have already ended precisely (date + time)
+        events = events.filter(event => !hasEventEnded(event));
 
     // Fetch the full user document if logged in; otherwise allow guest view
     let fullUser = null;
@@ -551,13 +692,58 @@ exports.getCatalog = async (req, res) => {
 };
 
 exports.searchEvents = async (req, res) => {
-  try {
-    let { q, date, category } = req.query;
-    let queryObj = {};
+  try{
+    try {
+        const { hasEventEnded } = require("../utils/bookingStatus");
+        let { q, date, category } = req.query;
+        let queryObj = {
+            status: { $ne: 'cancelled' }
+        };
 
-    // 1. Text Search (Matches eventName regardless of case)
-    if (q) {
-      queryObj.eventName = { $regex: q, $options: "i" };
+        // 1. Text Search
+        if (q) {
+            queryObj.eventName = { $regex: q, $options: "i" };
+        }
+
+        // 2. Date Search
+        if (date) {
+            const searchDate = new Date(date);
+            const nextDay = new Date(date);
+            nextDay.setDate(searchDate.getDate() + 1);
+            
+            queryObj.$or = [
+                { startDate: { $gte: searchDate, $lt: nextDay } },
+                { endDate: { $gte: searchDate, $lt: nextDay } }
+            ];
+        }
+
+        // 3. Category Filter
+        if (category && category !== "All") {
+            // Find the category ID first
+            const catDoc = await categoryModel.findOne({ name: category });
+            if (catDoc) {
+                queryObj.categoryId = catDoc._id;
+            }
+        }
+
+        // Ensure we show events that haven't ended yet unless a specific date is requested
+        if (!date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            queryObj.endDate = { $gte: today };
+        }
+
+        // Fetch events from DB and populate categoryId
+        let events = await eventModel.find(queryObj).populate('categoryId').lean();
+
+        // Filter out events that have precisely ended (date + time)
+        events = events.filter(event => !hasEventEnded(event));
+
+        // Render the page with the found events
+        res.render("index", { events: events });
+    } catch (err) {
+        console.error("Search failed:", err);
+        res.status(500).send("Search failed");
     }
 
     // 2. Date Search

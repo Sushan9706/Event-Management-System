@@ -5,8 +5,10 @@ const eventSchema = new mongoose.Schema({
     eventName: { type: String, required: true },
     title: { type: String }, // support legacy 'title'
 
-    date: { type: Date, required: true },
-    time: { type: String },
+    startDate: { type: Date, required: true },
+    startTime: { type: String },
+    endDate: { type: Date, required: true },
+    endTime: { type: String },
     location: { type: String, required: true },
     description: { type: String },
 
