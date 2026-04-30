@@ -16,10 +16,12 @@
     <%
       const event = booking.eventId;
       const eventName = event ? (event.eventName || event.title || event.name) : "Event";
-      const eventDate = event && event.date
-        ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+      const eventDate = event && event.startDate
+        ? new Date(event.startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
         : "TBA";
-      const eventTime = event && event.time ? event.time : "TBA";
+      const eventTime = (event && event.startTime)
+        ? (event.endTime ? `${event.startTime} - ${event.endTime}` : event.startTime)
+        : "TBA";
       const eventLocation = event && event.location ? event.location : "TBA";
       const eventImage = (event && (event.image || event.imagePath))
         ? (event.image || event.imagePath)

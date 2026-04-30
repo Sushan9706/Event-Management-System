@@ -165,7 +165,7 @@ exports.getUserDashboard = async (req, res) => {
         })
         .populate({
             path: 'eventId',
-            match: { date: { $gte: now } }
+            match: { endDate: { $gte: now } }
         })
         .sort({ createdAt: -1 });
 
@@ -217,7 +217,7 @@ exports.cancelBooking = async (req, res) => {
             eventId,
             userEmail: user.email,
             status: { $ne: 'cancelled' }
-        }).populate('eventId', 'date');
+        }).populate('eventId', 'startDate');
         await syncBookingsExpiry(activeBookings);
 
         const cancellableBookings = activeBookings.filter(booking => {
@@ -291,7 +291,7 @@ exports.cancelBookingById = async (req, res) => {
         }
 
         const bookingModel = require("../models/bookingModel");
-        const booking = await bookingModel.findById(bookingId).populate('eventId', 'date');
+        const booking = await bookingModel.findById(bookingId).populate('eventId', 'startDate');
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found" });
         }

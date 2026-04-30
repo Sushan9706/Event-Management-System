@@ -117,10 +117,10 @@
           <% bookingList.forEach(function(booking) { 
               const event = booking.eventId;
               const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
-              const eventDate = event && event.date 
-                ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
+              const eventDate = event && event.startDate 
+                ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
                 : 'TBA';
-              const eventDateIso = event && event.date ? new Date(event.date).toISOString().slice(0,10) : '';
+              const eventDateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
               const eventLocation = event && event.location ? event.location : 'TBA';
               const eventImage = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
               const ticketCount = booking.ticketCount || 1;

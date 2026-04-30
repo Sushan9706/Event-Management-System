@@ -40,8 +40,8 @@
             <div class="info-box">
                 <span class="info-label">WHEN</span>
                 <span class="info-value">
-                    <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
-                    <% if (event.time) { %> &bull; <%= event.time %><% } %>
+                    <%= new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                    <% if (event.startTime) { %> &bull; <%= event.startTime %><%= event.endTime ? ' - ' + event.endTime : '' %><% } %>
                 </span>
             </div>
             <div class="info-box">

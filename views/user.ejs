@@ -142,7 +142,7 @@
                   <div><p class="rn"><%= event.eventName || event.title %></p><p class="rid"><%= event.location %></p></div>
                 </div>
                 <div class="td"><span class="pill pill--ok"><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
-                <div class="td"><%= new Date(event.date).toLocaleDateString() %></div>
+                <div class="td"><%= new Date(event.startDate).toLocaleDateString() %></div>
                 <div class="td">
                    <a href="/bookings/manage/<%= booking._id %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>

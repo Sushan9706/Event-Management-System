@@ -19,7 +19,7 @@ router.get("/event", async (req, res) => {
             event = await eventModel.findById(req.query.eventId);
         }
         if (!event) {
-            event = await eventModel.findOne().sort({ date: 1 });
+            event = await eventModel.findOne().sort({ startDate: 1 });
         }
         res.render("event", { event });
     } catch (err) {
