@@ -226,18 +226,12 @@ exports.getUserDashboard = async (req, res) => {
       const bookingModel = require("../models/bookingModel");
   
       const recentBookings = await bookingModel
-        .find({
-          userEmail: user.email,
-          status: "confirmed",
-        })
-        .populate({
-          path: "eventId",
-          match: { date: { $gte: now } },
-        })
+        .find({ userEmail: user.email })
+        .populate("eventId")
         .sort({ createdAt: -1 });
   
       const allActiveBookings = recentBookings.filter((b) => b.eventId !== null);
-      const topRecentBookings = allActiveBookings.slice(0, 5);
+      const topRecentBookings = allActiveBookings.slice(0, 3);
   
       const totalBookings = await bookingModel.countDocuments({
         userEmail: user.email,
@@ -269,6 +263,37 @@ exports.getUserDashboard = async (req, res) => {
       res.redirect("/login");
     }
   };
+
+exports.loadMoreBookings = async (req, res) => {
+  try {
+    const { skip } = req.query;
+    const skipCount = parseInt(skip) || 0;
+    const user = await userModel.findById(req.user.userId);
+    const bookingModel = require("../models/bookingModel");
+    
+    const bookings = await bookingModel
+      .find({ userEmail: user.email })
+      .populate("eventId")
+      .sort({ createdAt: -1 })
+      .skip(skipCount)
+      .limit(5);
+      
+    const validBookings = bookings.filter(b => b.eventId !== null).map(b => ({
+      _id: b._id,
+      status: b.status || 'confirmed',
+      eventImage: b.eventId.image || b.eventId.imagePath,
+      eventName: b.eventId.eventName || b.eventId.title,
+      eventLocation: b.eventId.location,
+      eventDate: b.eventId.date,
+      eventStartDate: b.eventId.startDate // in case the UI uses startDate
+    }));
+    
+    res.json({ success: true, bookings: validBookings });
+  } catch (err) {
+    console.error("Error fetching more bookings:", err);
+    res.status(500).json({ success: false });
+  }
+};
 
 exports.cancelBooking = async (req, res) => {
   try {
