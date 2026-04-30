@@ -139,11 +139,14 @@
             if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
             imgUrl = '/' + imgUrl;
             }
-            let eventStartDate = new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-            let eventEndDate = new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-            let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} - ${eventEndDate}`;
+            let eventStartDate = new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
+            year: 'numeric' });
+            let eventEndDate = new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
+            year: 'numeric' });
+            let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} -
+            ${eventEndDate}`;
             let isFree = event.ticketPrice === 0;
-            let displayPrice = isFree ? "Free Admission" : "$" + event.ticketPrice.toFixed(2);
+            let displayPrice = isFree ? "Free" : "$" + event.ticketPrice.toFixed(2);
             %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
               data-date="<%= event.startDate %>">
