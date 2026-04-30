@@ -32,6 +32,7 @@ router.get('/register', redirectIfLoggedIn, userController.getRegister);
 router.post('/register', redirectIfLoggedIn, userController.postRegister);
 router.get('/login', redirectIfLoggedIn, userController.getLogin);
 router.post('/login', redirectIfLoggedIn, userController.postLogin);
+router.get('/reset-password', redirectIfLoggedIn, userController.getResetPassword);
 router.get('/logout', userController.logout);
 
 // --- PROTECTED USER ROUTES (Requires isLoggedIn) ---

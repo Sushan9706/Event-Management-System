@@ -89,6 +89,10 @@ exports.getLogin = (req, res) => {
   res.render("login");
 };
 
+exports.getResetPassword = (req, res) => {
+  res.render("reset-password");
+};
+
 exports.postLogin = async (req, res) => {
 try{
   try {
