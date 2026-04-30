@@ -14,7 +14,8 @@
   --muted: #888888;
   --border: #e4e4e0;
   --blue: #2563eb;
-  --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 body {
@@ -859,4 +860,205 @@ button {
 .search-bar-date-wrap input::-webkit-calendar-picker-indicator {
   opacity: 0.6;
   cursor: pointer;
+}
+
+/* ─── ADVANCED FILTER PANEL ─────────────────────── */
+.filter-panel {
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto 12px;
+  padding: 0 32px;
+}
+
+.filter-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mid);
+  transition: all 0.2s;
+  margin: 0 auto;
+}
+
+.filter-panel-toggle:hover,
+.filter-panel-toggle.active {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--dark);
+  color: var(--white);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.filter-panel-body {
+  display: none;
+  margin-top: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.filter-panel-body.open {
+  display: block;
+}
+
+.filter-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 180px));
+  gap: 12px;
+  align-items: end;
+  justify-content: center;
+  padding: 0 32px;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-field label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.filter-field input,
+.filter-field select {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--dark);
+  background: var(--bg);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+  border-color: var(--dark);
+  background: var(--white);
+}
+
+.filter-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.filter-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-clear-filters {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.btn-clear-filters:hover {
+  color: var(--dark);
+  background: var(--bg);
+}
+
+.btn-apply-filters {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--dark);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-apply-filters:hover {
+  background: #333;
+}
+
+.active-filters {
+  display: none;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto 4px;
+  padding: 0 32px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.active-filters.visible {
+  display: flex;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 12px;
+  background: var(--dark);
+  color: var(--white);
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.filter-chip button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.filter-chip button:hover {
+  color: var(--white);
 }

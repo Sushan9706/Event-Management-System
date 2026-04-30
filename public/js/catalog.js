@@ -11,42 +11,78 @@ document.addEventListener("DOMContentLoaded", () => {
   const noResults = document.getElementById("noResults");
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   const filterSection = document.getElementById("filters");
+  const filterToggleBtn = document.getElementById("filterToggleBtn");
+  const filterPanelBody = document.getElementById("filterPanelBody");
+  const filterCountBadge = document.getElementById("filterCount");
+  const filterLocation = document.getElementById("filterLocation");
+  const filterDateFrom = document.getElementById("filterDateFrom");
+  const filterPrice = document.getElementById("filterPrice");
+  const btnApplyFilters = document.getElementById("btnApplyFilters");
+  const btnClearFilters = document.getElementById("btnClearFilters");
+  const activeFiltersEl = document.getElementById("activeFilters");
+  const filterCategory = document.getElementById("filterCategory");
 
-  let currentCategory = "all";
-  let searchText = "";
-  let showAllMatching = false; // Track if Load More was clicked for the CURRENT filter
   const INITIAL_LIMIT = 9;
+  let state = {
+    searchText: "",
+    category: "all",
+    location: "",
+    dateFrom: "",
+    dateTo: "",
+    price: "",
+    showAll: false,
+  };
 
   // --- 1. FILTERING LOGIC (Consolidated with Load More support) ---
   function applyFilters() {
     const cards = document.querySelectorAll(".event-card");
     let matchingCount = 0;
-    let visibleCount = 0;
 
     cards.forEach((card) => {
       const name = card.querySelector(".card-name").textContent.toLowerCase();
-      const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
-      const category = (card.dataset.category || "").toLowerCase().trim().replace(/\s+/g, '-');
+      const location = (card.dataset.location || "").toLowerCase();
+      const category = (card.dataset.category || "")
+        .toLowerCase()
+        .trim()
+        .replace(/\\s+/g, "-");
+      const dateStr = card.dataset.date || "";
+      const price = parseFloat(card.dataset.price) || 0;
 
-      const matchesText = !searchText || name.includes(searchText) || location.includes(searchText);
-      const matchesCategory = currentCategory === "all" || category === currentCategory;
+      const matchesSearch =
+        !state.searchText ||
+        name.includes(state.searchText) ||
+        location.includes(state.searchText);
+      const matchesCategory =
+        state.category === "all" || category === state.category;
+      const matchesLocation =
+        !state.location || location.includes(state.location);
 
-      if (matchesText && matchesCategory) {
+      let matchesDate = true;
+      if (state.dateFrom && dateStr < state.dateFrom) matchesDate = false;
+
+      let matchesPrice = true;
+      if (state.price === "free" && price !== 0) matchesPrice = false;
+      if (state.price === "paid" && price === 0) matchesPrice = false;
+      if (state.price === "under50" && price >= 50) matchesPrice = false;
+      if (state.price === "under100" && price >= 100) matchesPrice = false;
+      if (state.price === "under200" && price >= 200) matchesPrice = false;
+
+      const visible =
+        matchesSearch &&
+        matchesCategory &&
+        matchesLocation &&
+        matchesDate &&
+        matchesPrice;
+
+      if (visible) {
         matchingCount++;
-        // Check if we should show this item based on the limit
-        if (showAllMatching || matchingCount <= INITIAL_LIMIT) {
-          card.classList.remove("hidden");
-          card.style.display = ""; // Fallback to CSS display: flex
-          visibleCount++;
-        } else {
-          card.style.display = "none";
-        }
+        card.style.display =
+          state.showAll || matchingCount <= INITIAL_LIMIT ? "" : "none";
       } else {
         card.style.display = "none";
       }
     });
 
-    // Handle Empty State
     if (matchingCount === 0) {
       if (eventsGrid) eventsGrid.style.display = "none";
       if (noResults) noResults.style.display = "block";
@@ -54,32 +90,26 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       if (eventsGrid) eventsGrid.style.display = "grid";
       if (noResults) noResults.style.display = "none";
-
-      // Show Load More if we have more matches than the limit AND haven't clicked "Show All"
-      if (loadMoreBtn) {
-        if (matchingCount > INITIAL_LIMIT && !showAllMatching) {
-          loadMoreBtn.style.display = "inline-flex";
-        } else {
-          loadMoreBtn.style.display = "none";
-        }
-      }
+      if (loadMoreBtn)
+        loadMoreBtn.style.display =
+          matchingCount > INITIAL_LIMIT && !state.showAll
+            ? "inline-flex"
+            : "none";
     }
   }
 
-  heroSearch?.addEventListener("input", (e) => {
-    searchText = e.target.value.trim().toLowerCase();
-    showAllMatching = false; // Reset "load more" state on new search
-    applyFilters();
-  });
-
   filterSection?.addEventListener("click", (e) => {
     if (!e.target.classList.contains("filter-tag")) return;
-
-    document.querySelectorAll(".filter-tag").forEach((t) => t.classList.remove("active"));
+    document
+      .querySelectorAll(".filter-tag")
+      .forEach((t) => t.classList.remove("active"));
     e.target.classList.add("active");
-
-    currentCategory = e.target.dataset.filter.toLowerCase().trim().replace(/\s+/g, '-');
-    showAllMatching = false; // Reset on new category
+    state.category = e.target.dataset.filter
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-");
+    if (filterCategory) filterCategory.value = state.category;
+    state.showAll = false;
     applyFilters();
   });
 
@@ -96,11 +126,131 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   searchInput?.addEventListener("input", (e) => {
-    searchText = e.target.value.trim().toLowerCase();
+    state.searchText = e.target.value.trim().toLowerCase();
     if (heroSearch) heroSearch.value = e.target.value;
     showAllMatching = false;
     applyFilters();
   });
+  // Filter panel toggle
+  filterToggleBtn?.addEventListener("click", () => {
+    filterPanelBody.classList.toggle("open");
+    filterToggleBtn.classList.toggle("active");
+  });
+
+  btnApplyFilters?.addEventListener("click", () => {
+    console.log("Apply button clicked"); // 👈 check this in console
+  
+    state.location = filterLocation.value.trim().toLowerCase();
+    state.dateFrom = filterDateFrom.value;
+    state.price = filterPrice.value;
+    state.category = filterCategory.value;
+    state.showAll = false;
+  
+    renderChips();
+    applyFilters();
+  });
+
+  btnClearFilters?.addEventListener("click", () => {
+    filterLocation.value = "";
+    filterDateFrom.value = "";
+    filterPrice.value = "";
+    state.location = "";
+    state.dateFrom = "";
+    state.dateTo = "";
+    state.price = "";
+    state.showAll = false;
+    filterCategory.value = "all";
+    state.category = "all";
+    document
+      .querySelectorAll(".filter-tag")
+      .forEach((t) => t.classList.remove("active"));
+    document
+      .querySelector(".filter-tag[data-filter='all']")
+      .classList.add("active");
+    updateFilterBadge();
+    renderChips();
+    applyFilters();
+  });
+
+  function updateFilterBadge() {
+    // no-op: filterCountBadge and filterToggleBtn don't exist in HTML
+  }
+
+  function renderChips() {
+    activeFiltersEl.innerHTML = "";
+    const chips = [];
+    if (state.location)
+      chips.push({ label: `📍 ${state.location}`, key: "location" });
+    if (state.dateFrom && state.dateTo)
+      chips.push({
+        label: `📅 ${state.dateFrom} → ${state.dateTo}`,
+        key: "dateRange",
+      });
+    else if (state.dateFrom)
+      chips.push({ label: `📅 From ${state.dateFrom}`, key: "dateFrom" });
+    else if (state.dateTo)
+      chips.push({ label: `📅 Until ${state.dateTo}`, key: "dateTo" });
+    if (state.price) {
+      const labels = {
+        free: "Free",
+        paid: "Paid",
+        under50: "< $50",
+        under100: "< $100",
+        under200: "< $200",
+      };
+      chips.push({ label: `💰 ${labels[state.price]}`, key: "price" });
+    }
+    if (state.category !== "all") {
+      chips.push({ label: `🏷️ ${state.category}`, key: "category" });
+    }
+    if (!chips.length) {
+      activeFiltersEl.classList.remove("visible");
+      return;
+    }
+    activeFiltersEl.classList.add("visible");
+    chips.forEach((chip) => {
+      const el = document.createElement("span");
+      el.className = "filter-chip";
+      el.innerHTML = `${chip.label} <button>×</button>`;
+      el.querySelector("button").addEventListener("click", () => {
+        if (chip.key === "location") {
+          state.location = "";
+          filterLocation.value = "";
+        }
+        if (chip.key === "dateFrom") {
+          state.dateFrom = "";
+          filterDateFrom.value = "";
+        }
+        if (chip.key === "dateTo") {
+          state.dateTo = "";
+        }
+        if (chip.key === "dateRange") {
+          state.dateFrom = "";
+          state.dateTo = "";
+          filterDateFrom.value = "";
+        }
+        if (chip.key === "price") {
+          state.price = "";
+          filterPrice.value = "";
+        }
+        if (chip.key === "category") {
+          state.category = "all";
+          filterCategory.value = "all";
+          document
+            .querySelectorAll(".filter-tag")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelector(".filter-tag[data-filter='all']")
+            .classList.add("active");
+        }
+        state.showAll = false;
+        updateFilterBadge();
+        renderChips();
+        applyFilters();
+      });
+      activeFiltersEl.appendChild(el);
+    });
+  }
 
   // --- 3. DROPDOWN LOGIC ---
   avatarBtn?.addEventListener("click", (e) => {
@@ -122,11 +272,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!notifDropdown?.contains(e.target) && !notifBtn?.contains(e.target)) {
       notifDropdown?.classList.remove("open");
     }
+    if (filterPanelBody?.classList.contains("open")) {
+      if (
+        !filterPanelBody.contains(e.target) &&
+        !filterToggleBtn?.contains(e.target)
+      ) {
+        if (filterPanelBody?.classList.contains("open")) {
+
+      }
+    }
   });
+
 
   // --- 4. LOAD MORE ---
   loadMoreBtn?.addEventListener("click", () => {
-    showAllMatching = true;
+    state.showAll = true;
     applyFilters();
     window.scrollBy({ top: 300, behavior: "smooth" });
   });
@@ -154,9 +314,18 @@ document.addEventListener("DOMContentLoaded", () => {
       searchOverlay?.classList.remove("open");
       notifDropdown?.classList.remove("open");
       avatarSidebar?.classList.remove("open");
+      filterPanelBody?.classList.remove("open");
+      filterToggleBtn?.classList.remove("active");
     }
   });
 
   // Initial Run
   applyFilters();
+});
+
+heroSearch?.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    state.searchText = e.target.value.trim().toLowerCase();
+    applyFilters();
+  }
 });
