@@ -310,6 +310,7 @@ exports.cancelBookingById = async (req, res) => {
         const normalizedCancel = Math.min(cancelCount, currentCount);
 
         let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+        let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
         const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
         if (ticketCodes.length < currentCount) {
@@ -328,17 +329,21 @@ exports.cancelBookingById = async (req, res) => {
         } else {
             const remainingCount = currentCount - normalizedCancel;
             const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
+            const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
             booking.ticketCount = remainingCount;
             booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
             booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+            booking.attendeeNames = attendeeNames.slice(0, remainingCount);
 
             // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
             const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
             try {
                 await bookingModel.create({
                     eventId: booking.eventId,
-                    userName: booking.userName,
+                    userName: cancelledNames[0] || booking.userName,
                     userEmail: booking.userEmail,
+                    attendeeEmail: booking.attendeeEmail || booking.userEmail,
+                    attendeeNames: cancelledNames,
                     ticketCount: normalizedCancel,
                     unitPrice: booking.unitPrice || 0,
                     totalAmount: (booking.unitPrice || 0) * normalizedCancel,

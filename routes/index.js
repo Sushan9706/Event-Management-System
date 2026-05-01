@@ -52,6 +52,7 @@ router.post(
 
 router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
 router.get("/bookings/manage/:bookingId", isLoggedIn, bookingController.getManageBooking);
+router.get("/tickets/:ticketCode", bookingController.getTicketDetails);
 
 router.get("/catalog", userController.getCatalog);
 

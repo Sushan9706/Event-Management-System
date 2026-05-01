@@ -55,6 +55,10 @@
       const availableTicketsLabel = hasCapacityLimit ? String(availableTickets) : "Unlimited";
       const isSoldOut = hasCapacityLimit ? availableTickets <= 0 : false;
       const hasEnded = !!(typeof event !== "undefined" && event && event.hasEnded);
+      const alreadyBookedTickets = (typeof event !== "undefined" && event && Number.isFinite(Number(event.userAlreadyBooked)))
+        ? Math.max(Number(event.userAlreadyBooked), 0)
+        : 0;
+      const userEmailValue = (locals.user && user.email) ? user.email : "";
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
       const formatNotifTime = (date) => {
@@ -394,6 +398,7 @@
       data-has-capacity-limit="<%= hasCapacityLimit %>"
       data-has-ended="<%= hasEnded %>"
       data-authenticated="<%= isAuthenticated %>"
+      data-already-booked="<%= alreadyBookedTickets %>"
     >
       <div class="booking-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
         <button class="booking-close" type="button" onclick="closeBooking()" aria-label="Close booking form">
@@ -425,6 +430,10 @@
               <span>Tickets</span>
               <strong id="bookingTicketSummary">0</strong>
             </div>
+            <div class="summary-row" id="alreadyBookedSummary" style="<%= alreadyBookedTickets > 0 ? '' : 'display:none;' %>">
+              <span>You already booked</span>
+              <strong id="bookingAlreadyBooked"><%= alreadyBookedTickets %></strong>
+            </div>
             <div class="summary-row">
               <span>Available</span>
               <strong id="bookingAvailableTickets"><%= availableTicketsLabel %></strong>
@@ -436,40 +445,13 @@
           </div>
 
           <form id="bookingForm" class="booking-form" novalidate>
-            <label class="booking-label" for="bookingFirstName">First Name</label>
-            <input
-              id="bookingFirstName"
-              class="booking-input"
-              type="text"
-              name="firstName"
-              placeholder="First name"
-              minlength="2"
-              maxlength="40"
-              pattern="[A-Za-z][A-Za-z' -]{1,39}"
-              autocomplete="given-name"
-              required
-            />
-
-            <label class="booking-label" for="bookingLastName">Last Name</label>
-            <input
-              id="bookingLastName"
-              class="booking-input"
-              type="text"
-              name="lastName"
-              placeholder="Last name"
-              minlength="2"
-              maxlength="40"
-              pattern="[A-Za-z][A-Za-z' -]{1,39}"
-              autocomplete="family-name"
-              required
-            />
-
             <label class="booking-label" for="bookingEmail">Email Address</label>
             <input
               id="bookingEmail"
               class="booking-input"
               type="email"
               name="email"
+              value="<%= userEmailValue %>"
               placeholder="you@example.com"
               pattern="[^@\\s]*[A-Za-z][^@\\s]*@[^@\\s]+\\.[^@\\s]+"
               autocomplete="email"
@@ -489,9 +471,14 @@
               required
             />
             <p class="booking-label">Available now: <strong id="ticketAvailabilityNote"><%= availableTicketsLabel %></strong></p>
+            <p class="booking-label">Maximum 5 tickets per booking. <span style="color:#c0392b;font-weight:700;">If you want more, buy again.</span></p>
+
+            <div class="attendee-step" id="attendeeStep" hidden>
+              <div id="attendeeNameFields"></div>
+            </div>
 
             <p class="booking-error" id="bookingError" aria-live="polite"></p>
-            <button class="booking-submit" type="submit">Confirm Booking</button>
+            <button class="booking-submit" id="bookingSubmitBtn" type="submit">Continue Booking</button>
           </form>
         </div>
 
@@ -570,10 +557,18 @@
       const availableTicketsEl = document.getElementById("bookingAvailableTickets");
       const ticketAvailabilityNote = document.getElementById("ticketAvailabilityNote");
       const totalPriceEl = document.getElementById("bookingTotalPrice");
+      const alreadyBookedSummary = document.getElementById("alreadyBookedSummary");
+      const alreadyBookedEl = document.getElementById("bookingAlreadyBooked");
+      const attendeeStep = document.getElementById("attendeeStep");
+      const attendeeNameFields = document.getElementById("attendeeNameFields");
+      const bookingSubmitBtn = document.getElementById("bookingSubmitBtn");
       let lastBookingId = null;
+      let bookingStep = "tickets";
       const searchOverlay = document.getElementById("searchOverlay");
       const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
       const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
+      const maxTicketsPerBooking = 5;
+      const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
       function formatAmount(amount, pricePerTicket) {
         if (pricePerTicket === 0) return "Free";
@@ -591,6 +586,10 @@
         const rawValue = ticketInput.value.trim();
         if (!/^[1-9]\d*$/.test(rawValue)) return null;
         let count = Number(rawValue);
+        if (count > maxTicketsPerBooking) {
+          count = maxTicketsPerBooking;
+          ticketInput.value = String(maxTicketsPerBooking);
+        }
         const availableTickets = getAvailableTickets();
         if (availableTickets !== null && count > availableTickets) {
           count = availableTickets;
@@ -605,6 +604,58 @@
         const safeCount = count || 0;
         ticketSummary.textContent = safeCount;
         totalPriceEl.textContent = formatAmount(pricePerTicket * safeCount, pricePerTicket);
+      }
+
+      function normalizeAttendeeName(value) {
+        return value.trim().replace(/\s+/g, " ");
+      }
+
+      function resetBookingStep() {
+        bookingStep = "tickets";
+        if (attendeeStep) attendeeStep.hidden = true;
+        if (attendeeNameFields) attendeeNameFields.innerHTML = "";
+        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Continue Booking";
+      }
+
+      function buildAttendeeFields(ticketCount) {
+        if (!attendeeNameFields) return;
+        attendeeNameFields.innerHTML = "";
+        for (let index = 0; index < ticketCount; index += 1) {
+          const fieldId = `attendeeName${index + 1}`;
+          const label = document.createElement("label");
+          label.className = "booking-label";
+          label.setAttribute("for", fieldId);
+          label.textContent = `Attendee ${index + 1} Full Name`;
+
+          const input = document.createElement("input");
+          input.id = fieldId;
+          input.className = "booking-input attendee-name-input";
+          input.type = "text";
+          input.name = "attendeeNames";
+          input.autocomplete = "name";
+          input.required = true;
+
+          attendeeNameFields.appendChild(label);
+          attendeeNameFields.appendChild(input);
+        }
+      }
+
+      function getAttendeeNames() {
+        return Array.from(document.querySelectorAll(".attendee-name-input"))
+          .map((input) => normalizeAttendeeName(input.value));
+      }
+
+      function focusAttendeeName(index) {
+        const inputs = Array.from(document.querySelectorAll(".attendee-name-input"));
+        if (inputs[index]) inputs[index].focus();
+      }
+
+      function showAttendeeStep(ticketCount) {
+        bookingStep = "attendee";
+        buildAttendeeFields(ticketCount);
+        if (attendeeStep) attendeeStep.hidden = false;
+        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Confirm Booking";
+        focusAttendeeName(0);
       }
 
       function handleBooking() {
@@ -627,12 +678,18 @@
             ? "Unlimited"
             : availableTickets;
         }
+        const alreadyBooked = Number.parseInt(bookingModal.dataset.alreadyBooked || "0", 10) || 0;
+        if (alreadyBookedSummary && alreadyBookedEl) {
+          alreadyBookedSummary.style.display = alreadyBooked > 0 ? "" : "none";
+          alreadyBookedEl.textContent = alreadyBooked;
+        }
         if (availableTickets !== null) {
           if (availableTickets <= 0) return;
-          ticketInput.max = String(availableTickets);
+          ticketInput.max = String(Math.min(availableTickets, maxTicketsPerBooking));
         } else {
-          ticketInput.removeAttribute("max");
+          ticketInput.max = String(maxTicketsPerBooking);
         }
+        resetBookingStep();
         ticketInput.value = "";
         updateTicketSummary();
 
@@ -651,32 +708,29 @@
         bookingModal.classList.remove("open");
         bookingModal.setAttribute("aria-hidden", "true");
         bookingForm.reset();
+        resetBookingStep();
         updateTicketSummary();
       }
 
-      bookingModal.addEventListener("click", function (e) {
-        if (e.target === this) closeBooking();
-      });
+      bookingModal.addEventListener("click", function () {});
 
-      ticketInput.addEventListener("input", updateTicketSummary);
+      ticketInput.addEventListener("input", () => {
+        if (bookingStep === "attendee") {
+          resetBookingStep();
+        }
+        updateTicketSummary();
+      });
 
       bookingForm.addEventListener("submit", async function (e) {
         e.preventDefault();
         bookingError.textContent = "";
 
-        const firstName = document.getElementById("bookingFirstName").value.trim();
-        const lastName = document.getElementById("bookingLastName").value.trim();
         const email = document.getElementById("bookingEmail").value.trim();
         const ticketCount = getTicketCount();
         const availableTickets = getAvailableTickets();
-        const namePattern = /^[A-Za-z][A-Za-z' -]{1,39}$/;
         const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
-        if (!firstName || !lastName || !email) {
-          bookingError.textContent = "Please enter your first name, last name, and email.";
-          return;
-        }
-        if (!namePattern.test(firstName) || !namePattern.test(lastName)) {
-          bookingError.textContent = "Please enter a valid first and last name (letters only).";
+        if (!email) {
+          bookingError.textContent = "Please enter your email address.";
           return;
         }
         if (!emailPattern.test(email)) {
@@ -685,6 +739,11 @@
         }
         if (!ticketCount) {
           bookingError.textContent = "Please enter a valid number of tickets.";
+          ticketInput.focus();
+          return;
+        }
+        if (ticketCount > maxTicketsPerBooking) {
+          bookingError.textContent = "Maximum 5 tickets per booking. If you want more, buy again.";
           ticketInput.focus();
           return;
         }
@@ -701,13 +760,36 @@
           ticketInput.focus();
           return;
         }
+        if (bookingStep === "tickets") {
+          showAttendeeStep(ticketCount);
+          return;
+        }
+
+        const attendeeNames = getAttendeeNames();
+        const missingIndex = attendeeNames.findIndex((name) => !name);
+        if (attendeeNames.length !== ticketCount || missingIndex !== -1) {
+          bookingError.textContent = `Please enter attendee full name for all ${ticketCount} ticket${ticketCount === 1 ? "" : "s"}.`;
+          focusAttendeeName(missingIndex === -1 ? 0 : missingIndex);
+          return;
+        }
+        const invalidIndex = attendeeNames.findIndex((name) => !attendeeNamePattern.test(name));
+        if (invalidIndex !== -1) {
+          bookingError.textContent = "Attendee names can contain letters and single spaces only.";
+          focusAttendeeName(invalidIndex);
+          return;
+        }
+        const uniqueNames = new Set(attendeeNames.map((name) => name.toLowerCase()));
+        if (uniqueNames.size !== attendeeNames.length) {
+          bookingError.textContent = "Please enter a different attendee name for each ticket.";
+          return;
+        }
 
         const { eventId, eventName, eventDate, eventTime, eventLocation } = bookingModal.dataset;
         const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
         const totalAmount = pricePerTicket * ticketCount;
 
         if (!eventId) {
-          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Attendees: ${attendeeNames.join(", ")} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
           bookingFormView.style.display = "none";
           bookingSuccessView.style.display = "block";
           if (downloadTicketBtn) {
@@ -721,7 +803,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "same-origin",
-            body: JSON.stringify({ eventId, firstName, lastName, email, ticketCount }),
+            body: JSON.stringify({ eventId, email, ticketCount, attendeeNames }),
           });
           if (response.redirected && response.url.includes("/login")) {
             window.location.href = "/login";
@@ -739,7 +821,8 @@
           }
 
           const serverTotal = typeof data.totalAmount === "number" ? data.totalAmount : totalAmount;
-          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
+          const displayNames = Array.isArray(data.attendeeNames) && data.attendeeNames.length ? data.attendeeNames : attendeeNames;
+          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Attendees: ${displayNames.join(", ")} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
           bookingFormView.style.display = "none";
           bookingSuccessView.style.display = "block";
           lastBookingId = data.bookingId || null;
@@ -761,7 +844,7 @@
         downloadTicketBtn.addEventListener("click", () => {
           const bookingId = downloadTicketBtn.dataset.bookingId || lastBookingId;
           if (bookingId) {
-            window.open(`/bookings/manage/${bookingId}`, "_blank");
+            window.location.href = `/bookings/manage/${bookingId}`;
           } else {
             window.location.href = "/bookings";
           }

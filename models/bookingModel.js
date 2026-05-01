@@ -18,6 +18,15 @@ const bookingSchema = new mongoose.Schema(
             trim: true,
             lowercase: true
         },
+        attendeeEmail: {
+            type: String,
+            trim: true,
+            lowercase: true
+        },
+        attendeeNames: {
+            type: [String],
+            default: []
+        },
         ticketCount: {
             type: Number,
             default: 1

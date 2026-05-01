@@ -63,6 +63,7 @@ app.use(async (req, res, next) => {
         "notifications email profileImage username bookedEvents"
       );
       if (userDoc) {
+        res.locals.user.email = userDoc.email;
         res.locals.user.profileImage = userDoc.profileImage;
         res.locals.user.username = userDoc.username;
         res.locals.user.bookedEvents = userDoc.bookedEvents;

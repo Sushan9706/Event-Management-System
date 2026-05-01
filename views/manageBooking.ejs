@@ -16,12 +16,20 @@
     <%
       const event = booking.eventId;
       const eventName = event ? (event.eventName || event.title || event.name) : "Event";
-      const eventDate = event && event.startDate
-        ? new Date(event.startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+      const formatDateLabel = (value) => value
+        ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
         : "TBA";
-      const eventTime = (event && event.startTime)
-        ? (event.endTime ? `${event.startTime} - ${event.endTime}` : event.startTime)
-        : "TBA";
+      const startDateLabel = formatDateLabel(event && (event.startDate || event.date));
+      const endDateLabel = formatDateLabel(event && (event.endDate || event.startDate || event.date));
+      const eventDate = startDateLabel === endDateLabel || endDateLabel === "TBA"
+        ? startDateLabel
+        : `${startDateLabel} - ${endDateLabel}`;
+      const eventTime = event && (event.startTime || event.endTime)
+        ? `${event.startTime || "TBA"}${event.endTime ? " - " + event.endTime : ""}`
+        : (event && event.time ? event.time : "TBA");
+      const printBaseUrl = (typeof publicBaseUrl === "string" && publicBaseUrl)
+        ? publicBaseUrl.replace(/\/+$/, "")
+        : "";
       const eventLocation = event && event.location ? event.location : "TBA";
       const eventImage = (event && (event.image || event.imagePath))
         ? (event.image || event.imagePath)
@@ -50,13 +58,16 @@
       const ticketList = Array.from({ length: ticketSlots }, (_, index) => ticketCodes[index] || "TBA");
       const ticketCodesDisplay = ticketList.length ? ticketList.join(", ") : "TBA";
       const ticketIdLabel = ticketList.length > 1 ? "Ticket IDs" : "Ticket ID";
+      const attendeeNames = Array.isArray(booking.attendeeNames) ? booking.attendeeNames : [];
+      const attendeeList = Array.from({ length: ticketSlots }, (_, index) => attendeeNames[index] || (index === 0 ? booking.userName : "")).filter(Boolean);
+      const attendeeNamesDisplay = attendeeList.length ? attendeeList.join(", ") : "-";
       const unitPriceDisplay = unitPrice === 0 ? "Free" : `$${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`;
       const totalDisplay = totalAmount === 0 ? "Free" : `$${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
       const bookingDate = booking.createdAt
         ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
         : "TBA";
-      const attendeeName = booking.userName || (user && user.username) || "Guest";
-      const attendeeEmail = booking.userEmail || (user && user.email) || "-";
+      const attendeeName = attendeeList[0] || "-";
+      const attendeeEmail = booking.attendeeEmail || booking.userEmail || (user && user.email) || "-";
       const eventDetailsLink = event && event._id ? `/event/${event._id}` : "/catalog";
       const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
       const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
@@ -150,12 +161,12 @@
             <p class="label">ATTENDEE INFORMATION</p>
             <div class="attendee-grid">
               <div>
-                <p class="meta-label">Full Name</p>
-                <p class="meta-value"><%= booking.userName || (user && user.username) || 'Guest' %></p>
+                <p class="meta-label">Full Names</p>
+                <p class="meta-value"><%= attendeeNamesDisplay %></p>
               </div>
               <div>
                 <p class="meta-label">Email Address</p>
-                <p class="meta-value"><%= booking.userEmail || (user && user.email) || '-' %></p>
+                <p class="meta-value"><%= attendeeEmail %></p>
               </div>
             </div>
           </article>
@@ -205,8 +216,8 @@
                 <p class="meta-value"><%= bookingDate %></p>
               </div>
               <div>
-                <p class="meta-label">Attendee</p>
-                <p class="meta-value"><%= attendeeName %></p>
+                <p class="meta-label">Attendees</p>
+                <p class="meta-value"><%= attendeeNamesDisplay %></p>
               </div>
               <div>
                 <p class="meta-label">Email</p>
@@ -287,51 +298,29 @@
 
     <div class="print-tickets" aria-hidden="true">
       <% ticketList.forEach(function(ticketCode, index) { %>
+        <%
+          const ticketDetailsUrl = `${printBaseUrl}/tickets/${encodeURIComponent(ticketCode)}`;
+          const ticketQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1100x1100&margin=28&ecc=M&data=${encodeURIComponent(ticketDetailsUrl)}`;
+        %>
         <section class="print-ticket" data-ticket-index="<%= index %>" data-ticket-code="<%= ticketCode %>">
           <div class="print-ticket-header">
-            <div>
-              <p class="print-ticket-label">EMS EVENT TICKET</p>
+            <div class="print-ticket-qr-wrap">
+              <img class="print-ticket-qr" src="<%= ticketQrUrl %>" alt="Ticket QR code" />
+              <p class="print-ticket-scan">Scan QR code for full ticket details</p>
+            </div>
+            <div class="print-ticket-main">
+              <p class="print-ticket-label">TICKET</p>
               <h2 class="print-ticket-title"><%= eventName %></h2>
-              <p class="print-ticket-meta"><%= eventDate %> · <%= eventTime %> · <%= eventLocation %></p>
+              <p class="print-ticket-meta"><%= eventDate %></p>
+              <p class="print-ticket-meta"><%= eventTime %></p>
+              <p class="print-ticket-meta">Attendee: <%= attendeeNames[index] || (index === 0 ? booking.userName : '-') || '-' %></p>
             </div>
             <div class="print-ticket-id">
               <span>Ticket <%= index + 1 %> of <%= ticketList.length %></span>
-              <strong><%= ticketCode %></strong>
             </div>
           </div>
-          <div class="print-ticket-grid">
-            <div>
-              <p class="meta-label">Attendee</p>
-              <p class="meta-value"><%= attendeeName %></p>
-            </div>
-            <div>
-              <p class="meta-label">Email</p>
-              <p class="meta-value"><%= attendeeEmail %></p>
-            </div>
-            <div>
-              <p class="meta-label">Date</p>
-              <p class="meta-value"><%= eventDate %></p>
-            </div>
-            <div>
-              <p class="meta-label">Time</p>
-              <p class="meta-value"><%= eventTime %></p>
-            </div>
-            <div>
-              <p class="meta-label">Location</p>
-              <p class="meta-value"><%= eventLocation %></p>
-            </div>
-            <div>
-              <p class="meta-label">Price</p>
-              <p class="meta-value"><%= unitPriceDisplay %></p>
-            </div>
-            <div>
-              <p class="meta-label">Booked On</p>
-              <p class="meta-value"><%= bookingDate %></p>
-            </div>
-            <div>
-              <p class="meta-label">Reference</p>
-              <p class="meta-value"><%= booking.referenceNumber || '-' %></p>
-            </div>
+          <div class="print-ticket-banner">
+            <img src="<%= eventImage %>" alt="<%= eventName %> event banner" />
           </div>
         </section>
       <% }); %>
@@ -375,8 +364,8 @@
           </div>
           <div class="detail-divider"></div>
           <div class="detail-row">
-            <span>Attendee</span>
-            <strong><%= attendeeName %></strong>
+            <span>Attendees</span>
+            <strong><%= attendeeNamesDisplay %></strong>
           </div>
           <div class="detail-row">
             <span>Email</span>
@@ -415,14 +404,17 @@
             <input
               id="cancelTicketCount"
               class="confirm-input"
-              type="number"
-              min="1"
-              max="<%= ticketCount %>"
-              value="1"
-              step="1"
+              type="text"
+              inputmode="numeric"
+              maxlength="3"
+              value=""
+              placeholder="1"
             />
           </div>
         </div>
+        <p class="cancel-warning" id="cancelWarning" style="display:none;">
+          Are you sure you want to cancel these tickets? This action cannot be undone.
+        </p>
         <div class="confirm-actions">
           <button class="ghost-btn" type="button" id="cancelModalNo">Keep Booking</button>
           <button class="primary-btn" type="button" id="cancelModalYes">Cancel Booking</button>
@@ -475,19 +467,39 @@
       const cancelModalYes = document.getElementById('cancelModalYes');
       const cancelTicketCountInput = document.getElementById('cancelTicketCount');
       const cancelTotalTickets = document.getElementById('cancelTotalTickets');
+      const cancelWarning = document.getElementById('cancelWarning');
       const cancelBtn = document.getElementById('cancelBookingBtn');
+      let cancelConfirmArmed = false;
+      const getCancelCount = () => {
+        if (!cancelTicketCountInput || !cancelBtn) return null;
+        const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+        const rawValue = cancelTicketCountInput.value.trim();
+        if (!/^[1-9]\d*$/.test(rawValue)) return null;
+        return Math.min(parseInt(rawValue, 10), totalTickets);
+      };
+      const updateCancelButtonLabel = () => {
+        if (!cancelModalYes || !cancelBtn) return;
+        const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+        const value = getCancelCount();
+        if (!value) {
+          cancelModalYes.textContent = 'Cancel Ticket';
+          return;
+        }
+        cancelModalYes.textContent =
+          value >= totalTickets ? 'Cancel Booking' : `Cancel ${value} Ticket${value > 1 ? 's' : ''}`;
+      };
       const openCancelModal = () => {
         if (!cancelModal) return;
+        cancelConfirmArmed = false;
+        if (cancelWarning) cancelWarning.style.display = 'none';
         if (cancelBtn) {
           const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
           if (cancelTotalTickets) cancelTotalTickets.textContent = totalTickets;
           if (cancelTicketCountInput) {
-            cancelTicketCountInput.max = totalTickets;
-            cancelTicketCountInput.value = Math.min(1, totalTickets);
+            cancelTicketCountInput.value = '';
+            cancelTicketCountInput.placeholder = String(Math.min(1, totalTickets));
           }
-          if (cancelModalYes) {
-            cancelModalYes.textContent = totalTickets === 1 ? 'Cancel Booking' : 'Cancel 1 Ticket';
-          }
+          updateCancelButtonLabel();
         }
         cancelModal.classList.add('open');
         cancelModal.setAttribute('aria-hidden', 'false');
@@ -495,6 +507,8 @@
       };
       const closeCancelModal = () => {
         if (!cancelModal) return;
+        cancelConfirmArmed = false;
+        if (cancelWarning) cancelWarning.style.display = 'none';
         cancelModal.classList.remove('open');
         cancelModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
@@ -509,13 +523,17 @@
       }
       if (cancelTicketCountInput && cancelModalYes && cancelBtn) {
         cancelTicketCountInput.addEventListener('input', () => {
+          cancelConfirmArmed = false;
+          if (cancelWarning) cancelWarning.style.display = 'none';
           const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
-          let value = parseInt(cancelTicketCountInput.value, 10) || 1;
-          if (value < 1) value = 1;
-          if (value > totalTickets) value = totalTickets;
-          cancelTicketCountInput.value = value;
-          cancelModalYes.textContent =
-            value >= totalTickets ? 'Cancel Booking' : `Cancel ${value} Ticket${value > 1 ? 's' : ''}`;
+          const digitsOnly = cancelTicketCountInput.value.replace(/\D/g, '');
+          if (digitsOnly !== cancelTicketCountInput.value) {
+            cancelTicketCountInput.value = digitsOnly;
+          }
+          if (digitsOnly && parseInt(digitsOnly, 10) > totalTickets) {
+            cancelTicketCountInput.value = String(totalTickets);
+          }
+          updateCancelButtonLabel();
         });
       }
 
@@ -561,9 +579,24 @@
         cancelModalYes.addEventListener('click', async () => {
           const bookingId = cancelBtn.dataset.booking;
           if (!bookingId) return;
-          const cancelCount = cancelTicketCountInput
-            ? parseInt(cancelTicketCountInput.value, 10) || 1
-            : 1;
+          const cancelCount = getCancelCount();
+          if (!cancelCount) {
+            if (cancelWarning) {
+              cancelWarning.textContent = 'Please enter how many tickets you want to cancel.';
+              cancelWarning.style.display = 'block';
+            }
+            cancelTicketCountInput?.focus();
+            return;
+          }
+          if (!cancelConfirmArmed) {
+            cancelConfirmArmed = true;
+            if (cancelWarning) {
+              cancelWarning.textContent = `Are you sure you want to cancel ${cancelCount} ticket${cancelCount > 1 ? 's' : ''}? This action cannot be undone.`;
+              cancelWarning.style.display = 'block';
+            }
+            cancelModalYes.textContent = 'Yes, Cancel';
+            return;
+          }
           try {
             const response = await fetch(`/bookings/cancel-booking/${bookingId}`, {
               method: 'POST',
