@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
       const category = (card.dataset.category || "").toLowerCase().trim().replace(/\s+/g, '-');
 
-      const matchesText = !searchText || name.includes(searchText) || location.includes(searchText);
+      const matchesText = !searchText || name.includes(searchText) || location.includes(searchText) || category.replace(/-/g, ' ').includes(searchText);
       const matchesCategory = currentCategory === "all" || category === currentCategory;
 
       if (matchesText && matchesCategory) {

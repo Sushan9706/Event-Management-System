@@ -717,7 +717,6 @@ exports.getCatalog = async (req, res) => {
 };
 
 exports.searchEvents = async (req, res) => {
-  try{
     try {
         const { hasEventEnded } = require("../utils/bookingStatus");
         let { q, date, category } = req.query;
@@ -725,9 +724,18 @@ exports.searchEvents = async (req, res) => {
             status: { $ne: 'cancelled' }
         };
 
-        // 1. Text Search
+        // 1. Text Search (Title + Category)
         if (q) {
-            queryObj.eventName = { $regex: q, $options: "i" };
+            const matchingCategories = await categoryModel.find({ 
+                name: { $regex: q, $options: "i" } 
+            });
+            const categoryIds = matchingCategories.map(cat => cat._id);
+
+            queryObj.$or = [
+                { eventName: { $regex: q, $options: "i" } },
+                { title: { $regex: q, $options: "i" } }, // Fallback for 'title' field
+                { categoryId: { $in: categoryIds } }
+            ];
         }
 
         // 2. Date Search
@@ -736,26 +744,54 @@ exports.searchEvents = async (req, res) => {
             const nextDay = new Date(date);
             nextDay.setDate(searchDate.getDate() + 1);
             
-            queryObj.$or = [
-                { startDate: { $gte: searchDate, $lt: nextDay } },
-                { endDate: { $gte: searchDate, $lt: nextDay } }
-            ];
+            // If we have other conditions, we use $and to combine them with the date range
+            const dateQuery = {
+                $or: [
+                    { startDate: { $gte: searchDate, $lt: nextDay } },
+                    { endDate: { $gte: searchDate, $lt: nextDay } },
+                    { date: { $gte: searchDate, $lt: nextDay } } // Fallback for 'date' field
+                ]
+            };
+
+            if (queryObj.$or) {
+                // If text search already added an $or, we use $and to group them
+                const textSearchOr = queryObj.$or;
+                delete queryObj.$or;
+                queryObj.$and = [
+                    { $or: textSearchOr },
+                    dateQuery
+                ];
+            } else {
+                queryObj.$or = dateQuery.$or;
+            }
         }
 
-        // 3. Category Filter
+        // 3. Category Filter (Dropdown)
         if (category && category !== "All") {
-            // Find the category ID first
             const catDoc = await categoryModel.findOne({ name: category });
             if (catDoc) {
                 queryObj.categoryId = catDoc._id;
             }
         }
 
-        // Ensure we show events that haven't ended yet unless a specific date is requested
+        // 4. Future Events Filter
         if (!date) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            queryObj.endDate = { $gte: today };
+            queryObj.$and = queryObj.$and || [];
+            queryObj.$and.push({
+                $or: [
+                    { endDate: { $gte: today } },
+                    { date: { $gte: today } }
+                ]
+            });
+            
+            // Clean up $and if it only has one element and no other top-level fields depend on it
+            if (queryObj.$and.length === 1 && !queryObj.$or) {
+                const singleFilter = queryObj.$and[0];
+                delete queryObj.$and;
+                Object.assign(queryObj, singleFilter);
+            }
         }
 
         // Fetch events from DB and populate categoryId
@@ -770,44 +806,6 @@ exports.searchEvents = async (req, res) => {
         console.error("Search failed:", err);
         res.status(500).send("Search failed");
     }
-
-    // 2. Date Search
-    if (date) {
-      const searchDate = new Date(date);
-      const nextDay = new Date(date);
-      nextDay.setDate(searchDate.getDate() + 1);
-
-      queryObj.date = {
-        $gte: searchDate,
-        $lt: nextDay,
-      };
-    }
-
-    // 3. Category Filter
-    if (category && category !== "All") {
-      // Find the category ID first
-      const catDoc = await categoryModel.findOne({ name: category });
-      if (catDoc) {
-        queryObj.categoryId = catDoc._id;
-      }
-    }
-
-    // Ensure we only show future events for general search unless a specific date is requested
-    if (!date) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      queryObj.date = { $gte: today };
-    }
-
-    // Fetch events from DB and populate categoryId
-    const events = await eventModel.find(queryObj).populate("categoryId");
-
-    // Render the page with the found events
-    res.render("index", { events: events });
-  } catch (err) {
-    console.error("Search failed:", err);
-    res.status(500).send("Search failed");
-  }
 };
 
 // Add this to your userController.js
