@@ -659,9 +659,14 @@
       }
 
       function handleBooking() {
-        if (bookingClosed) {
-          return;
-        }
+  if (bookingClosed) {
+    return;
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = "/login";
+    return;
+  }
         const { eventName, eventDate, eventTime, eventLocation } = bookingModal.dataset;
         const availableTickets = getAvailableTickets();
         document.getElementById("bookingEventName").textContent = eventName;
