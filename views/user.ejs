@@ -92,33 +92,35 @@
 
     <section class="recommended">
       <div class="sec-header">
-        <h2 class="sec-title">Recommended for You</h2>
-        <a href="#" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg></a>
+        <h2 class="sec-title">Latest Events</h2>
+        <a href="/catalog" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg></a>
       </div>
       <div class="cards-grid">
-        <div class="ecard ecard--featured">
-          <div class="ecard-img-wrap"><img src="https://media.bitcot.com/wp-content/uploads/2025/04/Best-Tech-Conferences-2026.webp" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-meta">Oct 12, 2026 • Berlin, DE</p>
-            <h3 class="ecard-title">Global Synergy: Design & Ethics Summit</h3>
-          </div>
-        </div>
-        <div class="ecard ecard--sm">
-          <div class="ecard-img-wrap"><img src="https://covers.stocktune.com/public/a/2/f/a2f8dadf-ce7a-4158-bb72-82a31cc5b032_large/infinite-neon-soundscapes-stocktune.jpg" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-date-sm">Nov 04, 2026</p>
-            <h3 class="ecard-title--sm">Metropolis Night Series: Soundscapes</h3>
-          </div>
-        </div>
-        <div class="ecard ecard--sm">
-          <div class="ecard-img-wrap"><img src="https://nohoartsdistrict.com/wp-content/uploads/2025/11/Throw-a-Festive-Winter-Solstice-Dinner-With-These-Finishing-Touches-scaled.jpeg" class="ecard-img" /></div>
-          <div class="ecard-body">
-            <p class="ecard-date-sm">Dec 15, 2026</p>
-            <h3 class="ecard-title--sm">The Artisan's Table: Winter Solstice</h3>
-          </div>
-        </div>
+        <% if (locals.latestEvents && latestEvents.length > 0) { %>
+          <% latestEvents.forEach(function(event, i) { %>
+            <a href="/event/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>" style="text-decoration:none; color:inherit;">
+              <div class="ecard-img-wrap">
+                <img src="<%= event.image || event.imagePath || 'https://via.placeholder.com/400x260?text=Event' %>" 
+                     class="ecard-img" 
+                     onerror="this.src='https://via.placeholder.com/400x260?text=Event'" />
+              </div>
+              <div class="ecard-body">
+                <p class="ecard-meta">
+                  <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                  <% if (event.location) { %> • <%= event.location %><% } %>
+                </p>
+                <h3 class="ecard-title">
+                  <%= event.eventName || event.title %>
+                </h3>
+              </div>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <p style="color: var(--text-mid); padding: 20px 0; grid-column: 1/-1;">No events available at the moment.</p>
+        <% } %>
       </div>
     </section>
+    
 
     <section class="bookings-wrap">
       <div class="bookings-box">
@@ -141,8 +143,13 @@
                   <div class="ri"><img src="<%= event.image || event.imagePath %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
                   <div><p class="rn"><%= event.eventName || event.title %></p><p class="rid"><%= event.location %></p></div>
                 </div>
+<<<<<<< HEAD
+                <div class="td"><span class="pill pill--ok" <%= (booking.status === 'cancelled') ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status === 'expired') ? 'style="background: #f0f0f0; color: #666;"' : '') %>><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
+                <div class="td"><%= new Date(event.date || event.startDate || new Date()).toLocaleDateString() %></div>
+=======
                 <div class="td"><span class="pill pill--ok"><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
                 <div class="td"><%= new Date(event.startDate).toLocaleDateString() %></div>
+>>>>>>> c401eacf8fbe92728cca358c9a57ad62fc0de36c
                 <div class="td">
                    <a href="/bookings/manage/<%= booking._id %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -154,9 +161,67 @@
             <p style="padding: 20px; color: #999; text-align: center;">No recent bookings found.</p>
           <% } %>
         </div>
+        <% if (locals.recentBookings && recentBookings.length === 3) { %>
+          <div style="text-align: center; margin-top: 20px;">
+            <button id="loadMoreBtn" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-page); color: var(--text-dark); cursor: pointer; font-family: var(--sans);">Load More Bookings</button>
+          </div>
+        <% } %>
       </div>
     </section>
   </main>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let skipCount = 3;
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', async () => {
+        try {
+          loadMoreBtn.textContent = "Loading...";
+          loadMoreBtn.disabled = true;
+          const res = await fetch(`/bookings/load-more?skip=${skipCount}`);
+          const data = await res.json();
+          if (data.success && data.bookings.length > 0) {
+            const tbl = document.querySelector('.tbl');
+            data.bookings.forEach(b => {
+              const dateStr = b.eventDate || b.eventStartDate ? new Date(b.eventDate || b.eventStartDate).toLocaleDateString() : 'N/A';
+              const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
+              const row = document.createElement('div');
+              row.className = 'tbl-row';
+              row.innerHTML = `
+                <div class="td td-event">
+                  <div class="ri"><img src="${b.eventImage}" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
+                  <div><p class="rn">${b.eventName}</p><p class="rid">${b.eventLocation || ''}</p></div>
+                </div>
+                <div class="td"><span class="pill pill--ok" style="${statusColor}">${b.status.toUpperCase()}</span></div>
+                <div class="td">${dateStr}</div>
+                <div class="td">
+                   <a href="/bookings/manage/${b._id}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                   </a>
+                </div>
+              `;
+              tbl.appendChild(row);
+            });
+            skipCount += data.bookings.length;
+            if (data.bookings.length < 5) {
+              loadMoreBtn.style.display = 'none';
+            } else {
+              loadMoreBtn.textContent = "Load More Bookings";
+              loadMoreBtn.disabled = false;
+            }
+          } else {
+            loadMoreBtn.style.display = 'none';
+          }
+        } catch (err) {
+          console.error(err);
+          loadMoreBtn.textContent = "Load More Bookings";
+          loadMoreBtn.disabled = false;
+        }
+      });
+    }
+  });
+  </script>
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
