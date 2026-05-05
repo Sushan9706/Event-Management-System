@@ -27,6 +27,101 @@ body.modal-open {
   overflow: hidden;
 }
 
+.balloon-celebration {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.celebration-balloon {
+  --color: #e94f64;
+  --delay: 0s;
+  --spin: 16deg;
+  --move-x: 40vw;
+  --move-y: 20vh;
+  --scale: 1;
+  position: absolute;
+  width: 34px;
+  height: 44px;
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.72) 0 11%, transparent 12%),
+    var(--color);
+  opacity: 0;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.2));
+}
+
+.celebration-balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 2px;
+  height: 15px;
+  background: rgba(47, 53, 77, 0.45);
+  transform: translateX(-50%);
+}
+
+.celebration-balloon.popped {
+  animation: balloon-pop 0.16s ease-out forwards;
+}
+
+.balloon-pop-particle {
+  --color: #e94f64;
+  --piece-x: 24px;
+  --piece-y: 24px;
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+  animation: pop-particle 0.76s ease-out forwards;
+}
+
+.from-left {
+  left: -52px;
+  top: var(--start-y);
+  animation: balloon-burst 2s ease-out var(--delay) forwards;
+}
+
+.from-right {
+  right: -52px;
+  top: var(--start-y);
+  animation: balloon-burst 2s ease-out var(--delay) forwards;
+}
+
+.from-top {
+  left: var(--start-x);
+  top: -58px;
+  animation: balloon-burst 2s ease-out var(--delay) forwards;
+}
+
+.from-bottom {
+  left: var(--start-x);
+  bottom: -58px;
+  animation: balloon-burst 2s ease-out var(--delay) forwards;
+}
+
+@keyframes balloon-burst {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.56) rotate(0deg); }
+  10% { opacity: 1; }
+  68% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--move-x), var(--move-y)) scale(var(--scale)) rotate(var(--spin)); }
+}
+
+@keyframes balloon-pop {
+  0% { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.7) rotate(var(--spin)); }
+}
+
+@keyframes pop-particle {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--piece-x)), calc(-50% + var(--piece-y))) scale(0.2); }
+}
+
 a {
   text-decoration: none;
   color: inherit;

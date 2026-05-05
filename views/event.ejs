@@ -614,7 +614,10 @@
         bookingStep = "tickets";
         if (attendeeStep) attendeeStep.hidden = true;
         if (attendeeNameFields) attendeeNameFields.innerHTML = "";
-        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Continue Booking";
+        if (bookingSubmitBtn) {
+          bookingSubmitBtn.disabled = false;
+          bookingSubmitBtn.textContent = "Continue Booking";
+        }
       }
 
       function buildAttendeeFields(ticketCount) {
@@ -654,8 +657,26 @@
         bookingStep = "attendee";
         buildAttendeeFields(ticketCount);
         if (attendeeStep) attendeeStep.hidden = false;
-        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Confirm Booking";
+        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Continue Booking";
         focusAttendeeName(0);
+      }
+
+      function submitEsewaPayment(paymentForm) {
+        const form = document.createElement("form");
+        form.method = paymentForm.method || "POST";
+        form.action = paymentForm.action;
+        form.style.display = "none";
+
+        Object.entries(paymentForm.fields || {}).forEach(([name, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value;
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
       }
 
       function handleBooking() {
@@ -822,6 +843,15 @@
 
           if (!data.success) {
             bookingError.textContent = data.message || "Booking failed. Please try again.";
+            return;
+          }
+
+          if (data.paymentRequired && data.paymentForm) {
+            if (bookingSubmitBtn) {
+              bookingSubmitBtn.disabled = true;
+              bookingSubmitBtn.textContent = "Opening eSewa Sandbox...";
+            }
+            submitEsewaPayment(data.paymentForm);
             return;
           }
 

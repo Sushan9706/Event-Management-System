@@ -1,5 +1,7 @@
 node_modules/
 node_modules.nosync/
 node_modules 2
+node_modules 3
+node_modules.desktop-bad/
 .env
 .DS_Store

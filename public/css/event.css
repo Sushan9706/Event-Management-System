@@ -625,6 +625,12 @@ body {
   transform: translateY(-1px);
 }
 
+.booking-submit:disabled {
+  cursor: wait;
+  opacity: 0.75;
+  transform: none;
+}
+
 .booking-secondary {
   padding: 12px 14px;
   border-radius: 10px;

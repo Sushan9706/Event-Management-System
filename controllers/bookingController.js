@@ -4,8 +4,17 @@ const User = require('../models/user');
 const mongoose = require('mongoose');
 const os = require('os');
 const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
+const {
+    ESEWA_PAYMENT_URL,
+    ESEWA_PRODUCT_CODE,
+    formatEsewaAmount,
+    buildEsewaPaymentFields,
+    decodeEsewaData,
+    verifyEsewaResponseSignature
+} = require('../config/esewa');
 
 const MAX_TICKETS_PER_BOOKING = 5;
+const ESEWA_CHECKOUT_TTL_MS = 30 * 60 * 1000;
 
 const pickEventName = (event, fallback = 'Event') => {
     if (!event) return fallback;
@@ -60,6 +69,109 @@ const normalizeAttendeeNames = (value) => (
         : []
 );
 
+const createEsewaTransactionUuid = () => `EMS-${Date.now()}-${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
+
+const getRequestBaseUrl = (req) => {
+    const configured = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+    if (configured) return configured;
+    return `${req.protocol}://${req.get('host') || 'localhost:3000'}`;
+};
+
+const getAlreadyBookedCount = async (eventId, userEmail) => {
+    const alreadyAgg = await Booking.aggregate([
+        {
+            $match: {
+                eventId,
+                userEmail,
+                status: { $nin: ['cancelled', 'expired'] }
+            }
+        },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$ticketCount', 1] } } } }
+    ]);
+    return alreadyAgg.length > 0 ? alreadyAgg[0].total : 0;
+};
+
+const ensureCapacityAvailable = async (event, ticketCount) => {
+    if (!event.maxCapacity || event.maxCapacity <= 0) {
+        return null;
+    }
+
+    const seatAgg = await Booking.aggregate([
+        { $match: { eventId: event._id, status: { $nin: ['cancelled', 'expired'] } } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$ticketCount', 1] } } } }
+    ]);
+    const bookedSeats = seatAgg.length > 0 ? seatAgg[0].total : 0;
+    if (bookedSeats + ticketCount > event.maxCapacity) {
+        return `Only ${Math.max(event.maxCapacity - bookedSeats, 0)} seats left for this event`;
+    }
+    return null;
+};
+
+const saveUserBookingState = async (user, event, ticketCount) => {
+    if (!Array.isArray(user.bookedEvents)) {
+        user.bookedEvents = [];
+    }
+
+    const eventId = event._id.toString();
+    if (!user.bookedEvents.some(id => id.toString() === eventId)) {
+        user.bookedEvents.push(event._id);
+    }
+    if (!Array.isArray(user.notifications)) {
+        user.notifications = [];
+    }
+
+    user.notifications.unshift({
+        type: 'booking_confirmed',
+        eventId: event._id,
+        eventName: pickEventName(event),
+        ticketCount,
+        createdAt: new Date()
+    });
+    if (user.notifications.length > 20) {
+        user.notifications = user.notifications.slice(0, 20);
+    }
+    await user.save();
+};
+
+const createConfirmedBooking = async ({ event, user, attendeeEmail, ticketCount, attendeeNames }) => {
+    const unitPrice = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
+    const totalAmount = unitPrice * ticketCount;
+    const alreadyBooked = await getAlreadyBookedCount(event._id, user.email);
+    const ref_num = createRef();
+    const ticketCodes = buildTicketCodes(ref_num, 1, ticketCount);
+    const booking = await Booking.create({
+        eventId: event._id,
+        userName: attendeeNames[0],
+        userEmail: user.email,
+        attendeeEmail,
+        attendeeNames,
+        ticketCount,
+        unitPrice,
+        totalAmount,
+        ticketCodes,
+        referenceNumber: ref_num,
+        bookingRef: ref_num,
+        status: 'confirmed'
+    });
+
+    await saveUserBookingState(user, event, ticketCount);
+    return { booking, alreadyBooked: alreadyBooked + ticketCount };
+};
+
+const buildEsewaPaymentForm = (req, transactionUuid, totalAmount) => {
+    const baseUrl = getRequestBaseUrl(req);
+    return {
+        action: ESEWA_PAYMENT_URL,
+        method: 'POST',
+        fields: buildEsewaPaymentFields({
+            amount: totalAmount,
+            transactionUuid,
+            successUrl: `${baseUrl}/payments/esewa/success`,
+            failureUrl: `${baseUrl}/payments/esewa/failure/${transactionUuid}`
+        })
+    };
+};
+
 exports.createBooking = async (req, res) => {
     try {
         const { eventId, email, ticketCount: ticketCountRaw, attendeeNames: attendeeNamesRaw } = req.body;
@@ -112,81 +224,50 @@ exports.createBooking = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        if (!Array.isArray(user.bookedEvents)) {
-            user.bookedEvents = [];
-        }
 
         // 3. Capacity check (by seats)
-        if (event.maxCapacity && event.maxCapacity > 0) {
-            const seatAgg = await Booking.aggregate([
-                { $match: { eventId: event._id, status: { $nin: ['cancelled', 'expired'] } } },
-                { $group: { _id: null, total: { $sum: { $ifNull: ["$ticketCount", 1] } } } }
-            ]);
-            const bookedSeats = seatAgg.length > 0 ? seatAgg[0].total : 0;
-            if (bookedSeats + ticketCount > event.maxCapacity) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Only ${Math.max(event.maxCapacity - bookedSeats, 0)} seats left for this event`
-                });
-            }
+        const capacityMessage = await ensureCapacityAvailable(event, ticketCount);
+        if (capacityMessage) {
+            return res.status(400).json({ success: false, message: capacityMessage });
         }
 
         const unitPrice = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
-
-        const alreadyAgg = await Booking.aggregate([
-            {
-                $match: {
-                    eventId: event._id,
-                    userEmail: user.email,
-                    status: { $nin: ['cancelled', 'expired'] }
-                }
-            },
-            { $group: { _id: null, total: { $sum: { $ifNull: ['$ticketCount', 1] } } } }
-        ]);
-        const alreadyBooked = alreadyAgg.length > 0 ? alreadyAgg[0].total : 0;
-
-        // 4. Each checkout is its own booking, while My Bookings groups same-event rows.
-        const ref_num = createRef();
-        const ticketCodes = buildTicketCodes(ref_num, 1, ticketCount);
         const totalAmount = unitPrice * ticketCount;
-        const booking = await Booking.create({
-            eventId: event._id,
-            userName: attendeeNames[0],
-            userEmail: user.email,
-            attendeeEmail: emailValue,
-            attendeeNames,
-            ticketCount,
-            unitPrice,
-            totalAmount,
-            ticketCodes,
-            referenceNumber: ref_num,
-            bookingRef: ref_num
-        });
 
-        // 5. Update user's bookedEvents + notifications
-        let needsUserSave = false;
-        if (!user.bookedEvents.some(id => id.toString() === eventId.toString())) {
-            user.bookedEvents.push(eventId);
-            needsUserSave = true;
+        if (totalAmount > 0) {
+            const transactionUuid = createEsewaTransactionUuid();
+            if (!req.session.esewaCheckouts) {
+                req.session.esewaCheckouts = {};
+            }
+            req.session.esewaCheckouts[transactionUuid] = {
+                eventId: event._id.toString(),
+                userId: user._id.toString(),
+                attendeeEmail: emailValue,
+                ticketCount,
+                attendeeNames,
+                totalAmount: formatEsewaAmount(totalAmount),
+                createdAt: Date.now()
+            };
+
+            return res.json({
+                success: true,
+                paymentRequired: true,
+                paymentProvider: 'esewa',
+                message: 'Continue to eSewa sandbox payment.',
+                transactionUuid,
+                productCode: ESEWA_PRODUCT_CODE,
+                paymentForm: buildEsewaPaymentForm(req, transactionUuid, totalAmount)
+            });
         }
-        if (!Array.isArray(user.notifications)) {
-            user.notifications = [];
-        }
-        const eventTitle = pickEventName(event);
-        user.notifications.unshift({
-            type: "booking_confirmed",
-            eventId: event._id,
-            eventName: eventTitle,
+
+        // Each checkout is its own booking, while My Bookings groups same-event rows.
+        const { booking, alreadyBooked } = await createConfirmedBooking({
+            event,
+            user,
+            attendeeEmail: emailValue,
             ticketCount,
-            createdAt: new Date()
+            attendeeNames
         });
-        if (user.notifications.length > 20) {
-            user.notifications = user.notifications.slice(0, 20);
-        }
-        needsUserSave = true;
-        if (needsUserSave) {
-            await user.save();
-        }
 
         res.json({
             success: true,
@@ -197,7 +278,7 @@ exports.createBooking = async (req, res) => {
             bookingId: booking._id,
             ticketCodes: booking.ticketCodes,
             attendeeNames: booking.attendeeNames,
-            alreadyBooked: alreadyBooked + ticketCount
+            alreadyBooked
         });
 
     } catch (err) {
@@ -213,6 +294,103 @@ exports.createBooking = async (req, res) => {
             message: err && err.message ? err.message : 'Failed to process booking'
         });
     }
+};
+
+exports.handleEsewaSuccess = async (req, res) => {
+    try {
+        const payload = decodeEsewaData(req.query.data);
+        const transactionUuid = payload.transaction_uuid;
+        const checkouts = req.session.esewaCheckouts || {};
+        const checkout = transactionUuid ? checkouts[transactionUuid] : null;
+
+        if (!checkout) {
+            req.flash('error', 'eSewa sandbox payment session expired. Please try booking again.');
+            return res.redirect('/bookings');
+        }
+
+        if (Date.now() - Number(checkout.createdAt || 0) > ESEWA_CHECKOUT_TTL_MS) {
+            delete checkouts[transactionUuid];
+            req.session.esewaCheckouts = checkouts;
+            req.flash('error', 'eSewa sandbox payment session expired. Please try booking again.');
+            return res.redirect(`/event/${checkout.eventId}`);
+        }
+
+        const expectedAmount = Number(checkout.totalAmount);
+        const receivedAmount = Number(payload.total_amount);
+        const isValidPayment = payload.status === 'COMPLETE'
+            && payload.product_code === ESEWA_PRODUCT_CODE
+            && Number.isFinite(receivedAmount)
+            && Math.abs(receivedAmount - expectedAmount) < 0.01
+            && verifyEsewaResponseSignature(payload);
+
+        if (!isValidPayment) {
+            delete checkouts[transactionUuid];
+            req.session.esewaCheckouts = checkouts;
+            req.flash('error', 'eSewa sandbox payment could not be verified. No booking was created.');
+            return res.redirect(`/event/${checkout.eventId}`);
+        }
+
+        const [event, user] = await Promise.all([
+            Event.findById(checkout.eventId),
+            User.findById(checkout.userId)
+        ]);
+
+        if (!event || !user) {
+            delete checkouts[transactionUuid];
+            req.session.esewaCheckouts = checkouts;
+            req.flash('error', 'Booking details were not found after eSewa sandbox payment.');
+            return res.redirect('/bookings');
+        }
+
+        if (isEventDatePassed(event)) {
+            delete checkouts[transactionUuid];
+            req.session.esewaCheckouts = checkouts;
+            req.flash('error', 'Booking closed. This event date has passed.');
+            return res.redirect(`/event/${checkout.eventId}`);
+        }
+
+        const capacityMessage = await ensureCapacityAvailable(event, checkout.ticketCount);
+        if (capacityMessage) {
+            delete checkouts[transactionUuid];
+            req.session.esewaCheckouts = checkouts;
+            req.flash('error', capacityMessage);
+            return res.redirect(`/event/${checkout.eventId}`);
+        }
+
+        const { booking } = await createConfirmedBooking({
+            event,
+            user,
+            attendeeEmail: checkout.attendeeEmail,
+            ticketCount: checkout.ticketCount,
+            attendeeNames: checkout.attendeeNames
+        });
+
+        delete checkouts[transactionUuid];
+        req.session.esewaCheckouts = checkouts;
+        req.flash('success', 'eSewa sandbox payment verified. Booking confirmed.');
+        return req.session.save(() => res.redirect(`/bookings/manage/${booking._id}?booked=1`));
+    } catch (err) {
+        console.error('eSewa Success Error:', err);
+        req.flash('error', 'Unable to verify eSewa sandbox payment. Please try again.');
+        return res.redirect('/bookings');
+    }
+};
+
+exports.handleEsewaFailure = (req, res) => {
+    const transactionUuid = req.params.transactionUuid;
+    const checkouts = req.session.esewaCheckouts || {};
+    const checkout = transactionUuid ? checkouts[transactionUuid] : null;
+    if (transactionUuid && checkout) {
+        delete checkouts[transactionUuid];
+        req.session.esewaCheckouts = checkouts;
+    }
+
+    req.flash('error', 'eSewa sandbox payment was not completed. No live payment was used.');
+    const redirectUrl = checkout && checkout.eventId ? `/event/${checkout.eventId}` : '/bookings';
+    if (req.session && typeof req.session.save === 'function') {
+        return req.session.save(() => res.redirect(redirectUrl));
+    }
+    return res.redirect(redirectUrl);
 };
 
 exports.getBookingsPage = async (req, res) => {
@@ -317,7 +495,12 @@ exports.getManageBooking = async (req, res) => {
             await booking.save();
         }
 
-        return res.render("manageBooking", { booking, user, publicBaseUrl: getPublicBaseUrl(req) });
+        return res.render("manageBooking", {
+            booking,
+            user,
+            publicBaseUrl: getPublicBaseUrl(req),
+            celebrateBooking: req.query && req.query.booked === '1'
+        });
     } catch (err) {
         console.error("Get Manage Booking Error:", err);
         return res.redirect('/bookings');
