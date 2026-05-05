@@ -2,26 +2,75 @@ const Booking = require('../models/bookingModel');
 const Event = require('../models/event');
 const User = require('../models/user');
 const mongoose = require('mongoose');
+const os = require('os');
 const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
+
+const MAX_TICKETS_PER_BOOKING = 5;
+
+const pickEventName = (event, fallback = 'Event') => {
+    if (!event) return fallback;
+    return event.eventName || event.title || event.name || event.eventTitle || fallback;
+};
+
+const isLocalHost = (host = '') => {
+    const hostname = host.replace(/^https?:\/\//, '').split(':')[0].toLowerCase();
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+};
+
+const getLanAddress = () => {
+    const interfaces = os.networkInterfaces();
+    for (const addresses of Object.values(interfaces)) {
+        for (const address of addresses || []) {
+            if (address.family === 'IPv4' && !address.internal) {
+                return address.address;
+            }
+        }
+    }
+    return '';
+};
+
+const getPublicBaseUrl = (req) => {
+    const configured = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+    if (configured && !isLocalHost(configured)) return configured;
+
+    const requestHost = req.get('host') || '';
+    if (isLocalHost(requestHost)) {
+        const lanAddress = getLanAddress();
+        const port = requestHost.includes(':') ? `:${requestHost.split(':').pop()}` : '';
+        if (lanAddress) return `${req.protocol}://${lanAddress}${port}`;
+    }
+
+    return configured || `${req.protocol}://${requestHost}`;
+};
+
+const createRef = () => `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+const buildTicketCodes = (refNum, startIndex, count) => (
+    Array.from({ length: count }, (_, index) => {
+        const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+        return `${refNum}-${String(startIndex + index).padStart(2, '0')}-${suffix}`;
+    })
+);
+
+const normalizeAttendeeName = (value = '') => value.trim().replace(/\s+/g, ' ');
+const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+const normalizeAttendeeNames = (value) => (
+    Array.isArray(value)
+        ? value.map(name => normalizeAttendeeName(String(name || '')))
+        : []
+);
 
 exports.createBooking = async (req, res) => {
     try {
-        const { eventId, name, firstName, lastName, email, ticketCount: ticketCountRaw } = req.body;
+        const { eventId, email, ticketCount: ticketCountRaw, attendeeNames: attendeeNamesRaw } = req.body;
         const userId = req.user.userId;
         const ticketCountValue = typeof ticketCountRaw === 'string' ? ticketCountRaw.trim() : String(ticketCountRaw || '').trim();
         const ticketCount = Number(ticketCountValue);
-        const trimmedFirst = (firstName || '').trim();
-        const trimmedLast = (lastName || '').trim();
-        const combinedName = [trimmedFirst, trimmedLast].filter(Boolean).join(' ').trim();
-        const displayName = combinedName || (name || '').trim();
         const emailValue = (email || '').trim().toLowerCase();
-        const namePattern = /^[A-Za-z][A-Za-z' -]{1,39}$/;
+        const attendeeNames = normalizeAttendeeNames(attendeeNamesRaw);
         const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
-        if (!trimmedFirst || !trimmedLast || !emailValue) {
-            return res.status(400).json({ success: false, message: 'Please enter your first name, last name, and email.' });
-        }
-        if (!namePattern.test(trimmedFirst) || !namePattern.test(trimmedLast)) {
-            return res.status(400).json({ success: false, message: 'Please enter a valid first and last name.' });
+        if (!emailValue) {
+            return res.status(400).json({ success: false, message: 'Please enter your email address.' });
         }
         if (!emailPattern.test(emailValue)) {
             return res.status(400).json({ success: false, message: 'Please enter a valid email address with at least one letter before @.' });
@@ -31,6 +80,22 @@ exports.createBooking = async (req, res) => {
         }
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ success: false, message: 'Invalid event. Please reload the page.' });
+        }
+        if (ticketCount > MAX_TICKETS_PER_BOOKING) {
+            return res.status(400).json({
+                success: false,
+                message: `Maximum ${MAX_TICKETS_PER_BOOKING} tickets per booking. If you want more, buy again.`
+            });
+        }
+        if (attendeeNames.length !== ticketCount || attendeeNames.some(name => !name)) {
+            return res.status(400).json({ success: false, message: `Please enter attendee full name for all ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.` });
+        }
+        if (attendeeNames.some(name => !attendeeNamePattern.test(name))) {
+            return res.status(400).json({ success: false, message: 'Attendee names can contain letters and single spaces only.' });
+        }
+        const uniqueNames = new Set(attendeeNames.map(name => name.toLowerCase()));
+        if (uniqueNames.size !== attendeeNames.length) {
+            return res.status(400).json({ success: false, message: 'Please enter a different attendee name for each ticket.' });
         }
 
         // 1. Check if event exists
@@ -67,61 +132,36 @@ exports.createBooking = async (req, res) => {
         }
 
         const unitPrice = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
-        const createRef = () => `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-        
-        const buildTicketCodes = (ref_num, startIndex, count) => {
-            return Array.from({ length: count }, (_, index) => {
-                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-                return `${ref_num}-${String(startIndex + index).padStart(2, '0')}-${suffix}`;
-            });
-        };
 
-        // 4. Merge into existing booking for same event + user (active)
-        let booking = await Booking.findOne({
+        const alreadyAgg = await Booking.aggregate([
+            {
+                $match: {
+                    eventId: event._id,
+                    userEmail: user.email,
+                    status: { $nin: ['cancelled', 'expired'] }
+                }
+            },
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$ticketCount', 1] } } } }
+        ]);
+        const alreadyBooked = alreadyAgg.length > 0 ? alreadyAgg[0].total : 0;
+
+        // 4. Each checkout is its own booking, while My Bookings groups same-event rows.
+        const ref_num = createRef();
+        const ticketCodes = buildTicketCodes(ref_num, 1, ticketCount);
+        const totalAmount = unitPrice * ticketCount;
+        const booking = await Booking.create({
             eventId: event._id,
+            userName: attendeeNames[0],
             userEmail: user.email,
-            status: { $nin: ['cancelled', 'expired'] }
-        }).sort({ createdAt: -1 });
-
-        if (booking) {
-            const existingCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
-            const baseCount = Math.max(booking.ticketCount || 0, existingCodes.length);
-            const ref_num = booking.referenceNumber || createRef();
-            const codes = [...existingCodes];
-
-            if (codes.length < baseCount) {
-                const fillCodes = buildTicketCodes(ref_num, codes.length + 1, baseCount - codes.length);
-                codes.push(...fillCodes);
-            }
-
-            const newCodes = buildTicketCodes(ref_num, codes.length + 1, ticketCount);
-            const newCount = baseCount + ticketCount;
-
-            booking.referenceNumber = ref_num;
-            booking.bookingRef = booking.bookingRef || ref_num;
-            booking.userName = (displayName || booking.userName || user.username || '').trim() || user.username;
-            booking.ticketCount = newCount;
-            booking.unitPrice = unitPrice;
-            booking.totalAmount = unitPrice * newCount;
-            booking.ticketCodes = [...codes, ...newCodes];
-            await booking.save();
-        } else {
-            const ref_num = createRef();
-            const ticketCodes = buildTicketCodes(ref_num, 1, ticketCount);
-            const totalAmount = unitPrice * ticketCount;
-
-            booking = await Booking.create({
-                eventId,
-                userName: (displayName || user.username || '').trim() || user.username,
-                userEmail: user.email,
-                ticketCount,
-                unitPrice,
-                totalAmount,
-                ticketCodes,
-                referenceNumber: ref_num,
-                bookingRef: ref_num
-            });
-        }
+            attendeeEmail: emailValue,
+            attendeeNames,
+            ticketCount,
+            unitPrice,
+            totalAmount,
+            ticketCodes,
+            referenceNumber: ref_num,
+            bookingRef: ref_num
+        });
 
         // 5. Update user's bookedEvents + notifications
         let needsUserSave = false;
@@ -132,7 +172,7 @@ exports.createBooking = async (req, res) => {
         if (!Array.isArray(user.notifications)) {
             user.notifications = [];
         }
-        const eventTitle = event.eventName || event.title || "Event";
+        const eventTitle = pickEventName(event);
         user.notifications.unshift({
             type: "booking_confirmed",
             eventId: event._id,
@@ -155,7 +195,9 @@ exports.createBooking = async (req, res) => {
             ticketCount: booking.ticketCount,
             totalAmount: booking.totalAmount,
             bookingId: booking._id,
-            ticketCodes: booking.ticketCodes
+            ticketCodes: booking.ticketCodes,
+            attendeeNames: booking.attendeeNames,
+            alreadyBooked: alreadyBooked + ticketCount
         });
 
     } catch (err) {
@@ -202,7 +244,44 @@ exports.getBookingsPage = async (req, res) => {
                 return booking;
             });
 
-        return res.render("bookings", { user, bookings, initialStatus: requestedStatus });
+        const groupedBookings = [];
+        const groupedByEventAndStatus = new Map();
+        for (const booking of bookings) {
+            const status = (booking.status || 'confirmed').toLowerCase();
+            const safeStatus = ['cancelled', 'expired'].includes(status) ? status : 'confirmed';
+            const eventId = booking.eventId && booking.eventId._id ? booking.eventId._id.toString() : String(booking.eventId);
+            const key = `${safeStatus}:${eventId}`;
+            const ticketCount = booking.ticketCount || 1;
+            const totalAmount = typeof booking.totalAmount === 'number'
+                ? booking.totalAmount
+                : (booking.unitPrice || 0) * ticketCount;
+
+            if (!groupedByEventAndStatus.has(key)) {
+                const plain = typeof booking.toObject === 'function' ? booking.toObject() : { ...booking };
+                plain.ticketCount = ticketCount;
+                plain.totalAmount = totalAmount;
+                plain.status = safeStatus;
+                plain.references = [booking.referenceNumber].filter(Boolean);
+                plain.ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+                groupedByEventAndStatus.set(key, plain);
+                groupedBookings.push(plain);
+            } else {
+                const group = groupedByEventAndStatus.get(key);
+                group.ticketCount += ticketCount;
+                group.totalAmount += totalAmount;
+                if (booking.referenceNumber && !group.references.includes(booking.referenceNumber)) {
+                    group.references.push(booking.referenceNumber);
+                }
+                if (Array.isArray(booking.ticketCodes)) {
+                    group.ticketCodes.push(...booking.ticketCodes);
+                }
+                group.referenceNumber = group.references.length > 1
+                    ? `${group.references[0]} + ${group.references.length - 1} more`
+                    : group.references[0];
+            }
+        }
+
+        return res.render("bookings", { user, bookings: groupedBookings, initialStatus: requestedStatus });
     } catch (err) {
         console.error("Get Bookings Error:", err);
         const requestedStatus = req.query && ['cancelled', 'expired'].includes(req.query.status) ? req.query.status : 'confirmed';
@@ -238,9 +317,66 @@ exports.getManageBooking = async (req, res) => {
             await booking.save();
         }
 
-        return res.render("manageBooking", { booking, user });
+        return res.render("manageBooking", { booking, user, publicBaseUrl: getPublicBaseUrl(req) });
     } catch (err) {
         console.error("Get Manage Booking Error:", err);
         return res.redirect('/bookings');
+    }
+};
+
+exports.getTicketDetails = async (req, res) => {
+    try {
+        const ticketCode = decodeURIComponent(req.params.ticketCode || '').trim();
+        if (!ticketCode) {
+            return res.status(404).render("404", { title: "Ticket Not Found" });
+        }
+
+        const booking = await Booking.findOne({ ticketCodes: ticketCode }).populate('eventId').lean();
+        if (!booking || !booking.eventId) {
+            return res.status(404).render("404", { title: "Ticket Not Found" });
+        }
+
+        const event = booking.eventId;
+        const ticketCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
+        const ticketIndex = Math.max(ticketCodes.findIndex(code => code === ticketCode), 0);
+        const ticketCount = Math.max(booking.ticketCount || ticketCodes.length || 1, 1);
+        const attendeeNames = Array.isArray(booking.attendeeNames) ? booking.attendeeNames : [];
+        const unitPrice = typeof booking.unitPrice === 'number'
+            ? booking.unitPrice
+            : (typeof event.ticketPrice === 'number' ? event.ticketPrice : 0);
+        const formatDateLabel = (value) => {
+            if (!value) return "TBA";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "TBA";
+            return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+        };
+        const startDate = formatDateLabel(event.startDate || event.date);
+        const endDate = formatDateLabel(event.endDate || event.startDate || event.date);
+        const eventDate = startDate === endDate || endDate === "TBA" ? startDate : `${startDate} - ${endDate}`;
+        const eventTime = event.startTime || event.endTime
+            ? `${event.startTime || "TBA"}${event.endTime ? " - " + event.endTime : ""}`
+            : (event.time || "TBA");
+
+        const ticket = {
+            code: ticketCode,
+            eventName: pickEventName(event, booking.eventName),
+            status: (booking.status || "confirmed").toUpperCase(),
+            ticketPosition: `${ticketIndex + 1} of ${ticketCount}`,
+            attendeeName: attendeeNames[ticketIndex] || "-",
+            attendeeEmail: booking.attendeeEmail || booking.userEmail || "-",
+            date: eventDate,
+            time: eventTime,
+            location: event.location || booking.eventLocation || "TBA",
+            price: unitPrice === 0 ? "Free" : `$${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`,
+            reference: booking.referenceNumber || "-",
+            bookedOn: booking.createdAt
+                ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+                : "TBA"
+        };
+
+        return res.render("ticketDetails", { ticket });
+    } catch (err) {
+        console.error("Get Ticket Details Error:", err);
+        return res.status(500).render("404", { title: "Ticket Not Found" });
     }
 };

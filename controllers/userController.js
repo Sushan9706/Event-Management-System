@@ -215,19 +215,25 @@ try{
 
 exports.getUserDashboard = async (req, res) => {
     try {
-      const now = new Date();
-      const user = await userModel.findById(req.user.userId);
-  
-      if (!user) {
-        req.flash("error", "User not found");
-        return res.redirect("/login");
-      }
-  
-      const bookingModel = require("../models/bookingModel");
-  
-      const recentBookings = await bookingModel
-        .find({ userEmail: user.email })
-        .populate("eventId")
+        const now = new Date();
+        const user = await userModel.findById(req.user.userId);
+
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/login');
+        }
+
+        const bookingModel = require("../models/bookingModel");
+        
+        // Fetch recent confirmed bookings for future events
+        const recentBookings = await bookingModel.find({
+            userEmail: user.email,
+            status: 'confirmed'
+        })
+        .populate({
+            path: 'eventId',
+            match: { endDate: { $gte: now } }
+        })
         .sort({ createdAt: -1 });
   
       const allActiveBookings = recentBookings.filter((b) => b.eventId !== null);
@@ -296,16 +302,81 @@ exports.loadMoreBookings = async (req, res) => {
 };
 
 exports.cancelBooking = async (req, res) => {
+  try{
   try {
     const { eventId } = req.params;
     const userId = req.user.userId;
 
-    // 1. Get user to get email (for finding the specific booking)
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+        // 1. Get user to get email (for finding the specific booking)
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (!Array.isArray(user.bookedEvents)) {
+            user.bookedEvents = [];
+        }
+
+        // 2. Remove from user's bookedEvents array
+        user.bookedEvents = user.bookedEvents.filter(id => id.toString() !== eventId);
+        await user.save();
+
+        // 3. Mark bookings as cancelled (keep record for history)
+        const bookingModel = require("../models/bookingModel");
+        const activeBookings = await bookingModel.find({
+            eventId,
+            userEmail: user.email,
+            status: { $ne: 'cancelled' }
+        }).populate('eventId', 'startDate');
+        await syncBookingsExpiry(activeBookings);
+
+        const cancellableBookings = activeBookings.filter(booking => {
+            const status = (booking.status || '').toLowerCase();
+            return status !== 'cancelled' && status !== 'expired';
+        });
+        if (cancellableBookings.length === 0) {
+            return res.status(400).json({ success: false, message: "This booking has expired and can no longer be cancelled." });
+        }
+
+        const totalCancelled = cancellableBookings.reduce((sum, booking) => {
+            const count = booking.ticketCount || 1;
+            return sum + count;
+        }, 0);
+
+        await bookingModel.updateMany(
+            { _id: { $in: cancellableBookings.map(booking => booking._id) } },
+            { $set: { status: 'cancelled' } }
+        );
+
+        if (!Array.isArray(user.notifications)) {
+            user.notifications = [];
+        }
+        if (totalCancelled > 0) {
+            let eventName = "Event";
+            try {
+                const eventDoc = await eventModel.findById(eventId).select("eventName title");
+                if (eventDoc) {
+                    eventName = eventDoc.eventName || eventDoc.title || eventName;
+                }
+            } catch (err) {
+                eventName = eventName;
+            }
+            user.notifications.unshift({
+                type: "booking_cancelled",
+                eventId,
+                eventName,
+                ticketCount: totalCancelled,
+                createdAt: new Date()
+            });
+            if (user.notifications.length > 20) {
+                user.notifications = user.notifications.slice(0, 20);
+            }
+        }
+        await user.save();
+
+        res.json({ success: true, message: "Booking cancelled successfully" });
+    } catch (err) {
+        console.error("Cancel Booking Error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
     }
     if (!Array.isArray(user.bookedEvents)) {
       user.bookedEvents = [];
@@ -405,7 +476,7 @@ exports.cancelBookingById = async (req, res) => {
         }
 
         const bookingModel = require("../models/bookingModel");
-        const booking = await bookingModel.findById(bookingId).populate('eventId', 'date');
+        const booking = await bookingModel.findById(bookingId).populate('eventId', 'startDate');
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found" });
         }
@@ -424,6 +495,7 @@ exports.cancelBookingById = async (req, res) => {
         const normalizedCancel = Math.min(cancelCount, currentCount);
 
         let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+        let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
         const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
         if (ticketCodes.length < currentCount) {
@@ -442,17 +514,21 @@ exports.cancelBookingById = async (req, res) => {
         } else {
             const remainingCount = currentCount - normalizedCancel;
             const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
+            const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
             booking.ticketCount = remainingCount;
             booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
             booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+            booking.attendeeNames = attendeeNames.slice(0, remainingCount);
 
             // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
             const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
             try {
                 await bookingModel.create({
                     eventId: booking.eventId,
-                    userName: booking.userName,
+                    userName: cancelledNames[0] || booking.userName,
                     userEmail: booking.userEmail,
+                    attendeeEmail: booking.attendeeEmail || booking.userEmail,
+                    attendeeNames: cancelledNames,
                     ticketCount: normalizedCancel,
                     unitPrice: booking.unitPrice || 0,
                     totalAmount: (booking.unitPrice || 0) * normalizedCancel,

@@ -591,6 +591,16 @@ body {
   margin: 0;
 }
 
+.attendee-step,
+#attendeeNameFields {
+  display: grid;
+  gap: 10px;
+}
+
+.attendee-step[hidden] {
+  display: none;
+}
+
 .booking-error {
   min-height: 18px;
   font-size: 12px;

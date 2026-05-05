@@ -35,13 +35,15 @@
                 <div class="summary-row">
                     <span class="summary-label">Date</span>
                     <span class="summary-value">
-                        <%= booking.event.startDate ? new Date(booking.event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : new Date(booking.event.date).toLocaleDateString() %>
+                        <%= booking.event.startDate ? new Date(booking.event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA' %>
                     </span>
                 </div>
 
                 <div class="summary-row">
                     <span class="summary-label">Time</span>
-                    <span class="summary-value"><%= booking.event.startTime || booking.event.time || 'TBA' %></span>
+                    <span class="summary-value">
+                        <%= booking.event.startTime ? (booking.event.endTime ? `${booking.event.startTime} - ${booking.event.endTime}` : booking.event.startTime) : 'TBA' %>
+                    </span>
                 </div>
 
                 <div class="summary-row">

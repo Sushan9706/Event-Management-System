@@ -31,6 +31,19 @@ const getEventById = async (req, res) => {
         event.availableTickets = hasCapacityLimit ? Math.max(maxCapacity - currentBookings, 0) : null;
         event.isSoldOut = hasCapacityLimit ? event.availableTickets <= 0 : false;
         event.hasEnded = hasEnded;
+        event.userAlreadyBooked = 0;
+
+        if (req.user && req.user.userId) {
+            const User = require('../models/user');
+            const user = await User.findById(req.user.userId).select('email');
+            if (user && user.email) {
+                const userBookingAgg = await Booking.aggregate([
+                    { $match: { eventId: event._id, userEmail: user.email, status: { $in: ACTIVE_BOOKING_STATUSES } } },
+                    { $group: { _id: null, total: { $sum: { $ifNull: ["$ticketCount", 1] } } } }
+                ]);
+                event.userAlreadyBooked = userBookingAgg.length > 0 ? userBookingAgg[0].total : 0;
+            }
+        }
 
         res.render('event', { event, user: req.user || null });
     } catch (err) {

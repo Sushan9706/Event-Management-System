@@ -19,7 +19,7 @@ router.get("/event", async (req, res) => {
             event = await eventModel.findById(req.query.eventId);
         }
         if (!event) {
-            event = await eventModel.findOne().sort({ date: 1 });
+            event = await eventModel.findOne().sort({ startDate: 1 });
         }
         res.render("event", { event });
     } catch (err) {
@@ -54,6 +54,7 @@ router.post(
 router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
 router.get("/bookings/load-more", isLoggedIn, userController.loadMoreBookings);
 router.get("/bookings/manage/:bookingId", isLoggedIn, bookingController.getManageBooking);
+router.get("/tickets/:ticketCode", bookingController.getTicketDetails);
 
 router.get("/catalog", userController.getCatalog);
 

@@ -562,10 +562,9 @@ body {
 
 @media (max-width: 480px) {
   .events-grid {
-    grid-template-columns: 1fr;
-  }
-  .nav-links {
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
 }
 .floating-card {
@@ -585,4 +584,13 @@ body {
 
   transform: rotate(-6deg);
   z-index: 2;
+}
+.event-card {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  width: 100%;
 }

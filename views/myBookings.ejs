@@ -96,7 +96,7 @@
                 <div class="empty-inline empty-inline--filtered" hidden>No bookings match the selected date range.</div>
                 <% confirmedBookings.forEach(booking => {
                     if (!booking.event) { return; }
-                    const eventDateObj = booking.event && booking.event.date ? new Date(booking.event.date) : null;
+                    const eventDateObj = booking.event && booking.event.startDate ? new Date(booking.event.startDate) : null;
                     const eventDateValid = eventDateObj && !isNaN(eventDateObj.getTime());
                     const eventDateISO = eventDateValid ? toLocalISO(eventDateObj) : '';
                     const eventDateLabel = eventDateValid
@@ -145,7 +145,7 @@
                 <div class="empty-inline empty-inline--filtered" hidden>No bookings match the selected date range.</div>
                 <% cancelledBookings.forEach(booking => {
                     if (!booking.event) { return; }
-                    const eventDateObj = booking.event && booking.event.date ? new Date(booking.event.date) : null;
+                    const eventDateObj = booking.event && booking.event.startDate ? new Date(booking.event.startDate) : null;
                     const eventDateValid = eventDateObj && !isNaN(eventDateObj.getTime());
                     const eventDateISO = eventDateValid ? toLocalISO(eventDateObj) : '';
                     const eventDateLabel = eventDateValid
