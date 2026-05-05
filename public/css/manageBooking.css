@@ -32,7 +32,7 @@ body.modal-open {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  z-index: 9999;
+  z-index: 50;
 }
 
 .celebration-balloon {
@@ -132,7 +132,7 @@ a {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .nav-container {
@@ -259,7 +259,7 @@ a {
 
 .booking-confirmed-banner {
   position: relative;
-  z-index: 10000;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 16px;
