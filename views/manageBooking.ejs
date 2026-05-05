@@ -132,6 +132,17 @@
 
       <a href="<%= backHref %>" class="back-link"><%= backLabel %></a>
 
+      <% if (shouldCelebrateBooking) { %>
+        <section class="booking-confirmed-banner" aria-live="polite">
+          <div class="booking-confirmed-icon">✓</div>
+          <div>
+            <p class="booking-confirmed-label">Payment successful</p>
+            <h1>Booking confirmed!</h1>
+            <p>Your ticket has been reserved and is ready to download.</p>
+          </div>
+        </section>
+      <% } %>
+
       <div class="manage-layout">
         <section class="manage-content">
           <article class="hero-card">

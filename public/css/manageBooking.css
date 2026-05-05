@@ -257,6 +257,54 @@ a {
   font-size: 12px;
 }
 
+.booking-confirmed-banner {
+  position: relative;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border: 1px solid #c9e8d0;
+  border-radius: 12px;
+  background: #f2fbf4;
+  color: #18351f;
+  box-shadow: 0 12px 30px rgba(24, 53, 31, 0.08);
+}
+
+.booking-confirmed-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2f8f46;
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.booking-confirmed-label {
+  margin-bottom: 4px;
+  color: #2f8f46;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.booking-confirmed-banner h1 {
+  font-size: 24px;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+
+.booking-confirmed-banner p:last-child {
+  color: #46624d;
+  font-size: 13px;
+}
+
 .manage-layout {
   display: grid;
   grid-template-columns: 1fr 280px;

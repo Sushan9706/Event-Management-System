@@ -155,8 +155,7 @@ exports.register = async (req, res) => {
             createdAt: Date.now()
         };
         return req.session.save(() => renderAuth(req, res, {
-            mode: 'register',
-            success: `Demo OTP sent to ${esewaId}: ${generatedOtp}`
+            mode: 'register'
         }));
     } catch (err) {
         if (err && err.code === 11000) {

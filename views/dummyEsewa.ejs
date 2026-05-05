@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dummy Payment Sandbox</title>
+    <title>EMS Wallet</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -13,21 +13,21 @@
     <main class="gateway-shell">
       <header class="gateway-header">
         <div class="brand-mark">e</div>
-        <span>Sandbox Wallet</span>
+        <span>EMS Wallet</span>
       </header>
 
       <section class="gateway-panel">
         <aside class="payment-summary">
           <div class="merchant">
             <div class="brand-mark small">e</div>
-            <strong><%= payment.product_code %></strong>
+            <strong>EPay</strong>
           </div>
           <p>Total Amount</p>
-          <h1>NPR. <%= Number(payment.total_amount).toFixed(2) %></h1>
+          <h1>$<%= Number(payment.total_amount).toFixed(2) %></h1>
           <dl>
             <div>
               <dt>Product Code</dt>
-              <dd><%= payment.product_code %></dd>
+              <dd>EPay</dd>
             </div>
             <div>
               <dt>Transaction</dt>
@@ -46,8 +46,10 @@
 
           <% if (mode === "register") { %>
             <% const pending = typeof pendingRegistration !== "undefined" ? pendingRegistration : null; %>
-            <p class="eyebrow">Dummy Wallet</p>
-            <h2><%= pending ? "Verify phone OTP" : "Register your phone" %></h2>
+            <p class="eyebrow">Wallet Register</p>
+            <% if (pending) { %>
+              <h2>Verify phone OTP</h2>
+            <% } %>
             <form action="/dummy-esewa/register" method="POST" class="gateway-form">
               <% if (pending) { %>
                 <div class="wallet-box compact">
@@ -82,14 +84,13 @@
               <strong><%= wallet ? wallet.esewaId : "Not registered" %></strong>
             </div>
             <form action="/dummy-esewa/pay" method="POST" class="gateway-form">
-              <button type="submit">Pay NPR. <%= Number(payment.total_amount).toFixed(2) %></button>
+              <button type="submit">Pay $<%= Number(payment.total_amount).toFixed(2) %></button>
             </form>
             <form action="/dummy-esewa/cancel" method="POST">
               <button type="submit" class="ghost-btn">Cancel Payment</button>
             </form>
           <% } else { %>
-            <p class="eyebrow">Sandbox Login</p>
-            <h2>Sign in with dummy PIN</h2>
+            <p class="eyebrow">Wallet Login</p>
             <form action="/dummy-esewa/login" method="POST" class="gateway-form">
               <label for="loginEsewaId">Wallet Number</label>
               <input
@@ -113,7 +114,7 @@
         </div>
       </section>
 
-      <p class="sandbox-note">College project dummy payment testing only. No live payment is used.</p>
+      <p class="sandbox-note">No live payment is used.</p>
     </main>
   </body>
 </html>
