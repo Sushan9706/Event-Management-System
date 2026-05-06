@@ -291,7 +291,8 @@ exports.loadMoreBookings = async (req, res) => {
       eventName: b.eventId.eventName || b.eventId.title,
       eventLocation: b.eventId.location,
       eventDate: b.eventId.date,
-      eventStartDate: b.eventId.startDate // in case the UI uses startDate
+      eventStartDate: b.eventId.startDate,
+      eventEndDate: b.eventId.endDate
     }));
     
     res.json({ success: true, bookings: validBookings });

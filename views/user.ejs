@@ -46,6 +46,15 @@
       if (Number.isNaN(d.getTime())) return "Just now";
       return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     };
+    const formatEventDate = (start, end) => {
+      if (!start) return 'N/A';
+      const s = new Date(start);
+      const e = new Date(end);
+      const opt = { month: 'short', day: '2-digit', year: 'numeric' };
+      const sStr = s.toLocaleDateString('en-US', opt);
+      if (!end || sStr === e.toLocaleDateString('en-US', opt)) return sStr;
+      return `${sStr} - ${e.toLocaleDateString('en-US', opt)}`;
+    };
   %>
   <div class="notif-dropdown" id="notifDropdown">
     <p class="notif-title">NOTIFICATIONS</p>
@@ -109,7 +118,7 @@
                   <%= event.eventName || event.title %>
                 </h3>
                 <p class="ecard-meta">
-                  <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                  <%= formatEventDate(event.startDate || event.date, event.endDate) %>
                   <% if (event.location) { %> • <%= event.location %><% } %>
                 </p>
               </div>
@@ -144,7 +153,7 @@
                   <div><p class="rn"><%= event.eventName || event.title %></p><p class="rid"><%= event.location %></p></div>
                 </div>
                 <div class="td"><span class="pill pill--ok" <%= (booking.status === 'cancelled') ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status === 'expired') ? 'style="background: #f0f0f0; color: #666;"' : '') %>><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
-                <div class="td"><%= new Date(event.date || event.startDate || new Date()).toLocaleDateString() %></div>
+                <div class="td"><%= formatEventDate(event.startDate || event.date) %></div>
                 <div class="td">
                    <a href="/bookings/manage/<%= booking._id %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -179,7 +188,8 @@
           if (data.success && data.bookings.length > 0) {
             const tbl = document.querySelector('.tbl');
             data.bookings.forEach(b => {
-              const dateStr = b.eventDate || b.eventStartDate ? new Date(b.eventDate || b.eventStartDate).toLocaleDateString() : 'N/A';
+              const sD = b.eventStartDate || b.eventDate;
+              const dateStr = sD ? new Date(sD).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
               const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
               const row = document.createElement('div');
               row.className = 'tbl-row';
