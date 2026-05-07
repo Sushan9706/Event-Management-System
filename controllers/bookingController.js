@@ -5,16 +5,21 @@ const mongoose = require('mongoose');
 const os = require('os');
 const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
 const {
-    ESEWA_PAYMENT_URL,
-    ESEWA_PRODUCT_CODE,
-    formatEsewaAmount,
-    buildEsewaPaymentFields,
-    decodeEsewaData,
-    verifyEsewaResponseSignature
-} = require('../config/esewa');
+    initiateKhaltiPayment: postKhaltiPayment,
+    lookupKhaltiPayment: lookupKhaltiPayment,
+    toKhaltiPaisa
+} = require('../config/khalti');
 
 const MAX_TICKETS_PER_BOOKING = 5;
-const ESEWA_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const KHALTI_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const createHttpError = (status, message, payload) => {
+    const error = new Error(message);
+    error.status = status;
+    if (payload) {
+        error.payload = payload;
+    }
+    return error;
+};
 
 const pickEventName = (event, fallback = 'Event') => {
     if (!event) return fallback;
@@ -69,12 +74,20 @@ const normalizeAttendeeNames = (value) => (
         : []
 );
 
-const createEsewaTransactionUuid = () => `EMS-${Date.now()}-${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
-
 const getRequestBaseUrl = (req) => {
     const configured = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
     if (configured) return configured;
     return `${req.protocol}://${req.get('host') || 'localhost:3000'}`;
+};
+
+const getFrontendBaseUrl = (req) => {
+    const configured = (process.env.FRONTEND_URL || '').trim().replace(/\/+$/, '');
+    return configured || getRequestBaseUrl(req);
+};
+
+const getBackendBaseUrl = (req) => {
+    const configured = (process.env.BACKEND_URL || '').trim().replace(/\/+$/, '');
+    return configured || getRequestBaseUrl(req);
 };
 
 const getAlreadyBookedCount = async (eventId, userEmail) => {
@@ -158,105 +171,99 @@ const createConfirmedBooking = async ({ event, user, attendeeEmail, ticketCount,
     return { booking, alreadyBooked: alreadyBooked + ticketCount };
 };
 
-const buildEsewaPaymentForm = (req, transactionUuid, totalAmount) => {
-    const baseUrl = getRequestBaseUrl(req);
+const prepareBookingCheckout = async ({ userId, eventId, email, ticketCountRaw, attendeeNamesRaw }) => {
+    const ticketCountValue = typeof ticketCountRaw === 'string' ? ticketCountRaw.trim() : String(ticketCountRaw || '').trim();
+    const ticketCount = Number(ticketCountValue);
+    const emailValue = (email || '').trim().toLowerCase();
+    const attendeeNames = normalizeAttendeeNames(attendeeNamesRaw);
+    const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailValue) {
+        throw createHttpError(400, 'Please enter your email address.');
+    }
+    if (!emailPattern.test(emailValue)) {
+        throw createHttpError(400, 'Please enter a valid email address with at least one letter before @.');
+    }
+    if (!/^[1-9]\d*$/.test(ticketCountValue) || !Number.isInteger(ticketCount)) {
+        throw createHttpError(400, 'Please enter a valid number of tickets.');
+    }
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        throw createHttpError(400, 'Invalid event. Please reload the page.');
+    }
+    if (ticketCount > MAX_TICKETS_PER_BOOKING) {
+        throw createHttpError(400, `Maximum ${MAX_TICKETS_PER_BOOKING} tickets per booking. If you want more, buy again.`);
+    }
+    if (attendeeNames.length !== ticketCount || attendeeNames.some(name => !name)) {
+        throw createHttpError(400, `Please enter attendee full name for all ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.`);
+    }
+    if (attendeeNames.some(name => !attendeeNamePattern.test(name))) {
+        throw createHttpError(400, 'Attendee names can contain letters and single spaces only.');
+    }
+    const uniqueNames = new Set(attendeeNames.map(name => name.toLowerCase()));
+    if (uniqueNames.size !== attendeeNames.length) {
+        throw createHttpError(400, 'Please enter a different attendee name for each ticket.');
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+        throw createHttpError(404, 'Event not found');
+    }
+    if (isEventDatePassed(event)) {
+        throw createHttpError(400, 'Booking closed. This event date has passed.');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+        throw createHttpError(404, 'User not found');
+    }
+
+    const capacityMessage = await ensureCapacityAvailable(event, ticketCount);
+    if (capacityMessage) {
+        throw createHttpError(400, capacityMessage);
+    }
+
+    const unitPrice = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
+    const totalAmount = unitPrice * ticketCount;
+
     return {
-        action: ESEWA_PAYMENT_URL,
-        method: 'POST',
-        fields: buildEsewaPaymentFields({
-            amount: totalAmount,
-            transactionUuid,
-            successUrl: `${baseUrl}/payments/esewa/success`,
-            failureUrl: `${baseUrl}/payments/esewa/failure/${transactionUuid}`
-        })
+        event,
+        user,
+        attendeeEmail: emailValue,
+        attendeeNames,
+        ticketCount,
+        unitPrice,
+        totalAmount
     };
+};
+
+const getKhaltiCheckouts = (req) => {
+    if (!req.session.khaltiCheckouts) {
+        req.session.khaltiCheckouts = {};
+    }
+    return req.session.khaltiCheckouts;
 };
 
 exports.createBooking = async (req, res) => {
     try {
-        const { eventId, email, ticketCount: ticketCountRaw, attendeeNames: attendeeNamesRaw } = req.body;
-        const userId = req.user.userId;
-        const ticketCountValue = typeof ticketCountRaw === 'string' ? ticketCountRaw.trim() : String(ticketCountRaw || '').trim();
-        const ticketCount = Number(ticketCountValue);
-        const emailValue = (email || '').trim().toLowerCase();
-        const attendeeNames = normalizeAttendeeNames(attendeeNamesRaw);
-        const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
-        if (!emailValue) {
-            return res.status(400).json({ success: false, message: 'Please enter your email address.' });
-        }
-        if (!emailPattern.test(emailValue)) {
-            return res.status(400).json({ success: false, message: 'Please enter a valid email address with at least one letter before @.' });
-        }
-        if (!/^[1-9]\d*$/.test(ticketCountValue) || !Number.isInteger(ticketCount)) {
-            return res.status(400).json({ success: false, message: 'Please enter a valid number of tickets.' });
-        }
-        if (!mongoose.Types.ObjectId.isValid(eventId)) {
-            return res.status(400).json({ success: false, message: 'Invalid event. Please reload the page.' });
-        }
-        if (ticketCount > MAX_TICKETS_PER_BOOKING) {
-            return res.status(400).json({
-                success: false,
-                message: `Maximum ${MAX_TICKETS_PER_BOOKING} tickets per booking. If you want more, buy again.`
-            });
-        }
-        if (attendeeNames.length !== ticketCount || attendeeNames.some(name => !name)) {
-            return res.status(400).json({ success: false, message: `Please enter attendee full name for all ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.` });
-        }
-        if (attendeeNames.some(name => !attendeeNamePattern.test(name))) {
-            return res.status(400).json({ success: false, message: 'Attendee names can contain letters and single spaces only.' });
-        }
-        const uniqueNames = new Set(attendeeNames.map(name => name.toLowerCase()));
-        if (uniqueNames.size !== attendeeNames.length) {
-            return res.status(400).json({ success: false, message: 'Please enter a different attendee name for each ticket.' });
-        }
-
-        // 1. Check if event exists
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ success: false, message: 'Event not found' });
-        }
-        if (isEventDatePassed(event)) {
-            return res.status(400).json({ success: false, message: 'Booking closed. This event date has passed.' });
-        }
-
-        // 2. Load user (each purchase becomes its own booking/order)
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        // 3. Capacity check (by seats)
-        const capacityMessage = await ensureCapacityAvailable(event, ticketCount);
-        if (capacityMessage) {
-            return res.status(400).json({ success: false, message: capacityMessage });
-        }
-
-        const unitPrice = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
-        const totalAmount = unitPrice * ticketCount;
+        const {
+            event,
+            user,
+            attendeeEmail,
+            attendeeNames,
+            ticketCount,
+            totalAmount
+        } = await prepareBookingCheckout({
+            userId: req.user.userId,
+            eventId: req.body.eventId,
+            email: req.body.email,
+            ticketCountRaw: req.body.ticketCount,
+            attendeeNamesRaw: req.body.attendeeNames
+        });
 
         if (totalAmount > 0) {
-            const transactionUuid = createEsewaTransactionUuid();
-            if (!req.session.esewaCheckouts) {
-                req.session.esewaCheckouts = {};
-            }
-            req.session.esewaCheckouts[transactionUuid] = {
-                eventId: event._id.toString(),
-                userId: user._id.toString(),
-                attendeeEmail: emailValue,
-                ticketCount,
-                attendeeNames,
-                totalAmount: formatEsewaAmount(totalAmount),
-                createdAt: Date.now()
-            };
-
-            return res.json({
-                success: true,
-                paymentRequired: true,
-                paymentProvider: 'esewa',
-                message: 'Continue to eSewa sandbox payment.',
-                transactionUuid,
-                productCode: ESEWA_PRODUCT_CODE,
-                paymentForm: buildEsewaPaymentForm(req, transactionUuid, totalAmount)
+            return res.status(400).json({
+                success: false,
+                message: 'Use the Khalti payment button to complete paid bookings.'
             });
         }
 
@@ -264,25 +271,31 @@ exports.createBooking = async (req, res) => {
         const { booking, alreadyBooked } = await createConfirmedBooking({
             event,
             user,
-            attendeeEmail: emailValue,
+            attendeeEmail,
             ticketCount,
             attendeeNames
         });
 
-        res.json({
-            success: true,
-            message: 'Booking confirmed!',
-            referenceNumber: booking.referenceNumber,
-            ticketCount: booking.ticketCount,
-            totalAmount: booking.totalAmount,
-            bookingId: booking._id,
-            ticketCodes: booking.ticketCodes,
-            attendeeNames: booking.attendeeNames,
-            alreadyBooked
-        });
+    res.json({
+        success: true,
+        message: 'Booking confirmed!',
+        referenceNumber: booking.referenceNumber,
+        ticketCount: booking.ticketCount,
+        totalAmount: booking.totalAmount,
+        bookingId: booking._id,
+        ticketCodes: booking.ticketCodes,
+        attendeeNames: booking.attendeeNames,
+        alreadyBooked
+    });
 
     } catch (err) {
         console.error('Booking Error:', err);
+        if (err && err.status) {
+            return res.status(err.status).json({
+                success: false,
+                message: err.message
+            });
+        }
         if (err && err.code === 11000) {
             return res.status(400).json({
                 success: false,
@@ -296,101 +309,235 @@ exports.createBooking = async (req, res) => {
     }
 };
 
-exports.handleEsewaSuccess = async (req, res) => {
+exports.initiateKhaltiPayment = async (req, res) => {
     try {
-        const payload = decodeEsewaData(req.query.data);
-        const transactionUuid = payload.transaction_uuid;
-        const checkouts = req.session.esewaCheckouts || {};
-        const checkout = transactionUuid ? checkouts[transactionUuid] : null;
-
-        if (!checkout) {
-            req.flash('error', 'eSewa sandbox payment session expired. Please try booking again.');
-            return res.redirect('/bookings');
-        }
-
-        if (Date.now() - Number(checkout.createdAt || 0) > ESEWA_CHECKOUT_TTL_MS) {
-            delete checkouts[transactionUuid];
-            req.session.esewaCheckouts = checkouts;
-            req.flash('error', 'eSewa sandbox payment session expired. Please try booking again.');
-            return res.redirect(`/event/${checkout.eventId}`);
-        }
-
-        const expectedAmount = Number(checkout.totalAmount);
-        const receivedAmount = Number(payload.total_amount);
-        const isValidPayment = payload.status === 'COMPLETE'
-            && payload.product_code === ESEWA_PRODUCT_CODE
-            && Number.isFinite(receivedAmount)
-            && Math.abs(receivedAmount - expectedAmount) < 0.01
-            && verifyEsewaResponseSignature(payload);
-
-        if (!isValidPayment) {
-            delete checkouts[transactionUuid];
-            req.session.esewaCheckouts = checkouts;
-            req.flash('error', 'eSewa sandbox payment could not be verified. No booking was created.');
-            return res.redirect(`/event/${checkout.eventId}`);
-        }
-
-        const [event, user] = await Promise.all([
-            Event.findById(checkout.eventId),
-            User.findById(checkout.userId)
-        ]);
-
-        if (!event || !user) {
-            delete checkouts[transactionUuid];
-            req.session.esewaCheckouts = checkouts;
-            req.flash('error', 'Booking details were not found after eSewa sandbox payment.');
-            return res.redirect('/bookings');
-        }
-
-        if (isEventDatePassed(event)) {
-            delete checkouts[transactionUuid];
-            req.session.esewaCheckouts = checkouts;
-            req.flash('error', 'Booking closed. This event date has passed.');
-            return res.redirect(`/event/${checkout.eventId}`);
-        }
-
-        const capacityMessage = await ensureCapacityAvailable(event, checkout.ticketCount);
-        if (capacityMessage) {
-            delete checkouts[transactionUuid];
-            req.session.esewaCheckouts = checkouts;
-            req.flash('error', capacityMessage);
-            return res.redirect(`/event/${checkout.eventId}`);
-        }
-
-        const { booking } = await createConfirmedBooking({
-            event,
-            user,
-            attendeeEmail: checkout.attendeeEmail,
-            ticketCount: checkout.ticketCount,
-            attendeeNames: checkout.attendeeNames
+        const checkout = await prepareBookingCheckout({
+            userId: req.user.userId,
+            eventId: req.body.eventId,
+            email: req.body.email,
+            ticketCountRaw: req.body.ticketCount,
+            attendeeNamesRaw: req.body.attendeeNames
         });
 
-        delete checkouts[transactionUuid];
-        req.session.esewaCheckouts = checkouts;
-        req.flash('success', 'eSewa sandbox payment verified. Booking confirmed.');
-        return req.session.save(() => res.redirect(`/bookings/manage/${booking._id}?booked=1`));
+        if (checkout.totalAmount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Khalti can only be used for paid bookings.'
+            });
+        }
+
+        const purchaseOrderId = String(req.body.orderId || `KHL-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`).trim();
+        const purchaseOrderName = String(req.body.orderName || pickEventName(checkout.event)).trim() || 'EMS Event Booking';
+        const customerName = String(req.body.customerName || checkout.attendeeNames[0] || req.user.username || 'EMS User').trim();
+        const returnUrl = `${getFrontendBaseUrl(req)}/payments/khalti/success`;
+        const websiteUrl = getFrontendBaseUrl(req);
+        const amountPaisa = toKhaltiPaisa(checkout.totalAmount);
+
+        const khaltiResponse = await postKhaltiPayment({
+            return_url: returnUrl,
+            website_url: websiteUrl,
+            amount: String(amountPaisa),
+            purchase_order_id: purchaseOrderId,
+            purchase_order_name: purchaseOrderName,
+            customer_info: {
+                name: customerName,
+                email: checkout.attendeeEmail
+            }
+        });
+
+        const pidx = String(khaltiResponse && khaltiResponse.pidx ? khaltiResponse.pidx : '').trim();
+        const paymentUrl = String(khaltiResponse && khaltiResponse.payment_url ? khaltiResponse.payment_url : '').trim();
+
+        if (!pidx || !paymentUrl) {
+            return res.status(500).json({
+                success: false,
+                message: 'Khalti did not return a payment URL.'
+            });
+        }
+
+        const expiresAtFromApi = khaltiResponse.expires_at ? Date.parse(khaltiResponse.expires_at) : NaN;
+        const expiresAt = Number.isFinite(expiresAtFromApi)
+            ? expiresAtFromApi
+            : Date.now() + KHALTI_CHECKOUT_TTL_MS;
+
+        const checkouts = getKhaltiCheckouts(req);
+        checkouts[pidx] = {
+            pidx,
+            purchaseOrderId,
+            purchaseOrderName,
+            eventId: checkout.event._id.toString(),
+            userId: checkout.user._id.toString(),
+            attendeeEmail: checkout.attendeeEmail,
+            attendeeNames: checkout.attendeeNames,
+            ticketCount: checkout.ticketCount,
+            unitPrice: checkout.unitPrice,
+            totalAmount: checkout.totalAmount,
+            amountPaisa,
+            customerName,
+            status: 'Initiated',
+            paymentUrl,
+            createdAt: Date.now(),
+            expiresAt
+        };
+        req.session.khaltiCheckouts = checkouts;
+
+        return req.session.save(() => res.json({
+            success: true,
+            paymentProvider: 'khalti',
+            payment_url: paymentUrl,
+            pidx,
+            expires_at: new Date(expiresAt).toISOString(),
+            expires_in: Math.max(Math.ceil((expiresAt - Date.now()) / 1000), 1)
+        }));
     } catch (err) {
-        console.error('eSewa Success Error:', err);
-        req.flash('error', 'Unable to verify eSewa sandbox payment. Please try again.');
-        return res.redirect('/bookings');
+        console.error('Khalti Initiate Error:', err);
+        return res.status(err.status || 500).json({
+            success: false,
+            message: err.message || 'Unable to start Khalti checkout.',
+            details: err.payload || undefined
+        });
     }
 };
 
-exports.handleEsewaFailure = (req, res) => {
-    const transactionUuid = req.params.transactionUuid;
-    const checkouts = req.session.esewaCheckouts || {};
-    const checkout = transactionUuid ? checkouts[transactionUuid] : null;
-    if (transactionUuid && checkout) {
-        delete checkouts[transactionUuid];
-        req.session.esewaCheckouts = checkouts;
-    }
+exports.getPaymentSuccessPage = (req, res) => {
+    const provider = String(req.query.provider || 'khalti').trim().toLowerCase();
+    const pidx = String(req.query.pidx || '').trim();
+    const checkouts = req.session.khaltiCheckouts || {};
+    const checkout = provider === 'khalti' && pidx ? checkouts[pidx] : null;
+    return res.render('khaltiSuccess', {
+        provider,
+        pidx,
+        bookingId: String(req.query.bookingId || (checkout && checkout.bookingId) || '').trim(),
+        eventName: checkout && checkout.purchaseOrderName ? String(checkout.purchaseOrderName) : '',
+        expiresAt: checkout && checkout.expiresAt ? checkout.expiresAt : null,
+        frontendBaseUrl: getFrontendBaseUrl(req),
+        backendBaseUrl: getBackendBaseUrl(req)
+    });
+};
 
-    req.flash('error', 'eSewa sandbox payment was not completed. No live payment was used.');
-    const redirectUrl = checkout && checkout.eventId ? `/event/${checkout.eventId}` : '/bookings';
-    if (req.session && typeof req.session.save === 'function') {
-        return req.session.save(() => res.redirect(redirectUrl));
+exports.getKhaltiSuccessPage = exports.getPaymentSuccessPage;
+
+exports.verifyKhaltiPayment = async (req, res) => {
+    try {
+        const pidx = String(req.body.pidx || '').trim();
+        if (!pidx) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing Khalti payment identifier.'
+            });
+        }
+
+        const checkouts = req.session.khaltiCheckouts || {};
+        const checkout = checkouts[pidx];
+        if (!checkout) {
+            return res.status(404).json({
+                success: false,
+                message: 'Khalti payment session expired. Please try booking again.'
+            });
+        }
+
+        if (checkout.expiresAt && Date.now() > checkout.expiresAt) {
+            delete checkouts[pidx];
+            req.session.khaltiCheckouts = checkouts;
+            return req.session.save(() => res.status(410).json({
+                success: false,
+                status: 'Expired',
+                expiresAt: checkout.expiresAt,
+                message: 'The 30-minute booking window expired. Please start the payment again.'
+            }));
+        }
+
+        const lookupResponse = await lookupKhaltiPayment({ pidx });
+        const status = String(lookupResponse.status || 'Pending').trim();
+        const lookupOrderId = String(lookupResponse.purchase_order_id || '').trim();
+        const lookupAmount = Number(lookupResponse.total_amount ?? lookupResponse.amount ?? NaN);
+        const expectedAmount = Number(checkout.amountPaisa || toKhaltiPaisa(checkout.totalAmount));
+
+        if (lookupOrderId && lookupOrderId !== checkout.purchaseOrderId) {
+            throw createHttpError(400, 'Khalti payment did not match the original order.');
+        }
+        if (Number.isFinite(lookupAmount) && lookupAmount !== expectedAmount) {
+            throw createHttpError(400, 'Khalti payment amount did not match the booking total.');
+        }
+
+        if (status === 'Completed') {
+            if (checkout.bookingId) {
+                checkout.status = status;
+                checkout.lookup = lookupResponse;
+                checkout.verifiedAt = Date.now();
+                req.session.khaltiCheckouts = checkouts;
+                return req.session.save(() => res.json({
+                    success: true,
+                    status,
+                    bookingId: checkout.bookingId,
+                    expiresAt: checkout.expiresAt,
+                    redirectUrl: `/bookings/manage/${checkout.bookingId}`
+                }));
+            }
+
+            const [event, user] = await Promise.all([
+                Event.findById(checkout.eventId),
+                User.findById(checkout.userId)
+            ]);
+
+            if (!event || !user) {
+                throw createHttpError(404, 'Booking details were not found after Khalti payment.');
+            }
+            if (isEventDatePassed(event)) {
+                throw createHttpError(400, 'Booking closed. This event date has passed.');
+            }
+
+            const capacityMessage = await ensureCapacityAvailable(event, checkout.ticketCount);
+            if (capacityMessage) {
+                throw createHttpError(400, capacityMessage);
+            }
+
+            const { booking } = await createConfirmedBooking({
+                event,
+                user,
+                attendeeEmail: checkout.attendeeEmail,
+                ticketCount: checkout.ticketCount,
+                attendeeNames: checkout.attendeeNames
+            });
+
+            checkout.bookingId = booking._id.toString();
+            checkout.status = status;
+            checkout.lookup = lookupResponse;
+            checkout.verifiedAt = Date.now();
+            req.session.khaltiCheckouts = checkouts;
+
+            return req.session.save(() => res.json({
+                success: true,
+                status,
+                bookingId: booking._id,
+                expiresAt: checkout.expiresAt,
+                redirectUrl: `/bookings/manage/${booking._id}`
+            }));
+        }
+
+        checkout.status = status;
+        checkout.lookup = lookupResponse;
+        req.session.khaltiCheckouts = checkouts;
+
+        return req.session.save(() => res.json({
+            success: status === 'Pending',
+            status,
+            bookingId: checkout.bookingId || null,
+            expiresAt: checkout.expiresAt,
+            redirectUrl: checkout.bookingId ? `/bookings/manage/${checkout.bookingId}` : null,
+            message: status === 'Pending'
+                ? 'Khalti payment is still pending.'
+                : 'Khalti payment was not completed.'
+        }));
+    } catch (err) {
+        console.error('Khalti Verify Error:', err);
+        return res.status(err.status || 500).json({
+            success: false,
+            message: err.message || 'Unable to verify Khalti payment.',
+            status: err.payload && err.payload.status ? err.payload.status : undefined,
+            details: err.payload || undefined
+        });
     }
-    return res.redirect(redirectUrl);
 };
 
 exports.getBookingsPage = async (req, res) => {
@@ -498,8 +645,7 @@ exports.getManageBooking = async (req, res) => {
         return res.render("manageBooking", {
             booking,
             user,
-            publicBaseUrl: getPublicBaseUrl(req),
-            celebrateBooking: req.query && req.query.booked === '1'
+            publicBaseUrl: getPublicBaseUrl(req)
         });
     } catch (err) {
         console.error("Get Manage Booking Error:", err);

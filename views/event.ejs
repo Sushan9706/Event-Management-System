@@ -478,6 +478,7 @@
             </div>
 
             <p class="booking-error" id="bookingError" aria-live="polite"></p>
+            <p class="booking-countdown" id="paymentTimerNote" hidden>30:00</p>
             <button class="booking-submit" id="bookingSubmitBtn" type="submit">Continue Booking</button>
           </form>
         </div>
@@ -562,8 +563,11 @@
       const attendeeStep = document.getElementById("attendeeStep");
       const attendeeNameFields = document.getElementById("attendeeNameFields");
       const bookingSubmitBtn = document.getElementById("bookingSubmitBtn");
+      const paymentTimerNote = document.getElementById("paymentTimerNote");
       let lastBookingId = null;
       let bookingStep = "tickets";
+      let bookingTimerRemainingMs = 30 * 60 * 1000;
+      let bookingTimerInterval = null;
       const searchOverlay = document.getElementById("searchOverlay");
       const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
       const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
@@ -604,20 +608,79 @@
         const safeCount = count || 0;
         ticketSummary.textContent = safeCount;
         totalPriceEl.textContent = formatAmount(pricePerTicket * safeCount, pricePerTicket);
+        updatePaymentActions();
       }
 
       function normalizeAttendeeName(value) {
         return value.trim().replace(/\s+/g, " ");
       }
 
+      function updatePaymentActions() {
+        const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
+        const ticketCount = getTicketCount();
+        const requiresPayment = bookingStep === "attendee" && pricePerTicket > 0 && !!ticketCount;
+
+        if (bookingSubmitBtn) {
+          bookingSubmitBtn.disabled = false;
+          bookingSubmitBtn.textContent = requiresPayment ? "Pay with Khalti" : "Continue Booking";
+        }
+        if (paymentTimerNote) {
+          paymentTimerNote.hidden = !requiresPayment;
+          if (requiresPayment && !bookingTimerInterval) {
+            paymentTimerNote.textContent = formatCountdown(paymentTimerRemainingMs);
+          } else if (!requiresPayment) {
+            paymentTimerNote.textContent = "";
+          }
+        }
+      }
+
+      function stopBookingTimer() {
+        if (bookingTimerInterval) {
+          window.clearInterval(bookingTimerInterval);
+          bookingTimerInterval = null;
+        }
+      }
+
+      function resetBookingTimer() {
+        stopBookingTimer();
+        bookingTimerRemainingMs = 30 * 60 * 1000;
+      }
+
+      function startBookingTimer() {
+        if (!paymentTimerNote) return;
+        resetBookingTimer();
+        paymentTimerNote.hidden = false;
+        paymentTimerNote.textContent = formatCountdown(bookingTimerRemainingMs);
+
+        bookingTimerInterval = window.setInterval(() => {
+          bookingTimerRemainingMs -= 1000;
+          if (bookingTimerRemainingMs <= 0) {
+            bookingTimerRemainingMs = 0;
+            paymentTimerNote.textContent = "00:00";
+            stopBookingTimer();
+            return;
+          }
+          paymentTimerNote.textContent = formatCountdown(bookingTimerRemainingMs);
+        }, 1000);
+      }
+
+      function formatCountdown(msRemaining) {
+        const totalSeconds = Math.max(Math.floor(msRemaining / 1000), 0);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
       function resetBookingStep() {
         bookingStep = "tickets";
         if (attendeeStep) attendeeStep.hidden = true;
         if (attendeeNameFields) attendeeNameFields.innerHTML = "";
-        if (bookingSubmitBtn) {
-          bookingSubmitBtn.disabled = false;
-          bookingSubmitBtn.textContent = "Continue Booking";
+        resetBookingTimer();
+        if (paymentTimerNote) {
+          paymentTimerNote.hidden = true;
+          paymentTimerNote.textContent = "";
         }
+        updatePaymentActions();
       }
 
       function buildAttendeeFields(ticketCount) {
@@ -657,26 +720,27 @@
         bookingStep = "attendee";
         buildAttendeeFields(ticketCount);
         if (attendeeStep) attendeeStep.hidden = false;
-        if (bookingSubmitBtn) bookingSubmitBtn.textContent = "Continue Booking";
+        updatePaymentActions();
+        startBookingTimer();
         focusAttendeeName(0);
       }
 
-      function submitEsewaPayment(paymentForm) {
-        const form = document.createElement("form");
-        form.method = paymentForm.method || "POST";
-        form.action = paymentForm.action;
-        form.style.display = "none";
-
-        Object.entries(paymentForm.fields || {}).forEach(([name, value]) => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = name;
-          input.value = value;
-          form.appendChild(input);
+      async function initiateKhaltiPayment(payload) {
+        const response = await fetch("/api/khalti/initiate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload),
         });
-
-        document.body.appendChild(form);
-        form.submit();
+        if (response.redirected && response.url.includes("/login")) {
+          window.location.href = "/login";
+          return null;
+        }
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = "/login";
+          return null;
+        }
+        return response.json();
       }
 
       function handleBooking() {
@@ -813,6 +877,7 @@
         const { eventId, eventName, eventDate, eventTime, eventLocation } = bookingModal.dataset;
         const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
         const totalAmount = pricePerTicket * ticketCount;
+        const requiresPayment = totalAmount > 0;
 
         if (!eventId) {
           bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Attendees: ${attendeeNames.join(", ")} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
@@ -825,6 +890,28 @@
         }
 
         try {
+          if (requiresPayment) {
+            const khaltiData = await initiateKhaltiPayment({
+              eventId,
+              email,
+              ticketCount,
+              attendeeNames,
+              amount: totalAmount,
+              orderId: `EMS-${eventId}-${Date.now()}`,
+              orderName: eventName,
+              customerName: attendeeNames[0],
+            });
+            if (!khaltiData) {
+              return;
+            }
+            if (!khaltiData.success || !khaltiData.payment_url) {
+              bookingError.textContent = khaltiData.message || "Unable to start Khalti payment.";
+              return;
+            }
+            window.location.href = khaltiData.payment_url;
+            return;
+          }
+
           const response = await fetch("/bookings/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -843,15 +930,6 @@
 
           if (!data.success) {
             bookingError.textContent = data.message || "Booking failed. Please try again.";
-            return;
-          }
-
-          if (data.paymentRequired && data.paymentForm) {
-            if (bookingSubmitBtn) {
-              bookingSubmitBtn.disabled = true;
-              bookingSubmitBtn.textContent = "Opening eSewa Sandbox...";
-            }
-            submitEsewaPayment(data.paymentForm);
             return;
           }
 

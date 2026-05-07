@@ -4,7 +4,6 @@ const userController = require('../controllers/userController');
 const { isLoggedIn, isAdmin, redirectIfLoggedIn } = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
 const bookingController = require('../controllers/bookingController');
-const dummyEsewaController = require('../controllers/dummyEsewaController');
 const eventModel = require('../models/event');
 const mongoose = require('mongoose');
 
@@ -64,16 +63,10 @@ router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('av
 
 // --- FUNCTIONAL ROUTES ---
 router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
-router.get('/payments/esewa/success', isLoggedIn, bookingController.handleEsewaSuccess);
-router.get('/payments/esewa/failure/:transactionUuid', isLoggedIn, bookingController.handleEsewaFailure);
-router.post('/dummy-esewa/start', isLoggedIn, dummyEsewaController.start);
-router.get('/dummy-esewa/auth', isLoggedIn, dummyEsewaController.auth);
-router.get('/dummy-esewa/register', isLoggedIn, dummyEsewaController.registerForm);
-router.post('/dummy-esewa/register', isLoggedIn, dummyEsewaController.register);
-router.post('/dummy-esewa/login', isLoggedIn, dummyEsewaController.login);
-router.get('/dummy-esewa/dashboard', isLoggedIn, dummyEsewaController.dashboard);
-router.post('/dummy-esewa/pay', isLoggedIn, dummyEsewaController.pay);
-router.post('/dummy-esewa/cancel', isLoggedIn, dummyEsewaController.cancel);
+router.post('/api/khalti/initiate', isLoggedIn, bookingController.initiateKhaltiPayment);
+router.post('/api/khalti/verify', isLoggedIn, bookingController.verifyKhaltiPayment);
+router.get('/payments/success', isLoggedIn, bookingController.getPaymentSuccessPage);
+router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSuccessPage);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
 router.get('/events/search', userController.searchEvents);

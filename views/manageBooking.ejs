@@ -77,7 +77,6 @@
         if (Number.isNaN(d.getTime())) return "Just now";
         return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
       };
-      const shouldCelebrateBooking = typeof celebrateBooking !== "undefined" && celebrateBooking;
     %>
 
     <header class="navbar">
@@ -126,22 +125,7 @@
     </header>
 
     <main class="page-shell">
-      <% if (shouldCelebrateBooking) { %>
-        <div class="balloon-celebration" id="balloonCelebration" aria-hidden="true"></div>
-      <% } %>
-
       <a href="<%= backHref %>" class="back-link"><%= backLabel %></a>
-
-      <% if (shouldCelebrateBooking) { %>
-        <section class="booking-confirmed-banner" aria-live="polite">
-          <div class="booking-confirmed-icon">✓</div>
-          <div>
-            <p class="booking-confirmed-label">Payment successful</p>
-            <h1>Booking confirmed!</h1>
-            <p>Your ticket has been reserved and is ready to download.</p>
-          </div>
-        </section>
-      <% } %>
 
       <div class="manage-layout">
         <section class="manage-content">
@@ -449,74 +433,6 @@
     </div>
 
     <script>
-      const shouldCelebrateBooking = <%- JSON.stringify(shouldCelebrateBooking) %>;
-      const runBalloonCelebration = () => {
-        const layer = document.getElementById('balloonCelebration');
-        if (!layer) return;
-        const colors = ['#e94f64', '#ffb84c', '#5cc8ff', '#7ed957', '#9b6dff', '#ff77bc', '#ffd166', '#4ecdc4'];
-        const sides = ['left', 'right', 'top', 'bottom'];
-        const createBalloonPop = (x, y, color, delayMs) => {
-          window.setTimeout(() => {
-            for (let pieceIndex = 0; pieceIndex < 8; pieceIndex += 1) {
-              const piece = document.createElement('span');
-              piece.className = 'balloon-pop-particle';
-              piece.style.setProperty('--color', color);
-              piece.style.left = `${x}vw`;
-              piece.style.top = `${y}vh`;
-              piece.style.setProperty('--piece-x', `${Math.cos((Math.PI * 2 * pieceIndex) / 8) * (30 + (pieceIndex % 3) * 10)}px`);
-              piece.style.setProperty('--piece-y', `${Math.sin((Math.PI * 2 * pieceIndex) / 8) * (30 + (pieceIndex % 3) * 10)}px`);
-              layer.appendChild(piece);
-            }
-          }, delayMs);
-        };
-        for (let index = 0; index < 96; index += 1) {
-          const side = sides[index % sides.length];
-          const balloon = document.createElement('span');
-          balloon.className = `celebration-balloon from-${side}`;
-          const color = colors[index % colors.length];
-          const delaySeconds = (index % 16) * 0.025;
-          balloon.style.setProperty('--color', color);
-          balloon.style.setProperty('--delay', `${delaySeconds}s`);
-          balloon.style.setProperty('--spin', `${index % 2 === 0 ? 28 : -28}deg`);
-          balloon.style.setProperty('--scale', `${0.86 + ((index % 5) * 0.08)}`);
-          let popX = 50;
-          let popY = 50;
-          if (side === 'left' || side === 'right') {
-            const startY = 2 + ((index * 17) % 96);
-            const endY = 4 + ((index * 19) % 92);
-            const moveX = 54 + ((index * 11) % 46);
-            balloon.style.setProperty('--start-y', `${startY}vh`);
-            balloon.style.setProperty('--move-x', `${side === 'left' ? moveX : -moveX}vw`);
-            balloon.style.setProperty('--move-y', `${endY - startY}vh`);
-            popX = side === 'left'
-              ? 14 + ((index * 7) % 32)
-              : 54 + ((index * 7) % 32);
-            popY = Math.max(6, Math.min(94, startY + ((endY - startY) * 0.35)));
-          } else {
-            const startX = 1 + ((index * 13) % 98);
-            const endX = 2 + ((index * 7) % 96);
-            const moveY = 42 + ((index * 23) % 58);
-            balloon.style.setProperty('--start-x', `${startX}vw`);
-            balloon.style.setProperty('--move-x', `${endX - startX}vw`);
-            balloon.style.setProperty('--move-y', `${side === 'top' ? moveY : -moveY}vh`);
-            popX = Math.max(4, Math.min(96, startX + ((endX - startX) * 0.35)));
-            popY = side === 'top'
-              ? 12 + ((index * 5) % 24)
-              : 64 + ((index * 5) % 24);
-          }
-          layer.appendChild(balloon);
-          window.setTimeout(() => balloon.classList.add('popped'), (delaySeconds * 1000) + 580);
-          createBalloonPop(popX, popY, color, (delaySeconds * 1000) + 540);
-        }
-        setTimeout(() => layer.remove(), 2400);
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      };
-      if (shouldCelebrateBooking) {
-        window.addEventListener('DOMContentLoaded', runBalloonCelebration, { once: true });
-      }
-
       const downloadBtn = document.getElementById('downloadBtn');
       const confirmModal = document.getElementById('confirmModal');
       const confirmCancel = document.getElementById('confirmCancel');
