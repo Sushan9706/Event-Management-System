@@ -202,6 +202,27 @@ function showToast(message, type = "success") {
 
 // Notification Toggle
 function toggleNotif() {
-    const panel = document.getElementById('notifPanel');
+    const panel = document.getElementById('notifPanel') || document.getElementById('notifDropdown');
     panel.classList.toggle('open');
+    panel.classList.toggle('show');
 }
+
+// --- SIDEBAR TOGGLE ---
+document.addEventListener("DOMContentLoaded", () => {
+    const triggers = document.querySelectorAll("#profileTrigger");
+    const sidebar = document.getElementById("avatarSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    const toggleSidebar = (state) => {
+        if (sidebar && overlay) {
+            sidebar.classList.toggle("open", state);
+            overlay.classList.toggle("open", state);
+        }
+    };
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener("click", () => toggleSidebar(true));
+    });
+    
+    overlay?.addEventListener("click", () => toggleSidebar(false));
+});
