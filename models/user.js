@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     notifications: [{
         type: {
             type: String,
-            enum: ["booking_confirmed", "booking_cancelled"],
+            enum: ["booking_confirmed", "booking_cancelled", "event_update"],
             required: true
         },
         eventId: {
@@ -41,6 +41,17 @@ const userSchema = new mongoose.Schema({
         eventName: {
             type: String,
             trim: true
+        },
+        message: {
+            type: String,
+            trim: true
+        },
+        link: {
+            type: String
+        },
+        isRead: {
+            type: Boolean,
+            default: false
         },
         ticketCount: {
             type: Number,

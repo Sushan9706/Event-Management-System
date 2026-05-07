@@ -1,6 +1,7 @@
 const Event = require('../models/event');
 const Category = require('../models/categoryModel');
 const Booking = require('../models/bookingModel');
+const User = require('../models/user');
 const path = require('path');
 const fs = require('fs');
 
@@ -267,6 +268,52 @@ exports.postEditEvent = async (req, res) => {
         }
 
         await event.save();
+
+        // --- Create Notifications for Confirmed Bookers ---
+        try {
+            const confirmedBookings = await Booking.find({ eventId: event._id, status: 'confirmed' });
+            const userEmails = [...new Set(confirmedBookings.map(b => b.userEmail))];
+
+            if (userEmails.length > 0) {
+                const notification = {
+                    type: 'event_update',
+                    eventId: event._id,
+                    eventName: event.eventName,
+                    message: `Event details have been updated: ${event.eventName}`,
+                    link: `/event/${event._id}`,
+                    isRead: false,
+                    createdAt: new Date()
+                };
+
+                // Add notification to users who don't already have an unread 'event_update' for this event
+                // This prevents spamming if the admin edits multiple times rapidly
+                await User.updateMany(
+                    { 
+                        email: { $in: userEmails },
+                        notifications: { 
+                            $not: { 
+                                $elemMatch: { 
+                                    eventId: event._id, 
+                                    type: 'event_update', 
+                                    isRead: false 
+                                } 
+                            } 
+                        } 
+                    },
+                    { 
+                        $push: { 
+                            notifications: { 
+                                $each: [notification], 
+                                $position: 0 
+                            } 
+                        } 
+                    }
+                );
+            }
+        } catch (notifErr) {
+            console.error('Error creating notifications:', notifErr);
+            // Don't fail the event update if notifications fail
+        }
 
         req.flash('success', 'Event updated successfully!');
         res.redirect('/admin/dashboard');

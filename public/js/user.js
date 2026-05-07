@@ -65,3 +65,14 @@
       });
     });
   });
+
+  async function markAsRead(notifId) {
+      try {
+          await fetch(`/notifications/mark-as-read/${notifId}`, { method: 'POST' });
+          // Optional: update UI without reload if needed, but reload is simpler for now
+          // to update the unread dot and other counters if any.
+          // window.location.reload(); 
+      } catch (err) {
+          console.error("Failed to mark notification as read", err);
+      }
+  }

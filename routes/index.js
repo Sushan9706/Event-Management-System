@@ -76,6 +76,8 @@ router.post('/dummy-esewa/pay', isLoggedIn, dummyEsewaController.pay);
 router.post('/dummy-esewa/cancel', isLoggedIn, dummyEsewaController.cancel);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
+router.get('/notifications', isLoggedIn, userController.getUserNotifications);
+router.post('/notifications/mark-as-read/:notifId', isLoggedIn, userController.markNotificationAsRead);
 router.get('/events/search', userController.searchEvents);
 
 

@@ -508,3 +508,37 @@ svg {
   font-size: 11px;
   color: var(--text-mid);
 }
+
+/* New Notification Styles */
+.notif-item--unread {
+  background: #fdf2f2;
+  border-left: 3px solid #e74c3c;
+}
+
+.notif-item-link {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 11px;
+  display: block;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.notif-item-link:hover {
+  text-decoration: underline;
+}
+
+.mark-read-btn {
+  font-size: 10px;
+  color: var(--blue);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mark-read-btn:hover {
+  text-decoration: underline;
+}

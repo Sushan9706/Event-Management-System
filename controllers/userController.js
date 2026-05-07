@@ -370,6 +370,10 @@ exports.cancelBooking = async (req, res) => {
             if (user.notifications.length > 20) {
                 user.notifications = user.notifications.slice(0, 20);
             }
+            // Remove any 'event_update' notifications for this event since booking is cancelled
+            user.notifications = user.notifications.filter(n => 
+                !(n.eventId && n.eventId.toString() === eventId && n.type === 'event_update')
+            );
         }
         await user.save();
 
@@ -566,6 +570,20 @@ exports.cancelBookingById = async (req, res) => {
         });
         if (user.notifications.length > 20) {
             user.notifications = user.notifications.slice(0, 20);
+        }
+
+        // Remove any 'event_update' notifications for this event since booking is cancelled
+        // We only do this if the user has NO more active bookings for this event
+        const remainingActiveCount = await bookingModel.countDocuments({
+            eventId: booking.eventId,
+            userEmail: user.email,
+            status: { $nin: ["cancelled", "expired"] }
+        });
+
+        if (remainingActiveCount === 0) {
+            user.notifications = user.notifications.filter(n => 
+                !(n.eventId && n.eventId.toString() === booking.eventId.toString() && n.type === 'event_update')
+            );
         }
 
         if (isFullCancel) {
@@ -993,4 +1011,31 @@ exports.updateProfileInfo = async (req, res) => {
 exports.logout = (req, res) => {
   res.cookie("token", "");
   res.redirect("/login");
+};
+
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { notifId } = req.params;
+    const userId = req.user.userId;
+
+    await userModel.updateOne(
+      { _id: userId, "notifications._id": notifId },
+      { $set: { "notifications.$.isRead": true } }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error marking notification as read:", err);
+    res.status(500).json({ success: false, error: "Failed to update notification" });
+  }
+};
+
+exports.getUserNotifications = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.userId).select('notifications');
+    res.json(user.notifications || []);
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
 };
