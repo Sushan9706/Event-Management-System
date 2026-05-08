@@ -386,6 +386,14 @@
         }
       }
 
+      function stopCountdown() {
+        if (countdownTimer) {
+          window.clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+        timerCard.hidden = true;
+      }
+
       function applyStatus(status, message, actionHref, actionLabel) {
         paymentStatus.textContent = status;
         statusMessage.textContent = message;
@@ -397,22 +405,21 @@
           statusIcon.style.background = "#edf7ef";
           statusIcon.style.color = "#2f8f46";
           statusTitle.textContent = isFreeBooking ? "Booking Successful" : "Payment Successful";
-          if (countdownTimer) {
-            window.clearInterval(countdownTimer);
-            countdownTimer = null;
-          }
-          timerCard.hidden = true;
+          stopCountdown();
           runBalloonCelebration();
         } else if (status === "Pending") {
           statusIcon.textContent = "!";
           statusIcon.style.background = "#fff4df";
           statusIcon.style.color = "#bb7d1f";
           statusTitle.textContent = "Payment Pending";
+          // timer keeps running — payment window still active
         } else {
+          // Failed, Cancelled, Expired, or any other terminal state
           statusIcon.textContent = "×";
           statusIcon.style.background = "#fdeceb";
           statusIcon.style.color = "#c0392b";
-          statusTitle.textContent = "Payment Failed or Cancelled";
+          statusTitle.textContent = status === "Expired" ? "Payment Window Expired" : "Payment Failed or Cancelled";
+          stopCountdown();
         }
       }
 
@@ -433,14 +440,11 @@
             countdownValue.textContent = "00:00";
             if (paymentStatus.textContent !== "Completed") {
               applyStatus("Expired", "The 30-minute payment window expired. Please start again.", "/bookings", "Back to My Bookings");
-            }
-            if (countdownTimer) {
-              window.clearInterval(countdownTimer);
-              countdownTimer = null;
+            } else {
+              stopCountdown();
             }
             return;
           }
-
           countdownValue.textContent = formatCountdown(remaining);
         };
 
