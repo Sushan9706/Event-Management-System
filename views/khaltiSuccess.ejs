@@ -276,12 +276,12 @@
       </div>
 
       <section class="status-card">
-        <p class="eyebrow" id="providerLabel">Khalti</p>
+        <p class="eyebrow" id="providerLabel"><%= provider === 'free' ? 'EMS' : 'Khalti' %></p>
         <div class="headline">
           <div class="icon" id="statusIcon">…</div>
           <div>
-            <h1 id="statusTitle">Verifying payment...</h1>
-            <p class="copy" id="statusMessage">We are checking the Khalti payment status before confirming your booking.</p>
+            <h1 id="statusTitle"><%= provider === 'free' ? 'Booking Successful' : 'Verifying payment...' %></h1>
+            <p class="copy" id="statusMessage"><%= provider === 'free' ? 'Your booking is confirmed and ready inside My Bookings.' : 'We are checking the Khalti payment status before confirming your booking.' %></p>
           </div>
         </div>
 
@@ -318,6 +318,7 @@
       const metaLabel = document.getElementById("metaLabel");
       const timerCard = document.getElementById("timerCard");
       const countdownValue = document.getElementById("countdownValue");
+      const isFreeBooking = "<%= provider %>" === "free";
       let celebrationPlayed = false;
       const paymentDeadline = Number(<%- JSON.stringify(expiresAt || null) %>) || null;
       let countdownTimer = null;
@@ -395,7 +396,7 @@
           statusIcon.textContent = "✓";
           statusIcon.style.background = "#edf7ef";
           statusIcon.style.color = "#2f8f46";
-          statusTitle.textContent = "Payment Successful";
+          statusTitle.textContent = isFreeBooking ? "Booking Successful" : "Payment Successful";
           if (countdownTimer) {
             window.clearInterval(countdownTimer);
             countdownTimer = null;
@@ -484,8 +485,19 @@
       }
 
       metaLabel.textContent = "<%= eventName ? 'EVENT' : 'PIDX' %>";
-      startCountdown();
-      verifyKhaltiPayment();
+
+      if (isFreeBooking) {
+        const freeBookingId = "<%= bookingId %>";
+        applyStatus(
+          "Completed",
+          "Your booking is confirmed and ready inside My Bookings.",
+          freeBookingId ? `/bookings/manage/${freeBookingId}` : "/bookings",
+          freeBookingId ? "View Booking" : "Go to My Bookings"
+        );
+      } else {
+        startCountdown();
+        verifyKhaltiPayment();
+      }
     </script>
   </body>
 </html>

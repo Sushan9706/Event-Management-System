@@ -933,21 +933,8 @@
             return;
           }
 
-          const serverTotal = typeof data.totalAmount === "number" ? data.totalAmount : totalAmount;
-          const displayNames = Array.isArray(data.attendeeNames) && data.attendeeNames.length ? data.attendeeNames : attendeeNames;
-          bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Attendees: ${displayNames.join(", ")} · Tickets: ${ticketCount} · Total: ${formatAmount(serverTotal, pricePerTicket)}`;
-          bookingFormView.style.display = "none";
-          bookingSuccessView.style.display = "block";
-          lastBookingId = data.bookingId || null;
-          if (downloadTicketBtn) {
-            if (lastBookingId) {
-              downloadTicketBtn.disabled = false;
-              downloadTicketBtn.dataset.bookingId = lastBookingId;
-            } else {
-              downloadTicketBtn.disabled = true;
-              downloadTicketBtn.dataset.bookingId = "";
-            }
-          }
+          const bookingId = data.bookingId || null;
+          window.location.href = `/payments/khalti/success?provider=free&bookingId=${encodeURIComponent(bookingId || '')}&eventName=${encodeURIComponent(eventName || '')}`;
         } catch (err) {
           bookingError.textContent = "Booking failed. Please try again.";
         }

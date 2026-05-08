@@ -408,7 +408,9 @@ exports.getPaymentSuccessPage = (req, res) => {
         provider,
         pidx,
         bookingId: String(req.query.bookingId || (checkout && checkout.bookingId) || '').trim(),
-        eventName: checkout && checkout.purchaseOrderName ? String(checkout.purchaseOrderName) : '',
+        eventName: checkout && checkout.purchaseOrderName
+            ? String(checkout.purchaseOrderName)
+            : String(req.query.eventName || '').trim(),
         expiresAt: checkout && checkout.expiresAt ? checkout.expiresAt : null,
         frontendBaseUrl: getFrontendBaseUrl(req),
         backendBaseUrl: getBackendBaseUrl(req)
