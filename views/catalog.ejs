@@ -213,10 +213,11 @@
             Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day:
             '2-digit', year: 'numeric' }); let eventEndDate = new
             Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day:
-            '2-digit', year: 'numeric' }); let eventDateDisplay = eventStartDate ===
-            eventEndDate ? eventStartDate : `${eventStartDate} - ${eventEndDate}`;
-            let isFree = event.ticketPrice === 0; let displayPrice = isFree ? "Free"
-            : "$" + event.ticketPrice.toFixed(2); %>
+            '2-digit', year: 'numeric' }); 
+            let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} - ${eventEndDate}`;
+            let price = typeof event.ticketPrice === 'number' ? event.ticketPrice : 0;
+            let isFree = price === 0; 
+            let displayPrice = isFree ? "Free" : "$" + price.toFixed(2); %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
               data-date="<%= event.startDate %>">
               <div class="card-img">

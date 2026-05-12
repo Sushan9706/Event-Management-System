@@ -802,7 +802,7 @@ exports.getCatalog = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Fetch the full user document if logged in; otherwise allow guest view
+    // 1. Determine user identity (check cookie if not in req.user)
     let fullUser = null;
     if (!req.user) {
       const token = req.cookies && req.cookies.token;
@@ -820,7 +820,7 @@ exports.getCatalog = async (req, res) => {
       fullUser = await userModel.findById(req.user.userId);
     }
 
-    // Fetch events where endDate is today or in the future
+    // 2. Fetch events
     let events = await eventModel
       .find({
         endDate: { $gte: today },
@@ -829,16 +829,21 @@ exports.getCatalog = async (req, res) => {
       .populate("categoryId")
       .lean();
 
-    // Filter out events that have already ended precisely (date + time)
-    events = events.filter((event) => !hasEventEnded(event));
+    // 3. Filter events
+    events = (events || []).filter((event) => !hasEventEnded(event));
 
+    // 4. Render once
     res.render("catalog", {
       events: events,
       user: fullUser,
-      notifications: fullUser ? fullUser.notifications || [] : [],
+      notifications: fullUser ? (fullUser.notifications || []) : []
     });
   } catch (err) {
-    console.error("Error loading catalog:", err);
+    console.error("CATALOG LOAD ERROR DETAIL:", {
+      message: err.message,
+      stack: err.stack,
+      userId: req.user ? req.user.userId : 'guest'
+    });
     res.status(500).send("Error loading catalog");
   }
 };
