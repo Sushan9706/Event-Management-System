@@ -4,6 +4,8 @@ const userModel = require("../models/user");
 const eventModel = require("../models/event");
 const categoryModel = require("../models/categoryModel");
 const mongoose = require("mongoose");
+const EmailVerification = require("../models/emailVerification");
+const emailService = require("../utils/emailService");
 const {
   syncBookingExpiry,
   syncBookingsExpiry,
@@ -16,6 +18,8 @@ exports.getRegister = (req, res) => {
 exports.postRegister = async (req, res) => {
   try {
     let { username, email, password, confirmPassword } = req.body;
+    username = (username || "").trim().toLowerCase();
+    email = (email || "").trim().toLowerCase();
     const errors = [];
 
     // 1. Unified Password Validation (Regex)
@@ -47,11 +51,18 @@ exports.postRegister = async (req, res) => {
       });
     }
 
-    // 4. Check for existing email
-    let existingUser = await userModel.findOne({ email: email.toLowerCase() });
+    // 4. Check for existing email or username
+    const existingUser = await userModel.findOne({
+      $or: [
+        { email: email },
+        { username: username }
+      ]
+    });
+
     if (existingUser) {
+      const field = existingUser.email === email ? "email" : "username";
       return res.render("register", {
-        error: ["An account with this email already exists."],
+        error: [`An account with this ${field} already exists.`],
         formData: { username, email },
       });
     }
@@ -993,4 +1004,167 @@ exports.updateProfileInfo = async (req, res) => {
 exports.logout = (req, res) => {
   res.cookie("token", "");
   res.redirect("/login");
+};
+
+// --- PASSWORD RESET FLOW ---
+
+// 1. Forgot Password - Render Email Entry Page
+exports.getForgotPassword = (req, res) => {
+    res.render("reset-password");
+};
+
+// 2. Forgot Password - Handle Email Submission & Send Code
+exports.postForgotPassword = async (req, res) => {
+    try {
+        let { email } = req.body;
+        email = (email || "").trim().toLowerCase();
+        console.log(`Password reset requested for: '${email}'`);
+
+        const user = await userModel.findOne({ email: email });
+
+        if (!user) {
+            console.log(`User not found for email: '${email}'`);
+            req.flash('error', 'No account found with that email address.');
+            return res.redirect('/reset-password');
+        }
+
+        // Generate 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        console.log(`Generated code ${code} for ${email}, expires at ${expiresAt}`);
+
+        // Invalidate previous codes for this email
+        await EmailVerification.deleteMany({ email: email.toLowerCase() });
+
+        // Save new code
+        await EmailVerification.create({
+            email: email.toLowerCase(),
+            code,
+            expiresAt
+        });
+        console.log(`Code saved to database for ${email}`);
+
+        // Send email
+        const emailResult = await emailService.sendResetCode(email, code);
+
+        if (!emailResult.success) {
+            console.error(`Failed to send email to ${email}:`, emailResult.error);
+            req.flash('error', 'Failed to send verification email. Please try again.');
+            return res.redirect('/reset-password');
+        }
+
+        console.log(`Email sent successfully to ${email}`);
+
+        // Store email in session for the next steps
+        req.session.resetEmail = email.toLowerCase();
+        
+        req.flash('success', 'Verification code sent to your email.');
+        res.redirect('/verify-code');
+    } catch (err) {
+        console.error('Forgot Password Error:', err);
+        req.flash('error', 'An unexpected error occurred. Please try again.');
+        res.redirect('/reset-password');
+    }
+};
+
+// 3. Verify Code - Render Page
+exports.getVerifyCode = (req, res) => {
+    if (!req.session.resetEmail) {
+        return res.redirect('/reset-password');
+    }
+    res.render("verify-code", { 
+        email: req.session.resetEmail
+    });
+};
+
+// 4. Verify Code - Handle Submission
+exports.postVerifyCode = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const email = req.session.resetEmail;
+
+        if (!email) {
+            return res.redirect('/reset-password');
+        }
+
+        const verification = await EmailVerification.findOne({
+            email,
+            code,
+            expiresAt: { $gt: new Date() },
+            used: false
+        });
+
+        if (!verification) {
+            req.flash('error', 'Invalid or expired verification code.');
+            return res.redirect('/verify-code');
+        }
+
+        // Mark code as "verified" in session (but not used yet until password is set)
+        req.session.codeVerified = true;
+        
+        res.redirect('/create-password');
+    } catch (err) {
+        console.error('Verify Code Error:', err);
+        req.flash('error', 'An error occurred during verification.');
+        res.redirect('/verify-code');
+    }
+};
+
+// 5. Create Password - Render Page
+exports.getCreatePassword = (req, res) => {
+    if (!req.session.resetEmail || !req.session.codeVerified) {
+        return res.redirect('/reset-password');
+    }
+    res.render("create-password");
+};
+
+// 6. Create Password - Handle Submission
+exports.postCreatePassword = async (req, res) => {
+    try {
+        const { password, confirmPassword } = req.body;
+        const email = req.session.resetEmail;
+
+        if (!email || !req.session.codeVerified) {
+            return res.redirect('/reset-password');
+        }
+
+        // Validation
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])(?!.*\s).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            req.flash('error', 'Password must be at least 8 characters long and include letters, numbers, and symbols.');
+            return res.redirect('/create-password');
+        }
+
+        if (password !== confirmPassword) {
+            req.flash('error', 'Passwords do not match.');
+            return res.redirect('/create-password');
+        }
+
+        // Update user password
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            req.flash('error', 'User not found.');
+            return res.redirect('/reset-password');
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+        user.password = hash;
+        await user.save();
+
+        // Invalidate the code
+        await EmailVerification.updateOne({ email, used: false }, { used: true });
+
+        // Clear session
+        delete req.session.resetEmail;
+        delete req.session.codeVerified;
+
+        req.flash('success', 'Password reset successful! You can now login with your new password.');
+        res.redirect('/login');
+    } catch (err) {
+        console.error('Create Password Error:', err);
+        req.flash('error', 'Failed to update password. Please try again.');
+        res.redirect('/create-password');
+    }
 };

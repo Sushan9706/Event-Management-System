@@ -12,6 +12,8 @@ const flash = require("connect-flash");
 // routes
 const indexRouter = require("./routes/index");
 const adminRoutes = require("./routes/adminRoutes");
+const User = require("./models/user");
+const Booking = require("./models/bookingModel");
 
 const app = express();
 
@@ -43,65 +45,40 @@ app.use(async (req, res, next) => {
   const jwt = require("jsonwebtoken");
   const token = req.cookies.token;
   res.locals.user = null;
+  res.locals.notifications = [];
+
   if (token) {
     try {
       const decoded = jwt.verify(token, "shhhhhhhhh");
-      res.locals.user = decoded;
       req.user = decoded;
-    } catch (err) {
-      res.locals.user = null;
-      req.user = null;
-    }
-  }
+      res.locals.user = decoded;
 
-  res.locals.notifications = [];
-  if (res.locals.user && res.locals.user.userId) {
-    try {
-      const User = require("./models/user");
-      const Booking = require("./models/bookingModel");
-      const userDoc = await User.findById(res.locals.user.userId).select(
+      // Fetch user data for the navbar/sidebar (cached in res.locals)
+      const userDoc = await User.findById(decoded.userId).select(
         "notifications email profileImage username bookedEvents"
-      );
+      ).lean(); // Use lean() for better performance as we don't need Mongoose methods here
+
       if (userDoc) {
-        res.locals.user.email = userDoc.email;
-        res.locals.user.profileImage = userDoc.profileImage;
-        res.locals.user.username = userDoc.username;
-        res.locals.user.bookedEvents = userDoc.bookedEvents;
-      }
-      if (
-        userDoc &&
-        Array.isArray(userDoc.notifications) &&
-        userDoc.notifications.length > 0
-      ) {
-        res.locals.notifications = userDoc.notifications
-          .slice()
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5);
-      } else if (userDoc && userDoc.email) {
-        const recentBookings = await Booking.find({ userEmail: userDoc.email })
-          .populate("eventId")
-          .sort({ createdAt: -1 })
-          .limit(5);
-        const fallbackNotifications = recentBookings.map((booking) => ({
-          type:
-            booking.status === "cancelled"
-              ? "booking_cancelled"
-              : "booking_confirmed",
-          eventId: booking.eventId ? booking.eventId._id : booking.eventId,
-          eventName: booking.eventId
-            ? booking.eventId.eventName || booking.eventId.title || "Event"
-            : "Event",
-          ticketCount: booking.ticketCount || 1,
-          createdAt: booking.createdAt,
-        }));
-        res.locals.notifications = fallbackNotifications;
-        if (fallbackNotifications.length > 0) {
-          userDoc.notifications = fallbackNotifications;
-          await userDoc.save();
+        // Merge DB data into res.locals.user
+        Object.assign(res.locals.user, {
+            email: userDoc.email,
+            profileImage: userDoc.profileImage,
+            username: userDoc.username,
+            bookedEvents: userDoc.bookedEvents
+        });
+
+        // Set notifications from user doc
+        if (Array.isArray(userDoc.notifications)) {
+          res.locals.notifications = userDoc.notifications
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5);
         }
       }
     } catch (err) {
-      res.locals.notifications = [];
+      console.error("Auth Middleware Error:", err);
+      res.locals.user = null;
+      req.user = null;
     }
   }
 
