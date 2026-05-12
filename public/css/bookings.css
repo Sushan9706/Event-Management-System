@@ -548,3 +548,11 @@ a {
     align-items: flex-start;
   }
 }
+.notif-dropdown {
+  display: none;
+}
+
+.notif-dropdown.open {
+  display: block;
+}
+

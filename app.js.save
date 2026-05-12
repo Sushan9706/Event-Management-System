@@ -131,7 +131,7 @@ app.post("/notifications/mark-all-read", async (req, res) => {
 app.use("/", indexRouter);
 app.use("/admin", adminRoutes);
 app.use("/event", eventRoutes);
-app.use("/venues", require("./routes/venuesRoutes"));
+app.use("/venues", require("./routes/venueRoutes"));
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
@@ -147,5 +147,13 @@ console.log(
 console.log(
   app._router.stack.map((r) => r.route && r.route.path).filter(Boolean)
 );
+app.use((req, res) => {
+  res.status(404).render("404", { title: "404 - Page Not Found" });
+});
+
+const venueRoutes = require("./routes/venueRoutes");
+app.use("/", venueRoutes);
 
 module.exports = app;
+X
+

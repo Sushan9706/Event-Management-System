@@ -542,3 +542,11 @@ svg {
 .mark-read-btn:hover {
   text-decoration: underline;
 }
+
+.notif-dropdown {
+  display: none;
+}
+
+.notif-dropdown.open {
+  display: block;
+}

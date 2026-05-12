@@ -1,43 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMS – My Bookings</title>
-    <link rel="stylesheet" href="/css/bookings.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <%
-      const bookingList = bookings || [];
-      const normalizeStatus = (status) => {
-        const value = (status || 'confirmed').toLowerCase();
-        return ['cancelled', 'expired'].includes(value) ? value : 'confirmed';
-      };
-      const confirmedCount = bookingList.filter(b => normalizeStatus(b.status) === 'confirmed').length;
-      const expiredCount = bookingList.filter(b => normalizeStatus(b.status) === 'expired').length;
-      const cancelledCount = bookingList.filter(b => normalizeStatus(b.status) === 'cancelled').length;
-      const activeStatus = (typeof initialStatus === 'string' && ['cancelled', 'expired'].includes(initialStatus)) ? initialStatus : 'confirmed';
-      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
-      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
-      const formatNotifTime = (date) => {
-        if (!date) return "Just now";
-        const d = new Date(date);
-        if (Number.isNaN(d.getTime())) return "Just now";
-        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-      };
-    %>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS – My Bookings</title>
+  <link rel="stylesheet" href="/css/bookings.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+  <% const bookingList=bookings || []; const normalizeStatus=(status)=> {
+    const value = (status || 'confirmed').toLowerCase(); return ['cancelled',
+    'expired'].includes(value) ? value : 'confirmed'; }; const confirmedCount =
+    bookingList.filter(b => normalizeStatus(b.status) === 'confirmed').length;
+    const expiredCount = bookingList.filter(b => normalizeStatus(b.status) ===
+    'expired').length; const cancelledCount = bookingList.filter(b =>
+    normalizeStatus(b.status) === 'cancelled').length; const activeStatus =
+    (typeof initialStatus === 'string' && ['cancelled',
+    'expired'].includes(initialStatus)) ? initialStatus : 'confirmed'; const
+    notifications = Array.isArray(locals.notifications) ? locals.notifications :
+    []; const formatTicketCount = (count) => `${count} ticket${count === 1 ? ''
+    : 's'}`; const formatNotifTime = (date) => { if (!date) return "Just now";
+    const d = new Date(date); if (Number.isNaN(d.getTime())) return "Just now";
+    return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour:
+    "2-digit", minute: "2-digit" }); }; %>
     <header class="navbar">
       <div class="nav-inner">
         <div class="nav-logo">EMS</div>
         <nav class="nav-links">
           <a href="/user" class="nav-item">Home</a>
           <a href="/catalog" class="nav-item">Events</a>
+          <a href="/venues" class="nav-item">Venues</a>
           <a href="/bookings" class="nav-item active">My Bookings</a>
         </nav>
         <div class="nav-right">
@@ -47,36 +45,86 @@
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
-              <% if (notifications.length > 0) { %>
+              <% if (notifications.some(function(n){ return !n.isRead; })) { %>
                 <span class="notif-dot"></span>
-              <% } %>
+                <% } %>
             </button>
-            <div class="bell-dropdown" id="bellDropdown">
-              <% if (notifications.length === 0) { %>
-                No new notifications
-              <% } else { %>
-                <% notifications.forEach(function(note) { 
-                    const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
-                    const eventTitle = note.eventName || 'Event';
-                    const countLabel = formatTicketCount(note.ticketCount || 1);
-                    const timeLabel = formatNotifTime(note.createdAt);
-                %>
-                  <div class="notif-item">
-                    <p class="notif-title"><%= title %></p>
-                    <p class="notif-sub"><%= eventTitle %> · <%= countLabel %></p>
-                    <p class="notif-time"><%= timeLabel %></p>
-                  </div>
-                <% }) %>
-              <% } %>
-            </div>
+            <% var _notifs=Array.isArray(locals.notifications) ? locals.notifications : []; var
+              _unread=_notifs.filter(function(n){ return !n.isRead; }).length; var _formatTime=function(date) { if
+              (!date) return 'Just now' ; var d=new Date(date); if (Number.isNaN(d.getTime())) return 'Just now' ;
+              return d.toLocaleString('en-US', { month: 'short' , day: '2-digit' , hour: '2-digit' , minute: '2-digit'
+              }); }; %>
+              <div class="notif-dropdown" id="notifDropdown">
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 0 0 10px 0;
+                ">
+                  <p class="notif-title" style="margin: 0">NOTIFICATIONS</p>
+                  <% if (_unread> 0) { %>
+                    <button id="markAllReadBtn" onclick="markAllNotificationsRead()" style="
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #e74c3c;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0;
+                    letter-spacing: 0.03em;
+                  ">
+                      MARK ALL READ
+                    </button>
+                    <% } %>
+                </div>
+                <% if (_notifs.length===0) { %>
+                  <p class="notif-empty">No new notifications</p>
+                  <% } else { %>
+                    <% _notifs.forEach(function(note) { var title='Notification' ; var sub=note.eventName || 'Event' ;
+                      var isLink=false; var eventLink=note.link || (note.eventId ? '/event/' + note.eventId : '#' ); var
+                      count=note.ticketCount || 1; if (note.type==='booking_confirmed' ) { title='Booking Confirmed' ;
+                      sub=(note.eventName || 'Event' ) + ' · ' + count + ' ticket' + (count===1 ? '' : 's' ); } else if
+                      (note.type==='booking_cancelled' ) { title='Booking Cancelled' ; sub=(note.eventName || 'Event' )
+                      + ' · ' + count + ' ticket' + (count===1 ? '' : 's' ); } else if (note.type==='event_update' ) {
+                      title='Event Updated' ; sub=(note.eventName || 'Event' ) + ' details have been updated.' ;
+                      isLink=true; } else if (note.type==='event_cancelled' ) { title='Event Cancelled' ;
+                      sub=(note.eventName || 'Event' ) + (note.eventDate ? ' · ' + note.eventDate : '' )
+                      + ' has been cancelled.' ; } var timeLabel=_formatTime(note.createdAt); var isUnread=!note.isRead;
+                      %>
+                      <div class="notif-item <%= isUnread ? 'notif-item--unread' : '' %>">
+                        <% if (isLink) { %>
+                          <a href="<%= eventLink %>" style="text-decoration: none; color: inherit; display: block">
+                            <p class="notif-item-title">
+                              <%= title %>
+                            </p>
+                            <p class="notif-item-sub">
+                              <%= sub %>
+                            </p>
+                            <p class="notif-time">
+                              <%= timeLabel %>
+                            </p>
+                          </a>
+                          <% } else { %>
+                            <p class="notif-item-title">
+                              <%= title %>
+                            </p>
+                            <p class="notif-item-sub">
+                              <%= sub %>
+                            </p>
+                            <p class="notif-time">
+                              <%= timeLabel %>
+                            </p>
+                            <% } %>
+                      </div>
+                      <% }); %>
+                        <% } %>
+              </div>
           </div>
           <div class="avatar-btn" id="avatarBtn">
             <img
               src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-              alt="User avatar"
-              class="avatar-circle"
-              onerror="this.style.background='#3b4254';this.removeAttribute('src')"
-            />
+              alt="User avatar" class="avatar-circle"
+              onerror="this.style.background='#3b4254';this.removeAttribute('src')" />
           </div>
         </div>
       </div>
@@ -85,14 +133,29 @@
     <main class="page-shell">
       <section class="page-hero">
         <h1>My Bookings</h1>
-        <p>Manage your upcoming experiences and track past attendances in our curated environment.</p>
+        <p>
+          Manage your upcoming experiences and track past attendances in our
+          curated environment.
+        </p>
       </section>
 
       <section class="booking-controls">
         <div class="tabs">
-          <button class="tab <%= activeStatus === 'confirmed' ? 'active' : '' %>" data-status="confirmed">CONFIRMED <span><%= confirmedCount %></span></button>
-          <button class="tab <%= activeStatus === 'expired' ? 'active' : '' %>" data-status="expired">EXPIRED <span><%= expiredCount %></span></button>
-          <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">CANCELLED <span><%= cancelledCount %></span></button>
+          <button class="tab <%= activeStatus === 'confirmed' ? 'active' : '' %>" data-status="confirmed">
+            CONFIRMED <span>
+              <%= confirmedCount %>
+            </span>
+          </button>
+          <button class="tab <%= activeStatus === 'expired' ? 'active' : '' %>" data-status="expired">
+            EXPIRED <span>
+              <%= expiredCount %>
+            </span>
+          </button>
+          <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">
+            CANCELLED <span>
+              <%= cancelledCount %>
+            </span>
+          </button>
         </div>
         <div class="filters">
           <button class="filter-btn" type="button" id="filterToggle">
@@ -108,53 +171,65 @@
       </section>
 
       <section class="booking-list">
-        <% if (bookingList.length === 0) { %>
+        <% if (bookingList.length===0) { %>
           <div class="empty-state">
             <p>You have no bookings yet.</p>
             <a href="/catalog" class="link-btn">Browse events</a>
           </div>
-        <% } else { %>
-          <% bookingList.forEach(function(booking) { 
-              const event = booking.eventId;
-              const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
-              const eventDate = event && event.startDate 
-                ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
-                : 'TBA';
-              const eventDateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
-              const eventLocation = event && event.location ? event.location : 'TBA';
-              const eventImage = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
-              const ticketCount = booking.ticketCount || 1;
-              const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
-              const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
-              const statusGroup = normalizeStatus(booking.status);
-              const actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
-          %>
-            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
-              <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>" onerror="this.style.display='none'" />
-              <div class="booking-meta">
-                <p class="label">EVENT NAME</p>
-                <h3><%= eventName %></h3>
-              </div>
-              <div class="booking-meta">
-                <p class="label">REFERENCE</p>
-                <div class="reference-pill"><%= booking.referenceNumber || '-' %></div>
-              </div>
-              <div class="booking-meta">
-                <p class="label">DATE & LOCATION</p>
-                <p class="date"><%= eventDate %></p>
-                <p class="location"><%= eventLocation %></p>
-              </div>
-              <div class="booking-meta">
-                <p class="label">TICKETS</p>
-                <p class="value"><%= ticketCount %> · <%= totalDisplay %></p>
-              </div>
-              <div class="booking-actions">
-                <span class="status <%= statusGroup %>"><%= statusGroup.toUpperCase() %></span>
-                <a href="/bookings/manage/<%= booking._id %>" class="manage-btn"><%= actionLabel %></a>
-              </div>
-            </article>
-          <% }); %>
-        <% } %>
+          <% } else { %>
+            <% bookingList.forEach(function(booking) { const event=booking.eventId; const eventName=event ?
+              (event.eventName || event.title || event.name) : 'Event' ; const eventDate=event && event.startDate ? new
+              Date(event.startDate).toLocaleDateString('en-US', { month: 'short' , day: '2-digit' , year: 'numeric' })
+              : 'TBA' ; const eventDateIso=event && event.startDate ? new
+              Date(event.startDate).toISOString().slice(0,10) : '' ; const eventLocation=event && event.location ?
+              event.location : 'TBA' ; const eventImage=event && event.image ? event.image
+              : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop' ; const
+              ticketCount=booking.ticketCount || 1; const totalAmount=typeof booking.totalAmount==='number' ?
+              booking.totalAmount : (booking.unitPrice || 0) * ticketCount; const totalDisplay=(booking.unitPrice===0 ||
+              totalAmount===0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) :
+              totalAmount.toFixed(2)}`; const statusGroup=normalizeStatus(booking.status); const
+              actionLabel=statusGroup==='confirmed' ? 'Manage' : 'View' ; %>
+              <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
+                <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>"
+                  onerror="this.style.display='none'" />
+                <div class="booking-meta">
+                  <p class="label">EVENT NAME</p>
+                  <h3>
+                    <%= eventName %>
+                  </h3>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">REFERENCE</p>
+                  <div class="reference-pill">
+                    <%= booking.referenceNumber || '-' %>
+                  </div>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">DATE & LOCATION</p>
+                  <p class="date">
+                    <%= eventDate %>
+                  </p>
+                  <p class="location">
+                    <%= eventLocation %>
+                  </p>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">TICKETS</p>
+                  <p class="value">
+                    <%= ticketCount %> · <%= totalDisplay %>
+                  </p>
+                </div>
+                <div class="booking-actions">
+                  <span class="status <%= statusGroup %>">
+                    <%= statusGroup.toUpperCase() %>
+                  </span>
+                  <a href="/bookings/manage/<%= booking._id %>" class="manage-btn">
+                    <%= actionLabel %>
+                  </a>
+                </div>
+              </article>
+              <% }); %>
+                <% } %>
       </section>
     </main>
 
@@ -170,102 +245,161 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="avatar-sidebar" id="avatarSidebar">
       <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User'
+          %>
       </div>
-      
+
       <div class="sidebar-divider"></div>
 
       <a href="/profile" class="sidebar-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
         My Profile
       </a>
 
       <div class="sidebar-divider"></div>
 
       <a href="/logout" class="sidebar-logout" id="logoutBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
         Log Out
       </a>
     </aside>
 
     <script>
-      const tabs = document.querySelectorAll('.tab');
-      const cards = document.querySelectorAll('.booking-card');
-      const dateFilter = document.getElementById('dateFilter');
-      const filterToggle = document.getElementById('filterToggle');
+      const tabs = document.querySelectorAll(".tab");
+      const cards = document.querySelectorAll(".booking-card");
+      const dateFilter = document.getElementById("dateFilter");
+      const filterToggle = document.getElementById("filterToggle");
 
       function setActiveTab(status) {
-        tabs.forEach(t => t.classList.remove('active'));
-        const target = Array.from(tabs).find(t => t.dataset.status === status);
-        if (target) target.classList.add('active');
+        tabs.forEach((t) => t.classList.remove("active"));
+        const target = Array.from(tabs).find(
+          (t) => t.dataset.status === status
+        );
+        if (target) target.classList.add("active");
       }
 
-      const urlStatus = new URLSearchParams(window.location.search).get('status');
-      if (urlStatus === 'cancelled' || urlStatus === 'confirmed' || urlStatus === 'expired') {
+      const urlStatus = new URLSearchParams(window.location.search).get(
+        "status"
+      );
+      if (
+        urlStatus === "cancelled" ||
+        urlStatus === "confirmed" ||
+        urlStatus === "expired"
+      ) {
         setActiveTab(urlStatus);
       }
 
       function applyFilters() {
-        const activeStatus = document.querySelector('.tab.active')?.dataset.status || 'confirmed';
+        const activeStatus =
+          document.querySelector(".tab.active")?.dataset.status || "confirmed";
         const dateValue = dateFilter.value;
-        cards.forEach(card => {
+        cards.forEach((card) => {
           const matchesStatus = card.dataset.status === activeStatus;
           const matchesDate = !dateValue || card.dataset.date === dateValue;
-          card.style.display = matchesStatus && matchesDate ? 'grid' : 'none';
+          card.style.display = matchesStatus && matchesDate ? "grid" : "none";
         });
       }
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
           applyFilters();
         });
       });
 
-      filterToggle.addEventListener('click', () => {
-        dateFilter.classList.toggle('open');
-        if (!dateFilter.classList.contains('open')) {
-          dateFilter.value = '';
+      filterToggle.addEventListener("click", () => {
+        dateFilter.classList.toggle("open");
+        if (!dateFilter.classList.contains("open")) {
+          dateFilter.value = "";
           applyFilters();
         }
       });
 
-      dateFilter.addEventListener('change', applyFilters);
+      dateFilter.addEventListener("change", applyFilters);
 
       applyFilters();
 
-      const bellBtn = document.getElementById('bellBtn');
-      const bellDropdown = document.getElementById('bellDropdown');
+      const bellBtn = document.getElementById("bellBtn");
+      const bellDropdown = document.getElementById("notifDropdown");
       if (bellBtn && bellDropdown) {
-        bellBtn.addEventListener('click', (e) => {
+        bellBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          const isOpen = bellDropdown.style.display === 'block';
-          bellDropdown.style.display = isOpen ? 'none' : 'block';
+          const isOpen = bellDropdown.style.display === "block";
+          bellDropdown.style.display = isOpen ? "none" : "block";
+          if (!isOpen) {
+            fetch("/notifications/mark-all-read", {
+              method: "POST",
+              credentials: "same-origin",
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success) {
+                  document
+                    .querySelectorAll(".notif-item--unread")
+                    .forEach((el) => el.classList.remove("notif-item--unread"));
+                  const dot = document.querySelector(".notif-dot");
+                  if (dot) dot.style.display = "none";
+                  const btn = document.getElementById("markAllReadBtn");
+                  if (btn) btn.style.display = "none";
+                }
+              });
+          }
         });
-        document.addEventListener('click', () => {
-          bellDropdown.style.display = 'none';
+        document.addEventListener("click", () => {
+          bellDropdown.style.display = "none";
         });
       }
 
-      const avatar = document.getElementById('avatarBtn') || document.querySelector('.avatar-circle');
-      const sidebar = document.getElementById('avatarSidebar');
-      const overlay = document.getElementById('sidebarOverlay');
+      const avatar =
+        document.getElementById("avatarBtn") ||
+        document.querySelector(".avatar-circle");
+      const sidebar = document.getElementById("avatarSidebar");
+      const overlay = document.getElementById("sidebarOverlay");
       const toggleSidebar = (state) => {
-        if (sidebar) sidebar.classList.toggle('open', state);
-        if (overlay) overlay.classList.toggle('open', state);
+        if (sidebar) sidebar.classList.toggle("open", state);
+        if (overlay) overlay.classList.toggle("open", state);
       };
-      if (avatar) avatar.addEventListener('click', () => toggleSidebar(true));
-      if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
+      if (avatar) avatar.addEventListener("click", () => toggleSidebar(true));
+      if (overlay)
+        overlay.addEventListener("click", () => toggleSidebar(false));
 
-      const logoutBtn = document.getElementById('logoutBtn');
+      const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-          if (!confirm('Are you sure you want to log out?')) {
+        logoutBtn.addEventListener("click", (e) => {
+          if (!confirm("Are you sure you want to log out?")) {
             e.preventDefault();
           }
         });
       }
+      function markAllNotificationsRead() {
+        fetch("/notifications/mark-all-read", {
+          method: "POST",
+          credentials: "same-origin",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              document
+                .querySelectorAll(".notif-item--unread")
+                .forEach((el) => el.classList.remove("notif-item--unread"));
+              const dot = document.querySelector(".notif-dot");
+              if (dot) dot.style.display = "none";
+              const badge = document.querySelector(".notif-badge");
+              if (badge) badge.style.display = "none";
+              const btn = document.getElementById("markAllReadBtn");
+              if (btn) btn.style.display = "none";
+            }
+          });
+      }
     </script>
-  </body>
+</body>
+
 </html>

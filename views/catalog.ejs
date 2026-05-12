@@ -13,79 +13,118 @@
 </head>
 
 <body>
-  <header class="navbar">
-    <div class="nav-inner">
-      <div class="nav-logo">EMS</div>
-      <nav class="nav-links">
-        <a href="/user" class="nav-item">Home</a>
-        <a href="/catalog" class="nav-item active">Events</a>
-        <a href="/bookings" class="nav-item">My Bookings</a>
-      </nav>
-      <div class="nav-right">
-        <button class="icon-btn" id="notifBtn" aria-label="Notifications">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <span class="notif-dot"></span>
-        </button>
+  <% var _notifs=Array.isArray(locals.notifications) ? locals.notifications : []; var
+    _unread=_notifs.filter(function(n){ return !n.isRead; }).length; var _formatTime=function(date) { if (!date)
+    return 'Just now' ; var d=new Date(date); if (Number.isNaN(d.getTime())) return 'Just now' ; return
+    d.toLocaleString('en-US', { month: 'short' , day: '2-digit' , hour: '2-digit' , minute: '2-digit' }); }; %>
+    <header class="navbar">
+      <div class="nav-inner">
+        <div class="nav-logo">EMS</div>
+        <nav class="nav-links">
+          <a href="/user" class="nav-item">Home</a>
+          <a href="/catalog" class="nav-item active">Events</a>
+          <a href="/venues" class="nav-item">Venues</a>
+          <a href="/bookings" class="nav-item">My Bookings</a>
+        </nav>
+        <div class="nav-right">
+          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <% if (_unread> 0) { %>
+              <span class="notif-dot"></span>
+              <% } %>
+          </button>
 
-        <div class="profile-menu-container" style="position: relative">
-          <div class="avatar-btn" id="avatarBtn">
-            <img
-              src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-              alt="User avatar" />
-          </div>
+          <div class="profile-menu-container" style="position: relative">
+            <div class="avatar-btn" id="avatarBtn">
+              <img
+                src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+                alt="User avatar" />
+            </div>
 
-          <aside class="avatar-sidebar" id="avatarSidebar">
-            <div style="
+            <aside class="avatar-sidebar" id="avatarSidebar">
+              <div style="
                   padding: 10px 22px;
                   font-weight: 700;
                   font-size: 12px;
                   color: var(--dark);
                 ">
-              Hi, <%= user ? user.username : 'Guest' %>
-            </div>
-            <div class="sidebar-divider"></div>
+                Hi, <%= user ? user.username : 'Guest' %>
+              </div>
+              <div class="sidebar-divider"></div>
 
-            <a href="/profile" class="sidebar-link"> My Profile </a>
-            <div class="sidebar-divider"></div>
-            <a href="/logout" class="sidebar-logout"> Log Out </a>
-          </aside>
+              <a href="/profile" class="sidebar-link"> My Profile </a>
+              <div class="sidebar-divider"></div>
+              <a href="/logout" class="sidebar-logout"> Log Out </a>
+            </aside>
+          </div>
         </div>
       </div>
-    </div>
-  </header>
-
-  <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
-    formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
-    const formatNotifTime = (date) => {
-    if (!date) return "Just now";
-    const d = new Date(date);
-    if (Number.isNaN(d.getTime())) return "Just now";
-    return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-    };
-    %>
+    </header>
     <div class="notif-dropdown" id="notifDropdown">
-      <p class="notif-title">NOTIFICATIONS</p>
-      <% if (notifications.length===0) { %>
+      <div style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 0 10px 0;
+        ">
+        <p class="notif-title" style="margin: 0">NOTIFICATIONS</p>
+        <% if (_unread> 0) { %>
+          <button id="markAllReadBtn" onclick="markAllNotificationsRead()" style="
+            font-size: 11px;
+            font-weight: 600;
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            letter-spacing: 0.03em;
+          ">
+            MARK ALL READ
+          </button>
+          <% } %>
+      </div>
+      <% if (_notifs.length===0) { %>
         <p class="notif-empty">No new notifications</p>
         <% } else { %>
-          <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled' ? 'Booking Cancelled'
-            : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
-            countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
-            <div class="notif-item">
-              <p class="notif-item-title">
-                <%= title %>
-              </p>
-              <p class="notif-item-sub">
-                <%= eventTitle %> · <%= countLabel %>
-              </p>
-              <p class="notif-time">
-                <%= timeLabel %>
-              </p>
+          <% _notifs.forEach(function(note) { var title='Notification' ; var sub=note.eventName || 'Event' ; var
+            isLink=false; var eventLink=note.link || (note.eventId ? '/event/' + note.eventId : '#' ); var
+            count=note.ticketCount || 1; if (note.type==='booking_confirmed' ) { title='Booking Confirmed' ;
+            sub=(note.eventName || 'Event' ) + ' · ' + count + ' ticket' + (count===1 ? '' : 's' ); } else if
+            (note.type==='booking_cancelled' ) { title='Booking Cancelled' ; sub=(note.eventName || 'Event' ) + ' · ' +
+            count + ' ticket' + (count===1 ? '' : 's' ); } else if (note.type==='event_update' ) { title='Event Updated'
+            ; sub=(note.eventName || 'Event' ) + ' details have been updated.' ; isLink=true; } else if
+            (note.type==='event_cancelled' ) { title='Event Cancelled' ; sub=(note.eventName || 'Event' ) +
+            (note.eventDate ? ' · ' + note.eventDate : '' ) + ' has been cancelled.' ; } var
+            timeLabel=_formatTime(note.createdAt); var isUnread=!note.isRead; %>
+            <div class="notif-item <%= isUnread ? 'notif-item--unread' : '' %>">
+              <% if (isLink) { %>
+                <a href="<%= eventLink %>" style="text-decoration: none; color: inherit; display: block">
+                  <p class="notif-item-title">
+                    <%= title %>
+                  </p>
+                  <p class="notif-item-sub">
+                    <%= sub %>
+                  </p>
+                  <p class="notif-time">
+                    <%= timeLabel %>
+                  </p>
+                </a>
+                <% } else { %>
+                  <p class="notif-item-title">
+                    <%= title %>
+                  </p>
+                  <p class="notif-item-sub">
+                    <%= sub %>
+                  </p>
+                  <p class="notif-time">
+                    <%= timeLabel %>
+                  </p>
+                  <% } %>
             </div>
-            <% }) %>
+            <% }); %>
               <% } %>
     </div>
 
@@ -101,7 +140,8 @@
           </svg>
           <input type="text" id="heroSearch" placeholder="Search for events, venues, or cities..." />
           <button class="mic-btn" id="voiceSearchBtn" title="Search by voice">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
               <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
               <line x1="12" y1="19" x2="12" y2="22"></line>
@@ -119,9 +159,6 @@
             </div>
           </div>
         </div>
-
-
-
       </div>
     </section>
 
@@ -140,33 +177,46 @@
     </div>
 
     <section class="events-section">
-      <div id="noResults"
-        style="display: none; text-align: center; padding: 4rem 2rem; background: #fff; border-radius: 12px; border: 1px dashed var(--border); grid-column: 1 / -1; margin-bottom: 2rem;">
-        <div style="font-size: 40px; margin-bottom: 1rem;">🔍</div>
-        <h3 style="font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">No matches found</h3>
-        <p style="font-size: 14px; color: var(--muted);">Try adjusting your search or category filters to find what
-          you're looking for.</p>
+      <div id="noResults" style="
+          display: none;
+          text-align: center;
+          padding: 4rem 2rem;
+          background: #fff;
+          border-radius: 12px;
+          border: 1px dashed var(--border);
+          grid-column: 1 / -1;
+          margin-bottom: 2rem;
+        ">
+        <div style="font-size: 40px; margin-bottom: 1rem">🔍</div>
+        <h3 style="
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+          ">
+          No matches found
+        </h3>
+        <p style="font-size: 14px; color: var(--muted)">
+          Try adjusting your search or category filters to find what you're
+          looking for.
+        </p>
       </div>
       <div class="events-grid" id="eventsGrid">
-        <% if (typeof events !=='undefined' && events.length> 0) { %>
-          <% events.forEach(event=> {
-            let catStr = (event.category || 'other').toLowerCase().trim().replace(/\s+/g, '-');
-            if(event.categoryId && event.categoryId.name) {
-            catStr = event.categoryId.name.toLowerCase().trim().replace(/\s+/g, '-');
-            }
-            let imgUrl = event.imagePath || event.image || '/images/default-event.png';
+        <% if (typeof events !=='undefined' && events.length> 0) { %> <% events.forEach(event=> { let catStr =
+            (event.category ||
+            'other').toLowerCase().trim().replace(/\s+/g, '-'); if(event.categoryId
+            && event.categoryId.name) { catStr =
+            event.categoryId.name.toLowerCase().trim().replace(/\s+/g, '-'); } let
+            imgUrl = event.imagePath || event.image || '/images/default-event.png';
             if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
-            imgUrl = '/' + imgUrl;
-            }
-            let eventStartDate = new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
-            year: 'numeric' });
-            let eventEndDate = new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
-            year: 'numeric' });
-            let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} -
-            ${eventEndDate}`;
-            let isFree = event.ticketPrice === 0;
-            let displayPrice = isFree ? "Free" : "$" + event.ticketPrice.toFixed(2);
-            %>
+            imgUrl = '/' + imgUrl; } let eventStartDate = new
+            Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day:
+            '2-digit', year: 'numeric' }); let eventEndDate = new
+            Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day:
+            '2-digit', year: 'numeric' }); let eventDateDisplay = eventStartDate ===
+            eventEndDate ? eventStartDate : `${eventStartDate} - ${eventEndDate}`;
+            let isFree = event.ticketPrice === 0; let displayPrice = isFree ? "Free"
+            : "$" + event.ticketPrice.toFixed(2); %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
               data-date="<%= event.startDate %>">
               <div class="card-img">
@@ -261,6 +311,47 @@
 
     <script src="/js/catalog.js"></script>
     <script src="/js/voice-search.js"></script>
+
+    <script>  const notifBtn = document.getElementById("notifBtn");
+      const notifDropdown = document.getElementById("notifDropdown");
+
+      if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          notifDropdown.classList.toggle("open");
+
+          fetch("/notifications/mark-all-read", {
+            method: "POST",
+            credentials: "same-origin",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                document
+                  .querySelectorAll(".notif-item--unread")
+                  .forEach((el) =>
+                    el.classList.remove("notif-item--unread")
+                  );
+
+                const dot = document.querySelector(".notif-dot");
+                if (dot) {
+                  dot.style.display = "none";
+                }
+
+                const btn = document.getElementById("markAllReadBtn");
+                if (btn) {
+                  btn.style.display = "none";
+                }
+              }
+            });
+        });
+
+        document.addEventListener("click", () => {
+          notifDropdown.classList.remove("open");
+        });
+      }
+    </script>
 </body>
 
 </html>

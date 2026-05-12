@@ -94,68 +94,15 @@ exports.getResetPassword = (req, res) => {
 };
 
 exports.postLogin = async (req, res) => {
-try{
   try {
     const { email, password } = req.body;
     const identifier = (email || "").trim().toLowerCase();
 
-        if (!identifier || !password) {
-            return res.render('login', {
-                error: 'Please provide both email/username and password.',
-                formData: { email: identifier }
-            });
-        }
-
-        const query = identifier.includes("@")
-            ? { email: identifier }
-            : { username: identifier };
-
-        const user = await userModel.findOne(query);
-
-        if (!user) {
-            return res.render('login', {
-                error: 'Invalid Credentials',
-                formData: { email: identifier }
-            });
-        }
-
-        const looksHashed = typeof user.password === "string" && user.password.startsWith("$2");
-        let isMatch = false;
-
-        if (looksHashed) {
-            isMatch = await bcrypt.compare(password, user.password);
-        } else {
-            // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
-            isMatch = password === user.password;
-            if (isMatch) {
-                const salt = await bcrypt.genSalt(10);
-                const hash = await bcrypt.hash(password, salt);
-                user.password = hash;
-                await user.save();
-            }
-        }
-
-        if (isMatch) {
-            const token = jwt.sign(
-                { email: user.email, userId: user._id, role: user.role },
-                "shhhhhhhhh"
-            );
-            res.cookie("token", token);
-
-            // THE REDIRECT LOGIC
-            if (user.role === 'admin') {
-                return res.redirect('/admin/dashboard');
-            }
-            return res.redirect('/user'); // Regular user landing page
-        }
-
-        return res.render('login', {
-            error: 'Invalid Credentials',
-            formData: { email: identifier }
-        });
-    } catch (err) {
-        console.error("Login Error:", err);
-        res.redirect('/login');
+    if (!identifier || !password) {
+      return res.render("login", {
+        error: "Please provide both email/username and password.",
+        formData: { email: identifier },
+      });
     }
 
     const query = identifier.includes("@")
@@ -173,102 +120,115 @@ try{
 
     const looksHashed =
       typeof user.password === "string" && user.password.startsWith("$2");
+
     let isMatch = false;
 
     if (looksHashed) {
       isMatch = await bcrypt.compare(password, user.password);
     } else {
-      // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
       isMatch = password === user.password;
+
       if (isMatch) {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
+
         user.password = hash;
         await user.save();
       }
     }
 
-    if (isMatch) {
-      const token = jwt.sign(
-        { email: user.email, userId: user._id, role: user.role },
-        "shhhhhhhhh"
-      );
-      res.cookie("token", token);
-
-      // THE REDIRECT LOGIC
-      if (user.role === "admin") {
-        return res.redirect("/admin/dashboard");
-      }
-      return res.redirect("/catalog"); // Regular user landing page
+    if (!isMatch) {
+      return res.render("login", {
+        error: "Invalid Credentials",
+        formData: { email: identifier },
+      });
     }
 
-    return res.render("login", {
-      error: "Invalid Credentials",
-      formData: { email: identifier },
-    });
+    const token = jwt.sign(
+      {
+        email: user.email,
+        userId: user._id,
+        role: user.role,
+      },
+      "shhhhhhhhh"
+    );
+
+    res.cookie("token", token);
+
+    if (user.role === "admin") {
+      return res.redirect("/admin/dashboard");
+    }
+
+    return res.redirect("/catalog");
   } catch (err) {
     console.error("Login Error:", err);
-    res.redirect("/login");
+    return res.redirect("/login");
   }
 };
 
-
 exports.getUserDashboard = async (req, res) => {
-    try {
-        const now = new Date();
-        const user = await userModel.findById(req.user.userId);
+  try {
+    const now = new Date();
+    const user = await userModel.findById(req.user.userId);
 
-        if (!user) {
-            req.flash('error', 'User not found');
-            return res.redirect('/login');
-        }
+    if (!user) {
+      req.flash("error", "User not found");
+      return res.redirect("/login");
+    }
 
-        const bookingModel = require("../models/bookingModel");
-        
-        // Fetch recent confirmed bookings for future events
-        const recentBookings = await bookingModel.find({
-            userEmail: user.email,
-            status: 'confirmed'
-        })
-        .populate({
-            path: 'eventId',
-            match: { endDate: { $gte: now } }
-        })
-        .sort({ createdAt: -1 });
-  
-      const allActiveBookings = recentBookings.filter((b) => b.eventId !== null);
-      const topRecentBookings = allActiveBookings.slice(0, 3);
-  
-      const totalBookings = await bookingModel.countDocuments({
+    const bookingModel = require("../models/bookingModel");
+
+    // Fetch recent confirmed bookings for future events
+    const recentBookings = await bookingModel
+      .find({
         userEmail: user.email,
         status: "confirmed",
-      });
-  
-      const upcomingEvents = allActiveBookings.length;
-  
-      // Latest events - no date filter, just newest added
-      const latestEvents = await eventModel
-        .find({ status: { $ne: "cancelled" } })
-        .sort({ createdAt: -1 })
-        .limit(3);
-  
-      console.log("latestEvents found:", latestEvents.length, latestEvents.map(e => e.eventName));
-  
-      const notifications = Array.isArray(user.notifications) ? user.notifications : [];
-  
-      res.render("user", {
-        user,
-        recentBookings: topRecentBookings,
-        totalBookings,
-        upcomingEvents,
-        latestEvents,
-        notifications,
-      });
-    } catch (err) {
-      console.error("Dashboard Error:", err);
-      res.redirect("/login");
-    }
-  };
+      })
+      .populate({
+        path: "eventId",
+        match: { endDate: { $gte: now } },
+      })
+      .sort({ createdAt: -1 });
+
+    const allActiveBookings = recentBookings.filter((b) => b.eventId !== null);
+    const topRecentBookings = allActiveBookings.slice(0, 3);
+
+    const totalBookings = await bookingModel.countDocuments({
+      userEmail: user.email,
+      status: "confirmed",
+    });
+
+    const upcomingEvents = allActiveBookings.length;
+
+    // Latest events - no date filter, just newest added
+    const latestEvents = await eventModel
+      .find({ status: { $ne: "cancelled" } })
+      .sort({ createdAt: -1 })
+      .limit(3);
+
+    console.log(
+      "latestEvents found:",
+      latestEvents.length,
+      latestEvents.map((e) => e.eventName)
+    );
+
+    const notifications = Array.isArray(user.notifications)
+      ? user.notifications
+      : [];
+
+    res.render("user", {
+      user,
+      recentBookings: topRecentBookings,
+      totalBookings,
+      upcomingEvents,
+      latestEvents,
+      notifications,
+    });
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+    res.redirect("/login");
+  }
+};
 
 exports.loadMoreBookings = async (req, res) => {
   try {
@@ -276,24 +236,26 @@ exports.loadMoreBookings = async (req, res) => {
     const skipCount = parseInt(skip) || 0;
     const user = await userModel.findById(req.user.userId);
     const bookingModel = require("../models/bookingModel");
-    
+
     const bookings = await bookingModel
       .find({ userEmail: user.email })
       .populate("eventId")
       .sort({ createdAt: -1 })
       .skip(skipCount)
       .limit(5);
-      
-    const validBookings = bookings.filter(b => b.eventId !== null).map(b => ({
-      _id: b._id,
-      status: b.status || 'confirmed',
-      eventImage: b.eventId.image || b.eventId.imagePath,
-      eventName: b.eventId.eventName || b.eventId.title,
-      eventLocation: b.eventId.location,
-      eventDate: b.eventId.date,
-      eventStartDate: b.eventId.startDate // in case the UI uses startDate
-    }));
-    
+
+    const validBookings = bookings
+      .filter((b) => b.eventId !== null)
+      .map((b) => ({
+        _id: b._id,
+        status: b.status || "confirmed",
+        eventImage: b.eventId.image || b.eventId.imagePath,
+        eventName: b.eventId.eventName || b.eventId.title,
+        eventLocation: b.eventId.location,
+        eventDate: b.eventId.date,
+        eventStartDate: b.eventId.startDate, // in case the UI uses startDate
+      }));
+
     res.json({ success: true, bookings: validBookings });
   } catch (err) {
     console.error("Error fetching more bookings:", err);
@@ -302,85 +264,101 @@ exports.loadMoreBookings = async (req, res) => {
 };
 
 exports.cancelBooking = async (req, res) => {
-  try{
   try {
-    const { eventId } = req.params;
-    const userId = req.user.userId;
+    try {
+      const { eventId } = req.params;
+      const userId = req.user.userId;
 
-        // 1. Get user to get email (for finding the specific booking)
-        const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-        if (!Array.isArray(user.bookedEvents)) {
-            user.bookedEvents = [];
-        }
+      // 1. Get user to get email (for finding the specific booking)
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+      if (!Array.isArray(user.bookedEvents)) {
+        user.bookedEvents = [];
+      }
 
-        // 2. Remove from user's bookedEvents array
-        user.bookedEvents = user.bookedEvents.filter(id => id.toString() !== eventId);
-        await user.save();
+      // 2. Remove from user's bookedEvents array
+      user.bookedEvents = user.bookedEvents.filter(
+        (id) => id.toString() !== eventId
+      );
+      await user.save();
 
-        // 3. Mark bookings as cancelled (keep record for history)
-        const bookingModel = require("../models/bookingModel");
-        const activeBookings = await bookingModel.find({
-            eventId,
-            userEmail: user.email,
-            status: { $ne: 'cancelled' }
-        }).populate('eventId', 'startDate');
-        await syncBookingsExpiry(activeBookings);
+      // 3. Mark bookings as cancelled (keep record for history)
+      const bookingModel = require("../models/bookingModel");
+      const activeBookings = await bookingModel
+        .find({
+          eventId,
+          userEmail: user.email,
+          status: { $ne: "cancelled" },
+        })
+        .populate("eventId", "startDate");
+      await syncBookingsExpiry(activeBookings);
 
-        const cancellableBookings = activeBookings.filter(booking => {
-            const status = (booking.status || '').toLowerCase();
-            return status !== 'cancelled' && status !== 'expired';
+      const cancellableBookings = activeBookings.filter((booking) => {
+        const status = (booking.status || "").toLowerCase();
+        return status !== "cancelled" && status !== "expired";
+      });
+      if (cancellableBookings.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "This booking has expired and can no longer be cancelled.",
         });
-        if (cancellableBookings.length === 0) {
-            return res.status(400).json({ success: false, message: "This booking has expired and can no longer be cancelled." });
+      }
+
+      const totalCancelled = cancellableBookings.reduce((sum, booking) => {
+        const count = booking.ticketCount || 1;
+        return sum + count;
+      }, 0);
+
+      await bookingModel.updateMany(
+        { _id: { $in: cancellableBookings.map((booking) => booking._id) } },
+        { $set: { status: "cancelled" } }
+      );
+
+      if (!Array.isArray(user.notifications)) {
+        user.notifications = [];
+      }
+      if (totalCancelled > 0) {
+        let eventName = "Event";
+        try {
+          const eventDoc = await eventModel
+            .findById(eventId)
+            .select("eventName title");
+          if (eventDoc) {
+            eventName = eventDoc.eventName || eventDoc.title || eventName;
+          }
+        } catch (err) {
+          eventName = eventName;
         }
-
-        const totalCancelled = cancellableBookings.reduce((sum, booking) => {
-            const count = booking.ticketCount || 1;
-            return sum + count;
-        }, 0);
-
-        await bookingModel.updateMany(
-            { _id: { $in: cancellableBookings.map(booking => booking._id) } },
-            { $set: { status: 'cancelled' } }
+        user.notifications.unshift({
+          type: "booking_cancelled",
+          eventId,
+          eventName,
+          ticketCount: totalCancelled,
+          createdAt: new Date(),
+        });
+        if (user.notifications.length > 20) {
+          user.notifications = user.notifications.slice(0, 20);
+        }
+        // Remove any 'event_update' notifications for this event since booking is cancelled
+        user.notifications = user.notifications.filter(
+          (n) =>
+            !(
+              n.eventId &&
+              n.eventId.toString() === eventId &&
+              n.type === "event_update"
+            )
         );
+      }
+      await user.save();
 
-        if (!Array.isArray(user.notifications)) {
-            user.notifications = [];
-        }
-        if (totalCancelled > 0) {
-            let eventName = "Event";
-            try {
-                const eventDoc = await eventModel.findById(eventId).select("eventName title");
-                if (eventDoc) {
-                    eventName = eventDoc.eventName || eventDoc.title || eventName;
-                }
-            } catch (err) {
-                eventName = eventName;
-            }
-            user.notifications.unshift({
-                type: "booking_cancelled",
-                eventId,
-                eventName,
-                ticketCount: totalCancelled,
-                createdAt: new Date()
-            });
-            if (user.notifications.length > 20) {
-                user.notifications = user.notifications.slice(0, 20);
-            }
-            // Remove any 'event_update' notifications for this event since booking is cancelled
-            user.notifications = user.notifications.filter(n => 
-                !(n.eventId && n.eventId.toString() === eventId && n.type === 'event_update')
-            );
-        }
-        await user.save();
-
-        res.json({ success: true, message: "Booking cancelled successfully" });
+      res.json({ success: true, message: "Booking cancelled successfully" });
     } catch (err) {
-        console.error("Cancel Booking Error:", err);
-        res.status(500).json({ success: false, message: "Server error" });
+      console.error("Cancel Booking Error:", err);
+      res.status(500).json({ success: false, message: "Server error" });
     }
     if (!Array.isArray(user.bookedEvents)) {
       user.bookedEvents = [];
@@ -460,159 +438,207 @@ exports.cancelBooking = async (req, res) => {
 };
 
 exports.cancelBookingById = async (req, res) => {
-  try{
   try {
-    const { bookingId } = req.params;
-    const { cancelCount: cancelCountRaw } = req.body || {};
-    const userId = req.user.userId;
+    try {
+      const { bookingId } = req.params;
+      const { cancelCount: cancelCountRaw } = req.body || {};
+      const userId = req.user.userId;
 
-        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-            return res.status(400).json({ success: false, message: "Invalid booking." });
+      if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid booking." });
+      }
+
+      const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+      if (!Array.isArray(user.bookedEvents)) {
+        user.bookedEvents = [];
+      }
+
+      const bookingModel = require("../models/bookingModel");
+      const booking = await bookingModel
+        .findById(bookingId)
+        .populate("eventId", "startDate");
+      if (!booking) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Booking not found" });
+      }
+      await syncBookingExpiry(booking);
+      if (booking.userEmail !== user.email) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to cancel this booking",
+        });
+      }
+      if (booking.status === "cancelled") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Booking is already cancelled" });
+      }
+      if (booking.status === "expired") {
+        return res.status(400).json({
+          success: false,
+          message: "Booking has expired and can no longer be cancelled",
+        });
+      }
+
+      const currentCount = Math.max(booking.ticketCount || 1, 1);
+      const normalizedCancel = Math.min(cancelCount, currentCount);
+
+      let ticketCodes = Array.isArray(booking.ticketCodes)
+        ? [...booking.ticketCodes]
+        : [];
+      let attendeeNames = Array.isArray(booking.attendeeNames)
+        ? [...booking.attendeeNames]
+        : [];
+      const referenceNumber =
+        booking.referenceNumber ||
+        `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      if (ticketCodes.length < currentCount) {
+        for (let i = ticketCodes.length; i < currentCount; i += 1) {
+          const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+          ticketCodes.push(
+            `${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`
+          );
         }
+        booking.referenceNumber = referenceNumber;
+        booking.bookingRef = booking.bookingRef || referenceNumber;
+      }
 
-        const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
-        const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-        if (!Array.isArray(user.bookedEvents)) {
-            user.bookedEvents = [];
-        }
+      const isFullCancel = normalizedCancel >= currentCount;
 
-        const bookingModel = require("../models/bookingModel");
-        const booking = await bookingModel.findById(bookingId).populate('eventId', 'startDate');
-        if (!booking) {
-            return res.status(404).json({ success: false, message: "Booking not found" });
-        }
-        await syncBookingExpiry(booking);
-        if (booking.userEmail !== user.email) {
-            return res.status(403).json({ success: false, message: "Not authorized to cancel this booking" });
-        }
-        if (booking.status === "cancelled") {
-            return res.status(400).json({ success: false, message: "Booking is already cancelled" });
-        }
-        if (booking.status === "expired") {
-            return res.status(400).json({ success: false, message: "Booking has expired and can no longer be cancelled" });
-        }
+      if (isFullCancel) {
+        booking.status = "cancelled";
+      } else {
+        const remainingCount = currentCount - normalizedCancel;
+        const cancelledCodes = ticketCodes.slice(
+          remainingCount,
+          remainingCount + normalizedCancel
+        );
+        const cancelledNames = attendeeNames.slice(
+          remainingCount,
+          remainingCount + normalizedCancel
+        );
+        booking.ticketCount = remainingCount;
+        booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
+        booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+        booking.attendeeNames = attendeeNames.slice(0, remainingCount);
 
-        const currentCount = Math.max(booking.ticketCount || 1, 1);
-        const normalizedCancel = Math.min(cancelCount, currentCount);
-
-        let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
-        let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
-        const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-        if (ticketCodes.length < currentCount) {
-            for (let i = ticketCodes.length; i < currentCount; i += 1) {
-                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-                ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
-            }
-            booking.referenceNumber = referenceNumber;
-            booking.bookingRef = booking.bookingRef || referenceNumber;
-        }
-
-        const isFullCancel = normalizedCancel >= currentCount;
-
-        if (isFullCancel) {
-            booking.status = "cancelled";
-        } else {
-            const remainingCount = currentCount - normalizedCancel;
-            const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
-            const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
-            booking.ticketCount = remainingCount;
-            booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
-            booking.ticketCodes = ticketCodes.slice(0, remainingCount);
-            booking.attendeeNames = attendeeNames.slice(0, remainingCount);
-
-            // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
-            const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-            try {
-                await bookingModel.create({
-                    eventId: booking.eventId,
-                    userName: cancelledNames[0] || booking.userName,
-                    userEmail: booking.userEmail,
-                    attendeeEmail: booking.attendeeEmail || booking.userEmail,
-                    attendeeNames: cancelledNames,
-                    ticketCount: normalizedCancel,
-                    unitPrice: booking.unitPrice || 0,
-                    totalAmount: (booking.unitPrice || 0) * normalizedCancel,
-                    ticketCodes: cancelledCodes,
-                    referenceNumber: cancellationRef,
-                    // bookingRef is unique in the DB; keep it unique for the cancellation record.
-                    bookingRef: cancellationRef,
-                    status: "cancelled"
-                });
-            } catch (err) {
-                console.error("Cancel history insert failed:", err && err.message ? err.message : err);
-            }
-        }
-
-        await booking.save();
-
-        if (!Array.isArray(user.notifications)) {
-            user.notifications = [];
-        }
-        let eventName = "Event";
+        // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
+        const cancellationRef = `EMS-CAN-${Date.now()
+          .toString(36)
+          .slice(-6)
+          .toUpperCase()}-${Math.random()
+            .toString(36)
+            .slice(2, 6)
+            .toUpperCase()}`;
         try {
-            const eventDoc = await eventModel.findById(booking.eventId).select("eventName title");
-            if (eventDoc) {
-                eventName = eventDoc.eventName || eventDoc.title || eventName;
-            }
-        } catch (err) {
-            eventName = eventName;
-        }
-        user.notifications.unshift({
-            type: "booking_cancelled",
+          await bookingModel.create({
             eventId: booking.eventId,
-            eventName,
+            userName: cancelledNames[0] || booking.userName,
+            userEmail: booking.userEmail,
+            attendeeEmail: booking.attendeeEmail || booking.userEmail,
+            attendeeNames: cancelledNames,
             ticketCount: normalizedCancel,
-            createdAt: new Date()
-        });
-        if (user.notifications.length > 20) {
-            user.notifications = user.notifications.slice(0, 20);
+            unitPrice: booking.unitPrice || 0,
+            totalAmount: (booking.unitPrice || 0) * normalizedCancel,
+            ticketCodes: cancelledCodes,
+            referenceNumber: cancellationRef,
+            // bookingRef is unique in the DB; keep it unique for the cancellation record.
+            bookingRef: cancellationRef,
+            status: "cancelled",
+          });
+        } catch (err) {
+          console.error(
+            "Cancel history insert failed:",
+            err && err.message ? err.message : err
+          );
         }
+      }
 
-        // Remove any 'event_update' notifications for this event since booking is cancelled
-        // We only do this if the user has NO more active bookings for this event
-        const remainingActiveCount = await bookingModel.countDocuments({
-            eventId: booking.eventId,
-            userEmail: user.email,
-            status: { $nin: ["cancelled", "expired"] }
-        });
+      await booking.save();
 
-        if (remainingActiveCount === 0) {
-            user.notifications = user.notifications.filter(n => 
-                !(n.eventId && n.eventId.toString() === booking.eventId.toString() && n.type === 'event_update')
-            );
+      if (!Array.isArray(user.notifications)) {
+        user.notifications = [];
+      }
+      let eventName = "Event";
+      try {
+        const eventDoc = await eventModel
+          .findById(booking.eventId)
+          .select("eventName title");
+        if (eventDoc) {
+          eventName = eventDoc.eventName || eventDoc.title || eventName;
         }
+      } catch (err) {
+        eventName = eventName;
+      }
+      user.notifications.unshift({
+        type: "booking_cancelled",
+        eventId: booking.eventId,
+        eventName,
+        ticketCount: normalizedCancel,
+        createdAt: new Date(),
+      });
+      if (user.notifications.length > 20) {
+        user.notifications = user.notifications.slice(0, 20);
+      }
 
-        if (isFullCancel) {
-            const remainingActive = await bookingModel.countDocuments({
-                eventId: booking.eventId,
-                userEmail: user.email,
-                status: { $nin: ["cancelled", "expired"] }
-            });
-            if (remainingActive === 0) {
-                user.bookedEvents = user.bookedEvents.filter(
-                    id => id.toString() !== booking.eventId.toString()
-                );
-                await user.save();
-            } else {
-                await user.save();
-            }
+      // Remove any 'event_update' notifications for this event since booking is cancelled
+      // We only do this if the user has NO more active bookings for this event
+      const remainingActiveCount = await bookingModel.countDocuments({
+        eventId: booking.eventId,
+        userEmail: user.email,
+        status: { $nin: ["cancelled", "expired"] },
+      });
+
+      if (remainingActiveCount === 0) {
+        user.notifications = user.notifications.filter(
+          (n) =>
+            !(
+              n.eventId &&
+              n.eventId.toString() === booking.eventId.toString() &&
+              n.type === "event_update"
+            )
+        );
+      }
+
+      if (isFullCancel) {
+        const remainingActive = await bookingModel.countDocuments({
+          eventId: booking.eventId,
+          userEmail: user.email,
+          status: { $nin: ["cancelled", "expired"] },
+        });
+        if (remainingActive === 0) {
+          user.bookedEvents = user.bookedEvents.filter(
+            (id) => id.toString() !== booking.eventId.toString()
+          );
+          await user.save();
         } else {
-            await user.save();
+          await user.save();
         }
+      } else {
+        await user.save();
+      }
 
-        res.json({
-            success: true,
-            message: isFullCancel ? "Booking cancelled successfully" : "Tickets cancelled successfully",
-            status: booking.status,
-            remainingTickets: isFullCancel ? 0 : booking.ticketCount
-        });
+      res.json({
+        success: true,
+        message: isFullCancel
+          ? "Booking cancelled successfully"
+          : "Tickets cancelled successfully",
+        status: booking.status,
+        remainingTickets: isFullCancel ? 0 : booking.ticketCount,
+      });
     } catch (err) {
-        console.error("Cancel Booking (partial) Error:", err);
-        res.status(500).json({ success: false, message: "Server error" });
+      console.error("Cancel Booking (partial) Error:", err);
+      res.status(500).json({ success: false, message: "Server error" });
     }
 
     const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
@@ -746,41 +772,52 @@ exports.cancelBookingById = async (req, res) => {
 };
 
 exports.getGuestDashboard = async (req, res) => {
-    try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+  try {
+    const { hasEventEnded } = require("../utils/bookingStatus");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        // Fetch events where endDate is today or in the future
-        let events = await eventModel.find({ 
-            endDate: { $gte: today },
-            status: { $ne: 'cancelled' }
-        }).populate('categoryId').lean();
+    // Fetch events where endDate is today or in the future
+    let events = await eventModel
+      .find({
+        endDate: { $gte: today },
+        status: { $ne: "cancelled" },
+      })
+      .populate("categoryId")
+      .lean();
 
-        // Filter out events that have precisely ended (date + time)
-        events = events.filter(event => !hasEventEnded(event));
+    // Filter out events that have precisely ended (date + time)
+    events = events.filter((event) => !hasEventEnded(event));
 
-        res.render("index", { events: events, user: null });
-    } catch (err) {
-        console.error("Error loading guest dashboard:", err);
-        res.status(500).send("Error loading dashboard");
-    }
+    res.render("index", { events: events, user: null });
+  } catch (err) {
+    console.error("Error loading guest dashboard:", err);
+    res.status(500).send("Error loading dashboard");
+  }
 };
 
 exports.getCatalog = async (req, res) => {
-    try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+  try {
+    const { hasEventEnded } = require("../utils/bookingStatus");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        // Fetch events where endDate is today or in the future
-        let events = await eventModel.find({ 
-            endDate: { $gte: today },
-            status: { $ne: 'cancelled' }
-        }).populate('categoryId').lean();
+    // Fetch events where endDate is today or in the future
+    let events = await eventModel
+      .find({
+        endDate: { $gte: today },
+        status: { $ne: "cancelled" },
+      })
+      .populate("categoryId")
+      .lean();
+    res.render("catalog", {
+      events: events,
+      user: fullUser,
+      notifications: fullUser ? fullUser.notifications || [] : [],
+    });
 
-        // Filter out events that have already ended precisely (date + time)
-        events = events.filter(event => !hasEventEnded(event));
+    // Filter out events that have already ended precisely (date + time)
+    events = events.filter((event) => !hasEventEnded(event));
 
     // Fetch the full user document if logged in; otherwise allow guest view
     let fullUser = null;
@@ -811,95 +848,89 @@ exports.getCatalog = async (req, res) => {
 };
 
 exports.searchEvents = async (req, res) => {
-    try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
-        let { q, date, category } = req.query;
-        let queryObj = {
-            status: { $ne: 'cancelled' }
-        };
+  try {
+    const { hasEventEnded } = require("../utils/bookingStatus");
+    let { q, date, category } = req.query;
+    let queryObj = {
+      status: { $ne: "cancelled" },
+    };
 
-        // 1. Text Search (Title + Category)
-        if (q) {
-            const matchingCategories = await categoryModel.find({ 
-                name: { $regex: q, $options: "i" } 
-            });
-            const categoryIds = matchingCategories.map(cat => cat._id);
+    // 1. Text Search (Title + Category)
+    if (q) {
+      const matchingCategories = await categoryModel.find({
+        name: { $regex: q, $options: "i" },
+      });
+      const categoryIds = matchingCategories.map((cat) => cat._id);
 
-            queryObj.$or = [
-                { eventName: { $regex: q, $options: "i" } },
-                { title: { $regex: q, $options: "i" } }, // Fallback for 'title' field
-                { categoryId: { $in: categoryIds } }
-            ];
-        }
-
-        // 2. Date Search
-        if (date) {
-            const searchDate = new Date(date);
-            const nextDay = new Date(date);
-            nextDay.setDate(searchDate.getDate() + 1);
-            
-            // If we have other conditions, we use $and to combine them with the date range
-            const dateQuery = {
-                $or: [
-                    { startDate: { $gte: searchDate, $lt: nextDay } },
-                    { endDate: { $gte: searchDate, $lt: nextDay } },
-                    { date: { $gte: searchDate, $lt: nextDay } } // Fallback for 'date' field
-                ]
-            };
-
-            if (queryObj.$or) {
-                // If text search already added an $or, we use $and to group them
-                const textSearchOr = queryObj.$or;
-                delete queryObj.$or;
-                queryObj.$and = [
-                    { $or: textSearchOr },
-                    dateQuery
-                ];
-            } else {
-                queryObj.$or = dateQuery.$or;
-            }
-        }
-
-        // 3. Category Filter (Dropdown)
-        if (category && category !== "All") {
-            const catDoc = await categoryModel.findOne({ name: category });
-            if (catDoc) {
-                queryObj.categoryId = catDoc._id;
-            }
-        }
-
-        // 4. Future Events Filter
-        if (!date) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            queryObj.$and = queryObj.$and || [];
-            queryObj.$and.push({
-                $or: [
-                    { endDate: { $gte: today } },
-                    { date: { $gte: today } }
-                ]
-            });
-            
-            // Clean up $and if it only has one element and no other top-level fields depend on it
-            if (queryObj.$and.length === 1 && !queryObj.$or) {
-                const singleFilter = queryObj.$and[0];
-                delete queryObj.$and;
-                Object.assign(queryObj, singleFilter);
-            }
-        }
-
-        // Fetch events from DB and populate categoryId
-        let events = await eventModel.find(queryObj).populate('categoryId').lean();
-
-        // Filter out events that have precisely ended (date + time)
-        events = events.filter(event => !hasEventEnded(event));
-
-        // Render the page with the found events
-        res.render("index", { events: events });
-    } catch (err) {
-        console.error("Search failed:", err);
-        res.status(500).send("Search failed");
+      queryObj.$or = [
+        { eventName: { $regex: q, $options: "i" } },
+        { title: { $regex: q, $options: "i" } }, // Fallback for 'title' field
+        { categoryId: { $in: categoryIds } },
+      ];
     }
+
+    // 2. Date Search
+    if (date) {
+      const searchDate = new Date(date);
+      const nextDay = new Date(date);
+      nextDay.setDate(searchDate.getDate() + 1);
+
+      // If we have other conditions, we use $and to combine them with the date range
+      const dateQuery = {
+        $or: [
+          { startDate: { $gte: searchDate, $lt: nextDay } },
+          { endDate: { $gte: searchDate, $lt: nextDay } },
+          { date: { $gte: searchDate, $lt: nextDay } }, // Fallback for 'date' field
+        ],
+      };
+
+      if (queryObj.$or) {
+        // If text search already added an $or, we use $and to group them
+        const textSearchOr = queryObj.$or;
+        delete queryObj.$or;
+        queryObj.$and = [{ $or: textSearchOr }, dateQuery];
+      } else {
+        queryObj.$or = dateQuery.$or;
+      }
+    }
+
+    // 3. Category Filter (Dropdown)
+    if (category && category !== "All") {
+      const catDoc = await categoryModel.findOne({ name: category });
+      if (catDoc) {
+        queryObj.categoryId = catDoc._id;
+      }
+    }
+
+    // 4. Future Events Filter
+    if (!date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      queryObj.$and = queryObj.$and || [];
+      queryObj.$and.push({
+        $or: [{ endDate: { $gte: today } }, { date: { $gte: today } }],
+      });
+
+      // Clean up $and if it only has one element and no other top-level fields depend on it
+      if (queryObj.$and.length === 1 && !queryObj.$or) {
+        const singleFilter = queryObj.$and[0];
+        delete queryObj.$and;
+        Object.assign(queryObj, singleFilter);
+      }
+    }
+
+    // Fetch events from DB and populate categoryId
+    let events = await eventModel.find(queryObj).populate("categoryId").lean();
+
+    // Filter out events that have precisely ended (date + time)
+    events = events.filter((event) => !hasEventEnded(event));
+
+    // Render the page with the found events
+    res.render("index", { events: events });
+  } catch (err) {
+    console.error("Search failed:", err);
+    res.status(500).send("Search failed");
+  }
 };
 
 // Add this to your userController.js
@@ -1026,16 +1057,43 @@ exports.markNotificationAsRead = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Error marking notification as read:", err);
-    res.status(500).json({ success: false, error: "Failed to update notification" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to update notification" });
   }
 };
 
 exports.getUserNotifications = async (req, res) => {
   try {
-    const user = await userModel.findById(req.user.userId).select('notifications');
+    const user = await userModel
+      .findById(req.user.userId)
+      .select("notifications");
     res.json(user.notifications || []);
   } catch (err) {
     console.error("Error fetching notifications:", err);
     res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+};
+exports.markAllNotificationsRead = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await userModel.updateOne(
+      { _id: userId },
+      { $set: { "notifications.$[].isRead": true } }
+    );
+
+    console.log("Mark all read result:", result);
+
+    const user = await userModel.findById(userId).select("notifications");
+    console.log(
+      "Notifications after update:",
+      JSON.stringify(user.notifications, null, 2)
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error marking all notifications as read:", err);
+    res.status(500).json({ success: false });
   }
 };

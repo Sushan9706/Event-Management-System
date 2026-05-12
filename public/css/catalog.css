@@ -48,7 +48,7 @@ button {
 }
 
 .nav-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px;
   height: 100%;
@@ -350,7 +350,7 @@ button {
 }
 
 .hero {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 48px 32px 32px;
   display: flex;
@@ -419,7 +419,7 @@ button {
 /* Find button removed - using real-time Ajax instead */
 
 .filters {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 40px;
   display: flex;
@@ -452,7 +452,7 @@ button {
 }
 
 .events-section {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 64px;
 }
@@ -859,4 +859,11 @@ button {
 .search-bar-date-wrap input::-webkit-calendar-picker-indicator {
   opacity: 0.6;
   cursor: pointer;
+}
+.notif-dropdown {
+  display: none;
+}
+
+.notif-dropdown.open {
+  display: block;
 }

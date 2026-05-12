@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     notifications: [{
         type: {
             type: String,
-            enum: ["booking_confirmed", "booking_cancelled", "event_update"],
+            enum: ["booking_confirmed", "booking_cancelled", "event_update", "event_cancelled"],
             required: true
         },
         eventId: {

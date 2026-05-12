@@ -399,6 +399,7 @@ exports.getBookingsPage = async (req, res) => {
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.render("bookings", { user: null, bookings: [], initialStatus: requestedStatus });
+
         }
 
         let bookings = await Booking.find({ userEmail: user.email })

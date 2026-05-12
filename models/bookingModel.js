@@ -5,7 +5,11 @@ const bookingSchema = new mongoose.Schema(
         eventId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Event',
-            required: true
+            required: false
+        },
+        venueId: {
+            type: String, // Since we don't have a Venue model yet, we'll store the ID as a string
+            required: false
         },
         userName: {
             type: String,
