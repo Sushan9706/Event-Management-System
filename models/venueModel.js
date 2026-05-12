@@ -6,7 +6,7 @@ const venueSchema = new mongoose.Schema({
   category: { type: String, required: true },
   capacity: { type: Number, required: true },
   ratePerDay: { type: Number, required: true },
-  image: { type: String, default: "/images/default-venue.png" },
+  image: { type: String, default: "/images/venues/default-venue.png" },
   active: { type: Boolean, default: true },
 }, { timestamps: true });
 

@@ -13,12 +13,12 @@ router.get("/", async (req, res) => {
     // Seed if empty (first run)
     if (venues.length === 0) {
       venues = await Venue.insertMany([
-        { name: "Amber Hall", location: "Kathmandu", category: "Conference", capacity: 300, ratePerDay: 45000 },
-        { name: "Blue Ridge Pavilion", location: "Lalitpur", category: "Outdoor", capacity: 500, ratePerDay: 62000 },
-        { name: "Cedar Boardroom", location: "Kathmandu", category: "Boardroom", capacity: 20, ratePerDay: 8500 },
-        { name: "Everest Suite", location: "Kathmandu", category: "Banquet", capacity: 800, ratePerDay: 120000 },
-        { name: "Fern Garden", location: "Bhaktapur", category: "Outdoor", capacity: 200, ratePerDay: 35000 },
-        { name: "Grand Auditorium", location: "Lalitpur", category: "Auditorium", capacity: 1200, ratePerDay: 180000 }
+        { name: "Amber Hall", location: "Kathmandu", category: "Conference", capacity: 300, ratePerDay: 45000, image: "/images/venues/amber-hall.png" },
+        { name: "Blue Ridge Pavilion", location: "Lalitpur", category: "Outdoor", capacity: 500, ratePerDay: 62000, image: "/images/venues/blue-ridge.png" },
+        { name: "Cedar Boardroom", location: "Kathmandu", category: "Boardroom", capacity: 20, ratePerDay: 8500, image: "/images/venues/cedar-boardroom.png" },
+        { name: "Everest Suite", location: "Kathmandu", category: "Banquet", capacity: 800, ratePerDay: 120000, image: "/images/venues/everest-suite.png" },
+        { name: "Fern Garden", location: "Bhaktapur", category: "Outdoor", capacity: 200, ratePerDay: 35000, image: "/images/venues/fern-garden.png" },
+        { name: "Grand Auditorium", location: "Lalitpur", category: "Auditorium", capacity: 1200, ratePerDay: 180000, image: "/images/venues/grand-auditorium.png" }
       ]);
     }
 
