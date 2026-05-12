@@ -73,7 +73,7 @@
       var location = (card.dataset.location || "").toLowerCase();
 
       var matchCat = activeFilter === "all" || cat === activeFilter;
-      var matchSearch = !searchQuery || name.includes(searchQuery);
+      var matchSearch = !searchQuery || name.includes(searchQuery) || location.includes(searchQuery);
       var matchLocation = activeLocation === "all" || location.includes(activeLocation);
 
       if (matchCat && matchSearch && matchLocation) {

@@ -8,7 +8,8 @@ const bookingSchema = new mongoose.Schema(
             required: false
         },
         venueId: {
-            type: String, // Since we don't have a Venue model yet, we'll store the ID as a string
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Venue',
             required: false
         },
         userName: {

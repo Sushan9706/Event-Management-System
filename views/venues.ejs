@@ -240,7 +240,7 @@
     </footer>
 
     <script>
-      window.__VENUES__ = JSON.stringify(typeof venues !== 'undefined' ? venues : [])
+      window.__VENUES__ = <%- JSON.stringify(venues || []) %>;
     </script>
     <script src="/js/venues.js"></script>
     <script>

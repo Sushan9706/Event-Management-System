@@ -3,7 +3,7 @@ const router = express.Router();
 const Venue = require("../models/venueModel");
 const Booking = require("../models/bookingModel");
 const User = require("../models/user");
-const { isLoggedIn } = require("../middleware/auth");
+const { isLoggedIn } = require("../middlewares/auth");
 
 // ── GET /venues  –  public catalog ──
 router.get("/", async (req, res) => {
