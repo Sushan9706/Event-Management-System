@@ -91,6 +91,7 @@ app.use(async (req, res, next) => {
 app.use("/", indexRouter);
 app.use("/admin", adminRoutes);
 app.use("/event", eventRoutes);
+app.use("/venues", require("./routes/venueRoutes"));
 
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
