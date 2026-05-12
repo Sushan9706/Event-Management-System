@@ -100,9 +100,9 @@
           <% latestEvents.forEach(function(event, i) { %>
             <a href="/event/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>" style="text-decoration:none; color:inherit;">
               <div class="ecard-img-wrap">
-                <img src="<%= event.image || event.imagePath || 'https://via.placeholder.com/400x260?text=Event' %>" 
+                <img src="<%= event.image || event.imagePath || '/images/default-event.png' %>" 
                      class="ecard-img" 
-                     onerror="this.src='https://via.placeholder.com/400x260?text=Event'" />
+                     onerror="this.src='/images/default-event.png'" />
               </div>
               <div class="ecard-body">
                 <h3 class="ecard-title">

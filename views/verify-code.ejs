@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Code - EMS</title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">EMS</div>
+        <nav>
+            <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></a>
+        </nav>
+    </header>
+
+    <main class="login-container">
+        <div class="central-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+
+        <section class="welcome-text">
+            <h1>Verify Code</h1>
+            <p>We've sent a 6-digit verification code to<br>your email. Enter it below to reset your<br>password.</p>
+        </section>
+
+        <div class="login-card verify-card">
+            <% if (typeof error !== 'undefined' && error.length > 0) { %>
+                <div class="flash-message error">
+                    <span class="flash-icon">!</span>
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success.length > 0) { %>
+                <div class="flash-message success">
+                    <span class="flash-icon">✓</span>
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <form action="/verify-code" method="POST" id="verifyForm">
+                <div class="verification-container">
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                    <input type="text" class="code-input" maxlength="1" pattern="\d" required>
+                </div>
+                
+                <!-- Hidden field to store the combined code -->
+                <input type="hidden" name="code" id="fullCode">
+
+                <button type="submit" class="login-btn">Verify Code</button>
+            </form>
+
+            <p class="resend-text">
+                Didn't receive the code? <a href="/reset-password">Resend Code</a>
+            </p>
+
+            <a href="/login" class="return-link">← RETURN TO LOGIN</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-left">
+            COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.
+        </div>
+        <div class="footer-right">
+            <a href="#">PRIVACY</a>
+            <a href="#">TERMS</a>
+            <a href="#">CONTACT</a>
+        </div>
+    </footer>
+
+    <script>
+        const inputs = document.querySelectorAll('.code-input');
+        const fullCodeInput = document.getElementById('fullCode');
+        const form = document.getElementById('verifyForm');
+
+        inputs.forEach((input, index) => {
+            // Handle typing
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length > 0 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                updateFullCode();
+            });
+
+            // Handle backspace
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            // Handle paste
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').slice(0, 6).split('');
+                pasteData.forEach((char, i) => {
+                    if (inputs[index + i]) {
+                        inputs[index + i].value = char;
+                    }
+                });
+                updateFullCode();
+                if (inputs[index + pasteData.length]) {
+                    inputs[index + pasteData.length].focus();
+                } else {
+                    inputs[inputs.length - 1].focus();
+                }
+            });
+        });
+
+        function updateFullCode() {
+            let code = '';
+            inputs.forEach(input => code += input.value);
+            fullCodeInput.value = code;
+        }
+
+        form.addEventListener('submit', (e) => {
+            updateFullCode();
+            if (fullCodeInput.value.length !== 6) {
+                e.preventDefault();
+                alert('Please enter the full 6-digit code.');
+            }
+        });
+
+        // Auto-dismiss flash messages
+        document.querySelectorAll('.flash-message').forEach(msg => {
+            setTimeout(() => {
+                msg.classList.add('fade-out');
+                setTimeout(() => {
+                    msg.remove();
+                }, 400);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

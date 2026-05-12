@@ -33,7 +33,15 @@ router.get('/register', redirectIfLoggedIn, userController.getRegister);
 router.post('/register', redirectIfLoggedIn, userController.postRegister);
 router.get('/login', redirectIfLoggedIn, userController.getLogin);
 router.post('/login', redirectIfLoggedIn, userController.postLogin);
-router.get('/reset-password', redirectIfLoggedIn, userController.getResetPassword);
+
+// Password Reset Flow
+router.get('/reset-password', redirectIfLoggedIn, userController.getForgotPassword);
+router.post('/reset-password', redirectIfLoggedIn, userController.postForgotPassword);
+router.get('/verify-code', redirectIfLoggedIn, userController.getVerifyCode);
+router.post('/verify-code', redirectIfLoggedIn, userController.postVerifyCode);
+router.get('/create-password', redirectIfLoggedIn, userController.getCreatePassword);
+router.post('/create-password', redirectIfLoggedIn, userController.postCreatePassword);
+
 router.get('/logout', userController.logout);
 
 // --- PROTECTED USER ROUTES (Requires isLoggedIn) ---

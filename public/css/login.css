@@ -294,3 +294,143 @@ input::placeholder {
 .input-group {
     margin-bottom: 20px;
 }
+
+/* Verification Code Boxes */
+.verification-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.code-input {
+    width: 45px;
+    height: 55px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 6px;
+    background-color: #f4f4f6;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.code-input:focus {
+    outline: none;
+    border-color: #4e596d;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(78, 89, 109, 0.1);
+}
+
+/* Central Badge/Icon */
+.central-badge {
+    width: 48px;
+    height: 48px;
+    background-color: #4e596d;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    color: white;
+}
+
+.central-badge svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Return to Login Link */
+.return-link {
+    display: block;
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.2s ease;
+}
+
+.return-link:hover {
+    color: #333;
+}
+
+.resend-text {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.resend-text a {
+    color: #4e596d;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+/* For Verify Code Page specifically */
+.verify-card {
+    text-align: center;
+}
+
+.verify-card p {
+    color: #777;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .code-input {
+        width: 40px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .verification-container {
+        gap: 6px;
+    }
+}
+
+/* Spinner Animation */
+.spinner {
+  animation: rotate 2s linear infinite;
+  width: 20px;
+  height: 20px;
+}
+
+.spinner .path {
+  stroke: #fff;
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+.login-btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
