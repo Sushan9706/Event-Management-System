@@ -802,23 +802,6 @@ exports.getCatalog = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Fetch events where endDate is today or in the future
-    let events = await eventModel
-      .find({
-        endDate: { $gte: today },
-        status: { $ne: "cancelled" },
-      })
-      .populate("categoryId")
-      .lean();
-    res.render("catalog", {
-      events: events,
-      user: fullUser,
-      notifications: fullUser ? fullUser.notifications || [] : [],
-    });
-
-    // Filter out events that have already ended precisely (date + time)
-    events = events.filter((event) => !hasEventEnded(event));
-
     // Fetch the full user document if logged in; otherwise allow guest view
     let fullUser = null;
     if (!req.user) {
@@ -837,9 +820,22 @@ exports.getCatalog = async (req, res) => {
       fullUser = await userModel.findById(req.user.userId);
     }
 
+    // Fetch events where endDate is today or in the future
+    let events = await eventModel
+      .find({
+        endDate: { $gte: today },
+        status: { $ne: "cancelled" },
+      })
+      .populate("categoryId")
+      .lean();
+
+    // Filter out events that have already ended precisely (date + time)
+    events = events.filter((event) => !hasEventEnded(event));
+
     res.render("catalog", {
       events: events,
-      user: fullUser, // Pass the full database object instead of just req.user
+      user: fullUser,
+      notifications: fullUser ? fullUser.notifications || [] : [],
     });
   } catch (err) {
     console.error("Error loading catalog:", err);
