@@ -313,90 +313,21 @@ exports.loadMoreBookings = async (req, res) => {
 };
 
 exports.cancelBooking = async (req, res) => {
-  try{
   try {
     const { eventId } = req.params;
     const userId = req.user.userId;
 
-        // 1. Get user to get email (for finding the specific booking)
-        const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-        if (!Array.isArray(user.bookedEvents)) {
-            user.bookedEvents = [];
-        }
-
-        // 2. Remove from user's bookedEvents array
-        user.bookedEvents = user.bookedEvents.filter(id => id.toString() !== eventId);
-        await user.save();
-
-        // 3. Mark bookings as cancelled (keep record for history)
-        const bookingModel = require("../models/bookingModel");
-        const activeBookings = await bookingModel.find({
-            eventId,
-            userEmail: user.email,
-            status: { $ne: 'cancelled' }
-        }).populate('eventId', 'startDate');
-        await syncBookingsExpiry(activeBookings);
-
-        const cancellableBookings = activeBookings.filter(booking => {
-            const status = (booking.status || '').toLowerCase();
-            return status !== 'cancelled' && status !== 'expired';
-        });
-        if (cancellableBookings.length === 0) {
-            return res.status(400).json({ success: false, message: "This booking has expired and can no longer be cancelled." });
-        }
-
-        const totalCancelled = cancellableBookings.reduce((sum, booking) => {
-            const count = booking.ticketCount || 1;
-            return sum + count;
-        }, 0);
-
-        await bookingModel.updateMany(
-            { _id: { $in: cancellableBookings.map(booking => booking._id) } },
-            { $set: { status: 'cancelled' } }
-        );
-
-        if (!Array.isArray(user.notifications)) {
-            user.notifications = [];
-        }
-        if (totalCancelled > 0) {
-            let eventName = "Event";
-            try {
-                const eventDoc = await eventModel.findById(eventId).select("eventName title");
-                if (eventDoc) {
-                    eventName = eventDoc.eventName || eventDoc.title || eventName;
-                }
-            } catch (err) {
-                eventName = eventName;
-            }
-            user.notifications.unshift({
-                type: "booking_cancelled",
-                eventId,
-                eventName,
-                ticketCount: totalCancelled,
-                createdAt: new Date()
-            });
-            if (user.notifications.length > 20) {
-                user.notifications = user.notifications.slice(0, 20);
-            }
-        }
-        await user.save();
-
-        res.json({ success: true, message: "Booking cancelled successfully" });
-    } catch (err) {
-        console.error("Cancel Booking Error:", err);
-        res.status(500).json({ success: false, message: "Server error" });
+    // 1. Get user to get email (for finding the specific booking)
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
     if (!Array.isArray(user.bookedEvents)) {
       user.bookedEvents = [];
     }
 
     // 2. Remove from user's bookedEvents array
-    user.bookedEvents = user.bookedEvents.filter(
-      (id) => id.toString() !== eventId
-    );
+    user.bookedEvents = user.bookedEvents.filter((id) => id.toString() !== eventId);
     await user.save();
 
     // 3. Mark bookings as cancelled (keep record for history)
@@ -407,13 +338,15 @@ exports.cancelBooking = async (req, res) => {
         userEmail: user.email,
         status: { $ne: "cancelled" },
       })
-      .populate("eventId", "date");
+      .populate("eventId", "startDate");
+    
     await syncBookingsExpiry(activeBookings);
 
     const cancellableBookings = activeBookings.filter((booking) => {
       const status = (booking.status || "").toLowerCase();
       return status !== "cancelled" && status !== "expired";
     });
+    
     if (cancellableBookings.length === 0) {
       return res.status(400).json({
         success: false,
@@ -434,6 +367,7 @@ exports.cancelBooking = async (req, res) => {
     if (!Array.isArray(user.notifications)) {
       user.notifications = [];
     }
+    
     if (totalCancelled > 0) {
       let eventName = "Event";
       try {
@@ -444,8 +378,9 @@ exports.cancelBooking = async (req, res) => {
           eventName = eventDoc.eventName || eventDoc.title || eventName;
         }
       } catch (err) {
-        eventName = eventName;
+        console.error("Error fetching event name for notification:", err);
       }
+      
       user.notifications.unshift({
         type: "booking_cancelled",
         eventId,
@@ -453,181 +388,45 @@ exports.cancelBooking = async (req, res) => {
         ticketCount: totalCancelled,
         createdAt: new Date(),
       });
+      
       if (user.notifications.length > 20) {
         user.notifications = user.notifications.slice(0, 20);
       }
+      await user.save();
     }
-    await user.save();
 
     res.json({ success: true, message: "Booking cancelled successfully" });
   } catch (err) {
     console.error("Cancel Booking Error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
   }
 };
 
+
 exports.cancelBookingById = async (req, res) => {
-  try{
   try {
     const { bookingId } = req.params;
     const { cancelCount: cancelCountRaw } = req.body || {};
     const userId = req.user.userId;
 
-        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-            return res.status(400).json({ success: false, message: "Invalid booking." });
-        }
-
-        const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
-        const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-        if (!Array.isArray(user.bookedEvents)) {
-            user.bookedEvents = [];
-        }
-
-        const bookingModel = require("../models/bookingModel");
-        const booking = await bookingModel.findById(bookingId).populate('eventId', 'startDate');
-        if (!booking) {
-            return res.status(404).json({ success: false, message: "Booking not found" });
-        }
-        await syncBookingExpiry(booking);
-        if (booking.userEmail !== user.email) {
-            return res.status(403).json({ success: false, message: "Not authorized to cancel this booking" });
-        }
-        if (booking.status === "cancelled") {
-            return res.status(400).json({ success: false, message: "Booking is already cancelled" });
-        }
-        if (booking.status === "expired") {
-            return res.status(400).json({ success: false, message: "Booking has expired and can no longer be cancelled" });
-        }
-
-        const currentCount = Math.max(booking.ticketCount || 1, 1);
-        const normalizedCancel = Math.min(cancelCount, currentCount);
-
-        let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
-        let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
-        const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-        if (ticketCodes.length < currentCount) {
-            for (let i = ticketCodes.length; i < currentCount; i += 1) {
-                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-                ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
-            }
-            booking.referenceNumber = referenceNumber;
-            booking.bookingRef = booking.bookingRef || referenceNumber;
-        }
-
-        const isFullCancel = normalizedCancel >= currentCount;
-
-        if (isFullCancel) {
-            booking.status = "cancelled";
-        } else {
-            const remainingCount = currentCount - normalizedCancel;
-            const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
-            const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
-            booking.ticketCount = remainingCount;
-            booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
-            booking.ticketCodes = ticketCodes.slice(0, remainingCount);
-            booking.attendeeNames = attendeeNames.slice(0, remainingCount);
-
-            // Create a separate cancelled-history record so cancelled tickets show up under "Cancelled".
-            const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-            try {
-                await bookingModel.create({
-                    eventId: booking.eventId,
-                    userName: cancelledNames[0] || booking.userName,
-                    userEmail: booking.userEmail,
-                    attendeeEmail: booking.attendeeEmail || booking.userEmail,
-                    attendeeNames: cancelledNames,
-                    ticketCount: normalizedCancel,
-                    unitPrice: booking.unitPrice || 0,
-                    totalAmount: (booking.unitPrice || 0) * normalizedCancel,
-                    ticketCodes: cancelledCodes,
-                    referenceNumber: cancellationRef,
-                    // bookingRef is unique in the DB; keep it unique for the cancellation record.
-                    bookingRef: cancellationRef,
-                    status: "cancelled"
-                });
-            } catch (err) {
-                console.error("Cancel history insert failed:", err && err.message ? err.message : err);
-            }
-        }
-
-        await booking.save();
-
-        if (!Array.isArray(user.notifications)) {
-            user.notifications = [];
-        }
-        let eventName = "Event";
-        try {
-            const eventDoc = await eventModel.findById(booking.eventId).select("eventName title");
-            if (eventDoc) {
-                eventName = eventDoc.eventName || eventDoc.title || eventName;
-            }
-        } catch (err) {
-            eventName = eventName;
-        }
-        user.notifications.unshift({
-            type: "booking_cancelled",
-            eventId: booking.eventId,
-            eventName,
-            ticketCount: normalizedCancel,
-            createdAt: new Date()
-        });
-        if (user.notifications.length > 20) {
-            user.notifications = user.notifications.slice(0, 20);
-        }
-
-        if (isFullCancel) {
-            const remainingActive = await bookingModel.countDocuments({
-                eventId: booking.eventId,
-                userEmail: user.email,
-                status: { $nin: ["cancelled", "expired"] }
-            });
-            if (remainingActive === 0) {
-                user.bookedEvents = user.bookedEvents.filter(
-                    id => id.toString() !== booking.eventId.toString()
-                );
-                await user.save();
-            } else {
-                await user.save();
-            }
-        } else {
-            await user.save();
-        }
-
-        res.json({
-            success: true,
-            message: isFullCancel ? "Booking cancelled successfully" : "Tickets cancelled successfully",
-            status: booking.status,
-            remainingTickets: isFullCancel ? 0 : booking.ticketCount
-        });
-    } catch (err) {
-        console.error("Cancel Booking (partial) Error:", err);
-        res.status(500).json({ success: false, message: "Server error" });
+    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid booking." });
     }
 
     const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
     const user = await userModel.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-    if (!Array.isArray(user.bookedEvents)) {
-      user.bookedEvents = [];
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     const bookingModel = require("../models/bookingModel");
-    const booking = await bookingModel
-      .findById(bookingId)
-      .populate("eventId", "date");
+    const booking = await bookingModel.findById(bookingId).populate("eventId", "startDate");
     if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
+      return res.status(404).json({ success: false, message: "Booking not found" });
     }
+
     await syncBookingExpiry(booking);
     if (booking.userEmail !== user.email) {
       return res.status(403).json({
@@ -635,10 +434,9 @@ exports.cancelBookingById = async (req, res) => {
         message: "Not authorized to cancel this booking",
       });
     }
+
     if (booking.status === "cancelled") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Booking is already cancelled" });
+      return res.status(400).json({ success: false, message: "Booking is already cancelled" });
     }
     if (booking.status === "expired") {
       return res.status(400).json({
@@ -650,19 +448,14 @@ exports.cancelBookingById = async (req, res) => {
     const currentCount = Math.max(booking.ticketCount || 1, 1);
     const normalizedCancel = Math.min(cancelCount, currentCount);
 
-    let ticketCodes = Array.isArray(booking.ticketCodes)
-      ? [...booking.ticketCodes]
-      : [];
-    const referenceNumber =
-      booking.referenceNumber ||
-      `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+    let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
+    const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
     if (ticketCodes.length < currentCount) {
       for (let i = ticketCodes.length; i < currentCount; i += 1) {
         const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-        ticketCodes.push(
-          `${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`
-        );
+        ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
       }
       booking.referenceNumber = referenceNumber;
       booking.bookingRef = booking.bookingRef || referenceNumber;
@@ -674,13 +467,39 @@ exports.cancelBookingById = async (req, res) => {
       booking.status = "cancelled";
     } else {
       const remainingCount = currentCount - normalizedCancel;
+      const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
+      const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
+      
       booking.ticketCount = remainingCount;
       booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
       booking.ticketCodes = ticketCodes.slice(0, remainingCount);
+      booking.attendeeNames = attendeeNames.slice(0, remainingCount);
+
+      // Create a separate cancelled-history record
+      const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      try {
+        await bookingModel.create({
+          eventId: booking.eventId,
+          userName: cancelledNames[0] || booking.userName,
+          userEmail: booking.userEmail,
+          attendeeEmail: booking.attendeeEmail || booking.userEmail,
+          attendeeNames: cancelledNames,
+          ticketCount: normalizedCancel,
+          unitPrice: booking.unitPrice || 0,
+          totalAmount: (booking.unitPrice || 0) * normalizedCancel,
+          ticketCodes: cancelledCodes,
+          referenceNumber: cancellationRef,
+          bookingRef: cancellationRef,
+          status: "cancelled",
+        });
+      } catch (err) {
+        console.error("Cancel history insert failed:", err);
+      }
     }
 
     await booking.save();
 
+    // Handle user notifications
     if (!Array.isArray(user.notifications)) {
       user.notifications = [];
     }
@@ -693,8 +512,9 @@ exports.cancelBookingById = async (req, res) => {
         eventName = eventDoc.eventName || eventDoc.title || eventName;
       }
     } catch (err) {
-      eventName = eventName;
+      console.error("Error fetching event name for notification:", err);
     }
+    
     user.notifications.unshift({
       type: "booking_cancelled",
       eventId: booking.eventId,
@@ -702,6 +522,7 @@ exports.cancelBookingById = async (req, res) => {
       ticketCount: normalizedCancel,
       createdAt: new Date(),
     });
+    
     if (user.notifications.length > 20) {
       user.notifications = user.notifications.slice(0, 20);
     }
@@ -716,27 +537,24 @@ exports.cancelBookingById = async (req, res) => {
         user.bookedEvents = user.bookedEvents.filter(
           (id) => id.toString() !== booking.eventId.toString()
         );
-        await user.save();
-      } else {
-        await user.save();
       }
-    } else {
-      await user.save();
     }
+    await user.save();
 
     res.json({
       success: true,
-      message: isFullCancel
-        ? "Booking cancelled successfully"
-        : "Tickets cancelled successfully",
+      message: isFullCancel ? "Booking cancelled successfully" : "Tickets cancelled successfully",
       status: booking.status,
       remainingTickets: isFullCancel ? 0 : booking.ticketCount,
     });
   } catch (err) {
     console.error("Cancel Booking (partial) Error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
   }
 };
+
 
 exports.getGuestDashboard = async (req, res) => {
     try {
