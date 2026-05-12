@@ -127,7 +127,8 @@ app.post("/notifications/mark-all-read", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-// Routes
+// Routes (Updated: 2026-05-12)
+console.log("Initializing Index Router...");
 app.use("/", indexRouter);
 app.use("/admin", adminRoutes);
 app.use("/event", eventRoutes);
@@ -136,6 +137,12 @@ app.use("/venues", require("./routes/venuesRoutes"));
 // Example for future routes
 // const authRoutes = require('./routes/authRoutes');
 // app.use('/auth', authRoutes);
+
+app.get("/test-route", (req, res) => res.send("Router is working!"));
+app.get("/venue-bookings", (req, res, next) => {
+  console.log("Direct app.get /venue-bookings hit");
+  next();
+}, require("./controllers/bookingController").getVenueBookingsPage);
 
 // 404 handler
 app.use((req, res) => {

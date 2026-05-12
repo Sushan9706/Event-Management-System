@@ -48,7 +48,8 @@ button {
 }
 
 .nav-inner {
-  max-width: 1500px;
+  max-width: 1800px;
+  width: 95%;
   margin: 0 auto;
   padding: 0 32px;
   height: 100%;
@@ -350,7 +351,8 @@ button {
 }
 
 .hero {
-  max-width: 1500px;
+  max-width: 1800px;
+  width: 95%;
   margin: 0 auto;
   padding: 48px 32px 32px;
   display: flex;
@@ -419,7 +421,8 @@ button {
 /* Find button removed - using real-time Ajax instead */
 
 .filters {
-  max-width: 1500px;
+  max-width: 1800px;
+  width: 95%;
   margin: 0 auto;
   padding: 0 32px 40px;
   display: flex;
@@ -452,15 +455,16 @@ button {
 }
 
 .events-section {
-  max-width: 1500px;
+  max-width: 1800px;
+  width: 95%;
   margin: 0 auto;
   padding: 0 32px 64px;
 }
 
 .events-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
   width: 100%;
 }
 

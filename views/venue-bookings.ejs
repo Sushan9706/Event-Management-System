@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMS – My Venue Bookings</title>
+  <link rel="stylesheet" href="/css/bookings.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 40px 0 20px;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title span {
+      background: #eee;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+    .cancelled-section { opacity: 0.8; }
+    .venue-card {
+      background: #fff;
+      border: 1px solid #e4e4e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      align-items: center;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .venue-card { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">EMS</div>
+      <nav class="nav-links">
+        <a href="/user" class="nav-item">Home</a>
+        <a href="/catalog" class="nav-item">Events</a>
+        <a href="/venues" class="nav-item">Venues</a>
+        <a href="/bookings" class="nav-item">My Bookings</a>
+        <a href="/venue-bookings" class="nav-item active">Venue Bookings</a>
+      </nav>
+      <div class="nav-right">
+         <div class="profile-menu-container" style="position: relative">
+            <div class="avatar-btn" id="avatarBtn">
+              <img src="<%= (user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (user ? user.username : 'User') + '&background=e74c3c&color=fff' %>" alt="User" />
+            </div>
+          </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+    <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px;">My Venue Bookings</h1>
+    <p style="color: #666; margin-bottom: 32px;">Manage your venue reservations and upcoming plans.</p>
+
+    <!-- CONFIRMED SECTION -->
+    <h2 class="section-title">CONFIRMED RESERVATIONS <span><%= confirmed.length %></span></h2>
+    <div class="booking-list">
+      <% if (confirmed.length === 0) { %>
+        <div class="empty-state" style="padding: 40px; text-align: center; background: #fff; border: 1px dashed #ccc; border-radius: 12px;">
+          <p>No confirmed venue bookings found.</p>
+          <a href="/venues" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Browse Venues</a>
+        </div>
+      <% } else { %>
+        <% confirmed.forEach(booking => { %>
+          <article class="venue-card">
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Venue Name</p>
+              <h3 style="font-size: 16px; margin-top: 4px;"><%= booking.venueId ? (booking.venueId.name || 'Venue') : 'Venue' %></h3>
+            </div>
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Date & Slot</p>
+              <p style="font-size: 14px; margin-top: 4px;">
+                <%= booking.venueDate ? new Date(booking.venueDate).toLocaleDateString() : 'TBA' %>
+                <br><span style="color: #666; font-size: 12px;"><%= booking.timeSlot || 'Full Day' %></span>
+              </p>
+            </div>
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Reference</p>
+              <div style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; font-family: monospace; font-size: 13px; margin-top: 4px;">
+                <%= booking.referenceNumber %>
+              </div>
+            </div>
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Amount</p>
+              <p style="font-size: 14px; font-weight: 600; margin-top: 4px;">NPR <%= (booking.totalAmount || 0).toLocaleString() %></p>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">CONFIRMED</span>
+            </div>
+          </article>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- CANCELLED SECTION -->
+    <h2 class="section-title">CANCELLED RESERVATIONS <span><%= cancelled.length %></span></h2>
+    <div class="booking-list cancelled-section">
+      <% if (cancelled.length === 0) { %>
+        <div class="empty-state" style="padding: 40px; text-align: center; background: #fff; border: 1px dashed #ccc; border-radius: 12px;">
+          <p>No cancelled bookings.</p>
+        </div>
+      <% } else { %>
+        <% cancelled.forEach(booking => { %>
+          <article class="venue-card">
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Venue Name</p>
+              <h3 style="font-size: 16px; margin-top: 4px;"><%= booking.venueId ? (booking.venueId.name || 'Venue') : 'Venue' %></h3>
+            </div>
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Date</p>
+              <p style="font-size: 14px; margin-top: 4px;"><%= booking.venueDate ? new Date(booking.venueDate).toLocaleDateString() : 'TBA' %></p>
+            </div>
+            <div>
+              <p style="font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase;">Reference</p>
+              <div style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; font-family: monospace; font-size: 13px; margin-top: 4px;">
+                <%= booking.referenceNumber %>
+              </div>
+            </div>
+            <div style="text-align: right; grid-column: span 2;">
+              <span style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">CANCELLED</span>
+            </div>
+          </article>
+        <% }) %>
+      <% } %>
+    </div>
+  </main>
+
+  <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">Hi, <%= user ? user.username : 'User' %></div>
+      <div class="sidebar-divider"></div>
+      <a href="/profile" class="sidebar-link">My Profile</a>
+      <a href="/venue-bookings" class="sidebar-link active">My Venue Bookings</a>
+      <div class="sidebar-divider"></div>
+      <a href="/logout" class="sidebar-logout">Log Out</a>
+  </aside>
+
+  <footer class="footer">
+    <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+    <div class="footer-links">
+      <a href="#">PRIVACY POLICY</a>
+      <a href="#">TERMS OF SERVICE</a>
+      <a href="#">CONTACT</a>
+    </div>
+  </footer>
+
+  <script>
+    const avatarBtn = document.getElementById("avatarBtn");
+    const avatarSidebar = document.getElementById("avatarSidebar");
+    if (avatarBtn && avatarSidebar) {
+      avatarBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        avatarSidebar.classList.toggle("open");
+      });
+      document.addEventListener("click", () => avatarSidebar.classList.remove("open"));
+    }
+  </script>
+</body>
+</html>

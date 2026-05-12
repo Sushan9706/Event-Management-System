@@ -53,6 +53,8 @@ router.get("/user", isLoggedIn, userController.getUserDashboard);
 // This is the specific update you asked for:
 router.get("/profile", isLoggedIn, userController.getProfile);
 
+
+
 router.post(
   "/profile/update-password",
   isLoggedIn,
@@ -68,6 +70,7 @@ router.post(
 );
 
 router.get("/bookings", isLoggedIn, bookingController.getBookingsPage);
+router.get("/venue-bookings", isLoggedIn, bookingController.getVenueBookingsPage);
 router.get("/bookings/load-more", isLoggedIn, userController.loadMoreBookings);
 router.get(
   "/bookings/manage/:bookingId",

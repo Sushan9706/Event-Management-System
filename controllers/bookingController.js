@@ -1,6 +1,7 @@
 const Booking = require('../models/bookingModel');
 const Event = require('../models/event');
 const User = require('../models/user');
+const Venue = require('../models/venueModel');
 const mongoose = require('mongoose');
 const os = require('os');
 const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
@@ -562,5 +563,37 @@ exports.getTicketDetails = async (req, res) => {
     } catch (err) {
         console.error("Get Ticket Details Error:", err);
         return res.status(500).render("404", { title: "Ticket Not Found" });
+    }
+};
+exports.getVenueBookingsPage = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.redirect('/login');
+
+        const venueBookings = await Booking.find({ 
+            userEmail: user.email,
+            venueId: { $exists: true, $ne: null }
+        })
+        .populate('venueId')
+        .lean();
+
+        // Separate and sort
+        const confirmed = venueBookings
+            .filter(b => b.status === 'confirmed')
+            .sort((a, b) => (a.venueDate || a.createdAt) - (b.venueDate || b.createdAt));
+
+        const cancelled = venueBookings
+            .filter(b => b.status === 'cancelled')
+            .sort((a, b) => (b.venueDate || b.createdAt) - (a.venueDate || a.createdAt));
+
+        res.render("venue-bookings", { 
+            user, 
+            confirmed, 
+            cancelled,
+            notifications: user.notifications || []
+        });
+    } catch (err) {
+        console.error("Venue Bookings Page Error:", err);
+        res.status(500).send("Error loading venue bookings: " + err.message);
     }
 };

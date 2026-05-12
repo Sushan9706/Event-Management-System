@@ -12,6 +12,15 @@ const bookingSchema = new mongoose.Schema(
             ref: 'Venue',
             required: false
         },
+        venueDate: {
+            type: Date,
+            required: false
+        },
+        timeSlot: {
+            type: String,
+            required: false,
+            default: 'Full Day'
+        },
         userName: {
             type: String,
             required: true,
