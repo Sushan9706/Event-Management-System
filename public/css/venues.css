@@ -40,10 +40,58 @@ Copy
 }
 
 /* ── Layout Overrides to reduce side space ── */
-.hero, .filters, .events-section {
+.hero, .category-filter-wrap, .events-section {
   max-width: 1800px !important;
   width: 95% !important;
   margin: 0 auto !important;
+}
+
+.category-filter-wrap {
+  margin-bottom: 40px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.category-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.filters {
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+.filter-tag {
+  padding: 10px 24px !important;
+  border-radius: 50px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  transition: all 0.25s ease !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--white) !important;
+  color: var(--mid) !important;
+}
+
+.filter-tag:hover {
+  border-color: var(--dark) !important;
+  color: var(--dark) !important;
+  transform: translateY(-1px);
+}
+
+.filter-tag.active {
+  background: var(--dark) !important;
+  color: var(--white) !important;
+  border-color: var(--dark) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .events-grid {
