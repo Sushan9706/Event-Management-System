@@ -34,11 +34,13 @@ body {
 a {
   text-decoration: none;
 }
+
 button {
   cursor: pointer;
   border: none;
   background: none;
 }
+
 svg {
   display: block;
   flex-shrink: 0;
@@ -67,14 +69,16 @@ svg {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.1em;
-  flex: 1; /* Pushes center to true middle */
+  flex: 1;
+  /* Pushes center to true middle */
 }
 
 .nav-center {
   display: flex;
   gap: 28px;
   justify-content: center;
-  flex: 2; /* Takes more space to force centering */
+  flex: 2;
+  /* Takes more space to force centering */
 }
 
 .nav-link {
@@ -101,7 +105,18 @@ svg {
 .nav-link:hover {
   color: var(--text-dark);
 }
+
 .nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Active State */
+.nav-link.active {
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.nav-link.active::after {
   transform: scaleX(1);
 }
 
@@ -110,7 +125,8 @@ svg {
   align-items: center;
   gap: 16px;
   justify-content: flex-end;
-  flex: 1; /* Balances the logo */
+  flex: 1;
+  /* Balances the logo */
 }
 
 .icon-btn {
@@ -156,15 +172,18 @@ svg {
   letter-spacing: 0.15em;
   font-weight: 700;
 }
+
 .hero-title {
   font-family: var(--serif);
   font-size: 42px;
   margin: 8px 0;
   font-weight: 400;
 }
+
 .hero-name {
   color: var(--blue);
 }
+
 .hero-sub {
   color: var(--text-mid);
   font-size: 14px;
@@ -177,18 +196,21 @@ svg {
   gap: 16px;
   margin-top: 24px;
 }
+
 .stat-card {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 24px;
 }
+
 .stat-label {
   font-size: 10px;
   color: var(--text-mid);
   letter-spacing: 0.1em;
   margin: 12px 0 4px;
 }
+
 .stat-num {
   font-size: 32px;
   font-weight: 300;
@@ -200,10 +222,12 @@ svg {
   position: relative;
   overflow: hidden;
 }
+
 .member-title {
   font-size: 20px;
   margin-top: 8px;
 }
+
 .member-link {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
@@ -218,10 +242,12 @@ svg {
   align-items: flex-end;
   margin-bottom: 20px;
 }
+
 .sec-title {
   font-size: 20px;
   font-family: var(--serif);
 }
+
 .explore-all {
   font-size: 10px;
   font-weight: 700;
@@ -236,6 +262,7 @@ svg {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
 }
+
 .ecard {
   background: white;
   border: 1px solid var(--border);
@@ -245,32 +272,39 @@ svg {
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .ecard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+
 .ecard--latest {
   border: 2px solid var(--blue);
   box-shadow: 0 4px 12px rgba(74, 124, 220, 0.15);
 }
+
 .ecard-img {
   width: 100%;
   height: 180px;
   object-fit: cover;
 }
+
 .ecard-body {
   padding: 16px;
   flex-grow: 1;
 }
+
 .ecard-meta {
   font-size: 11px;
   color: var(--text-mid);
   margin-top: 8px;
 }
+
 .ecard-title {
   font-size: 16px;
   line-height: 1.3;
 }
+
 .ecard-title--sm {
   font-size: 14px;
   line-height: 1.3;
@@ -283,6 +317,7 @@ svg {
   border-radius: 12px;
   padding: 24px;
 }
+
 .tbl-head {
   display: grid;
   grid-template-columns: 1fr 120px 120px 80px;
@@ -293,6 +328,7 @@ svg {
   font-weight: 700;
   letter-spacing: 0.05em;
 }
+
 .tbl-row {
   display: grid;
   grid-template-columns: 1fr 120px 120px 80px;
@@ -300,11 +336,13 @@ svg {
   padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
 }
+
 .td-event {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .ri {
   width: 40px;
   height: 40px;
@@ -312,25 +350,30 @@ svg {
   background: #eee;
   overflow: hidden;
 }
+
 .ri-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .rn {
   font-weight: 600;
   font-size: 13px;
 }
+
 .rid {
   font-size: 11px;
   color: var(--text-mid);
 }
+
 .pill {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 9px;
   font-weight: 700;
 }
+
 .pill--ok {
   background: #eef9f3;
   color: var(--green-ok);
@@ -342,19 +385,23 @@ svg {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.1); /* Lighter backdrop */
+  background: rgba(0, 0, 0, 0.1);
+  /* Lighter backdrop */
   z-index: 1050;
 }
+
 .sidebar-overlay.open {
   display: block;
 }
 
 .avatar-sidebar {
   position: fixed;
-  top: 60px; /* Aligned to your 60px Navbar height */
+  top: 60px;
+  /* Aligned to your 60px Navbar height */
   right: -260px;
   width: 240px;
-  height: auto; /* Not full height */
+  height: auto;
+  /* Not full height */
   background: var(--white);
   border: 1px solid var(--border);
   border-top: none;
@@ -407,7 +454,8 @@ svg {
   padding: 11px 22px;
   font-size: 13px;
   font-weight: 500;
-  color: #c0392b; /* Red for logout */
+  color: #c0392b;
+  /* Red for logout */
   transition: background 0.15s;
   width: 100%;
   cursor: pointer;
@@ -432,6 +480,7 @@ svg {
   display: flex;
   gap: 24px;
 }
+
 .footer-links a {
   color: var(--text-light);
 }

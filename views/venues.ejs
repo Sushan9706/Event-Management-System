@@ -26,7 +26,7 @@
           <a href="/catalog" class="nav-item">Events</a>
           <a href="/venues" class="nav-item active">Venues</a>
           <a href="/bookings" class="nav-item">My Bookings</a>
-          <a href="/venue-bookings" class="nav-item">Venue Bookings</a>
+          <a href="/venue-bookings" class="nav-item">My Venue Bookings</a>
         </nav>
         <div class="nav-right">
           <button class="icon-btn" id="notifBtn" aria-label="Notifications">
@@ -101,8 +101,10 @@
 
     <section class="hero">
       <h1>Find Your <span>Venue.</span></h1>
-      <div class="search-bar" style="max-width: 800px; display: flex; gap: 12px; background: none; box-shadow: none; height: auto; margin: 0 auto;">
-        <div class="search-bar-input" style="background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.04); height: 52px; flex: 2; min-width: 200px;">
+      <div class="search-bar"
+        style="max-width: 800px; display: flex; gap: 12px; background: none; box-shadow: none; height: auto; margin: 0 auto;">
+        <div class="search-bar-input"
+          style="background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.04); height: 52px; flex: 2; min-width: 200px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -110,8 +112,10 @@
           <input type="text" id="venueSearch" placeholder="Search by name…" />
         </div>
 
-        <div class="search-bar-input" style="background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.04); height: 52px; flex: 1; min-width: 150px; padding: 0 15px;">
-          <select id="locationFilter" style="border:none; outline:none; background:transparent; width:100%; font-family:var(--sans); font-size:14px; color:var(--dark); cursor:pointer;">
+        <div class="search-bar-input"
+          style="background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.04); height: 52px; flex: 1; min-width: 150px; padding: 0 15px;">
+          <select id="locationFilter"
+            style="border:none; outline:none; background:transparent; width:100%; font-family:var(--sans); font-size:14px; color:var(--dark); cursor:pointer;">
             <option value="all">All Locations</option>
             <option value="kathmandu">Kathmandu</option>
             <option value="lalitpur">Lalitpur</option>
@@ -121,7 +125,8 @@
           </select>
         </div>
 
-        <button id="clearFilters" style="background: var(--dark); color: var(--white); border: none; border-radius: 12px; padding: 0 24px; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; height: 52px;">Clear</button>
+        <button id="clearFilters"
+          style="background: var(--dark); color: var(--white); border: none; border-radius: 12px; padding: 0 24px; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; height: 52px;">Clear</button>
       </div>
     </section>
 
@@ -151,8 +156,7 @@
             (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) { imgUrl='/' + imgUrl; } %>
             <div class="event-card venue-card" data-id="<%= venue._id %>" data-category="<%= catSlug %>"
               data-name="<%= (venue.name || '').toLowerCase() %>"
-              data-location="<%= (venue.location || '').toLowerCase() %>"
-              data-capacity="<%= venue.capacity %>">
+              data-location="<%= (venue.location || '').toLowerCase() %>" data-capacity="<%= venue.capacity %>">
               <div class="card-img">
                 <img src="<%= imgUrl %>" alt="<%= venue.name %>" />
                 <span class="card-tag tag-<%= catSlug %>">

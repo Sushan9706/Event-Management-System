@@ -223,6 +223,7 @@ exports.getUserDashboard = async (req, res) => {
       upcomingEvents,
       latestEvents,
       notifications,
+      activePage: "home",
     });
   } catch (err) {
     console.error("Dashboard Error:", err);
@@ -265,100 +266,15 @@ exports.loadMoreBookings = async (req, res) => {
 
 exports.cancelBooking = async (req, res) => {
   try {
-    try {
-      const { eventId } = req.params;
-      const userId = req.user.userId;
+    const { eventId } = req.params;
+    const userId = req.user.userId;
 
-      // 1. Get user to get email (for finding the specific booking)
-      const user = await userModel.findById(userId);
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-      if (!Array.isArray(user.bookedEvents)) {
-        user.bookedEvents = [];
-      }
-
-      // 2. Remove from user's bookedEvents array
-      user.bookedEvents = user.bookedEvents.filter(
-        (id) => id.toString() !== eventId
-      );
-      await user.save();
-
-      // 3. Mark bookings as cancelled (keep record for history)
-      const bookingModel = require("../models/bookingModel");
-      const activeBookings = await bookingModel
-        .find({
-          eventId,
-          userEmail: user.email,
-          status: { $ne: "cancelled" },
-        })
-        .populate("eventId", "startDate");
-      await syncBookingsExpiry(activeBookings);
-
-      const cancellableBookings = activeBookings.filter((booking) => {
-        const status = (booking.status || "").toLowerCase();
-        return status !== "cancelled" && status !== "expired";
-      });
-      if (cancellableBookings.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "This booking has expired and can no longer be cancelled.",
-        });
-      }
-
-      const totalCancelled = cancellableBookings.reduce((sum, booking) => {
-        const count = booking.ticketCount || 1;
-        return sum + count;
-      }, 0);
-
-      await bookingModel.updateMany(
-        { _id: { $in: cancellableBookings.map((booking) => booking._id) } },
-        { $set: { status: "cancelled" } }
-      );
-
-      if (!Array.isArray(user.notifications)) {
-        user.notifications = [];
-      }
-      if (totalCancelled > 0) {
-        let eventName = "Event";
-        try {
-          const eventDoc = await eventModel
-            .findById(eventId)
-            .select("eventName title");
-          if (eventDoc) {
-            eventName = eventDoc.eventName || eventDoc.title || eventName;
-          }
-        } catch (err) {
-          eventName = eventName;
-        }
-        user.notifications.unshift({
-          type: "booking_cancelled",
-          eventId,
-          eventName,
-          ticketCount: totalCancelled,
-          createdAt: new Date(),
-        });
-        if (user.notifications.length > 20) {
-          user.notifications = user.notifications.slice(0, 20);
-        }
-        // Remove any 'event_update' notifications for this event since booking is cancelled
-        user.notifications = user.notifications.filter(
-          (n) =>
-            !(
-              n.eventId &&
-              n.eventId.toString() === eventId &&
-              n.type === "event_update"
-            )
-        );
-      }
-      await user.save();
-
-      res.json({ success: true, message: "Booking cancelled successfully" });
-    } catch (err) {
-      console.error("Cancel Booking Error:", err);
-      res.status(500).json({ success: false, message: "Server error" });
+    // 1. Get user to get email (for finding the specific booking)
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     if (!Array.isArray(user.bookedEvents)) {
       user.bookedEvents = [];
@@ -368,8 +284,7 @@ exports.cancelBooking = async (req, res) => {
     user.bookedEvents = user.bookedEvents.filter(
       (id) => id.toString() !== eventId
     );
-    await user.save();
-
+    
     // 3. Mark bookings as cancelled (keep record for history)
     const bookingModel = require("../models/bookingModel");
     const activeBookings = await bookingModel
@@ -378,14 +293,19 @@ exports.cancelBooking = async (req, res) => {
         userEmail: user.email,
         status: { $ne: "cancelled" },
       })
-      .populate("eventId", "date");
+      .populate("eventId", "startDate");
+    
     await syncBookingsExpiry(activeBookings);
 
     const cancellableBookings = activeBookings.filter((booking) => {
       const status = (booking.status || "").toLowerCase();
       return status !== "cancelled" && status !== "expired";
     });
+
     if (cancellableBookings.length === 0) {
+      // If we already removed it from user's list but no bookings found or all expired
+      // we still save the user object updates.
+      await user.save();
       return res.status(400).json({
         success: false,
         message: "This booking has expired and can no longer be cancelled.",
@@ -405,6 +325,7 @@ exports.cancelBooking = async (req, res) => {
     if (!Array.isArray(user.notifications)) {
       user.notifications = [];
     }
+    
     if (totalCancelled > 0) {
       let eventName = "Event";
       try {
@@ -427,9 +348,19 @@ exports.cancelBooking = async (req, res) => {
       if (user.notifications.length > 20) {
         user.notifications = user.notifications.slice(0, 20);
       }
+      
+      // Remove any 'event_update' notifications for this event
+      user.notifications = user.notifications.filter(
+        (n) =>
+          !(
+            n.eventId &&
+            n.eventId.toString() === eventId &&
+            n.type === "event_update"
+          )
+      );
     }
+    
     await user.save();
-
     res.json({ success: true, message: "Booking cancelled successfully" });
   } catch (err) {
     console.error("Cancel Booking Error:", err);

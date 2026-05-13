@@ -420,19 +420,45 @@ button {
 
 /* Find button removed - using real-time Ajax instead */
 
-.filters {
+.filter-section {
   max-width: 1800px;
   width: 95%;
   margin: 0 auto;
-  padding: 0 32px 40px;
+  padding: 0 32px 48px;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filters-top, .filters-bottom {
+  display: flex;
+  gap: 32px;
+  align-items: flex-end;
   flex-wrap: wrap;
-  justify-content: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  padding-left: 2px;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-tag {
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 30px;
   border: 1.5px solid var(--border);
   background: var(--white);
@@ -441,6 +467,7 @@ button {
   color: var(--mid);
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .filter-tag:hover {
@@ -452,6 +479,72 @@ button {
   background: var(--dark);
   color: var(--white);
   border-color: var(--dark);
+}
+
+.search-bar--sm {
+  height: 40px;
+  max-width: 280px;
+  margin: 0;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.search-bar--sm .search-bar-input {
+  padding: 0 16px;
+}
+
+.search-bar--sm input {
+  font-size: 13px;
+}
+
+.date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 40px;
+}
+
+.date-input {
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--dark);
+  outline: none;
+  cursor: pointer;
+}
+
+.date-sep {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.btn-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #c0392b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+
+.btn-clear:hover {
+  opacity: 0.7;
+}
+
+.btn-clear svg {
+  flex-shrink: 0;
 }
 
 .events-section {

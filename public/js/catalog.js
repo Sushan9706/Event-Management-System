@@ -11,33 +11,51 @@ document.addEventListener("DOMContentLoaded", () => {
   const noResults = document.getElementById("noResults");
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   const filterSection = document.getElementById("filters");
+  const locationFilter = document.getElementById("locationFilter");
+  const dateFrom = document.getElementById("dateFrom");
+  const dateTo = document.getElementById("dateTo");
+  const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
   let currentCategory = "all";
   let searchText = "";
-  let showAllMatching = false; // Track if Load More was clicked for the CURRENT filter
+  let locationText = "";
+  let startDate = null;
+  let endDate = null;
+  let showAllMatching = false;
   const INITIAL_LIMIT = 9;
 
-  // --- 1. FILTERING LOGIC (Consolidated with Load More support) ---
+  // --- 1. FILTERING LOGIC ---
   function applyFilters() {
     const cards = document.querySelectorAll(".event-card");
     let matchingCount = 0;
-    let visibleCount = 0;
 
     cards.forEach((card) => {
       const name = card.querySelector(".card-name").textContent.toLowerCase();
-      const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
+      const cardLocation = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
       const category = (card.dataset.category || "").toLowerCase().trim().replace(/\s+/g, '-');
+      const cardDate = new Date(card.dataset.date);
 
-      const matchesText = !searchText || name.includes(searchText) || location.includes(searchText) || category.replace(/-/g, ' ').includes(searchText);
+      // Matches Logic
+      const matchesText = !searchText || name.includes(searchText) || cardLocation.includes(searchText) || category.replace(/-/g, ' ').includes(searchText);
       const matchesCategory = currentCategory === "all" || category === currentCategory;
+      const matchesLocation = !locationText || cardLocation.includes(locationText);
+      
+      let matchesDate = true;
+      if (startDate) {
+        const dFrom = new Date(startDate);
+        dFrom.setHours(0,0,0,0);
+        matchesDate = matchesDate && cardDate >= dFrom;
+      }
+      if (endDate) {
+        const dTo = new Date(endDate);
+        dTo.setHours(23,59,59,999);
+        matchesDate = matchesDate && cardDate <= dTo;
+      }
 
-      if (matchesText && matchesCategory) {
+      if (matchesText && matchesCategory && matchesLocation && matchesDate) {
         matchingCount++;
-        // Check if we should show this item based on the limit
         if (showAllMatching || matchingCount <= INITIAL_LIMIT) {
-          card.classList.remove("hidden");
-          card.style.display = ""; // Fallback to CSS display: flex
-          visibleCount++;
+          card.style.display = ""; 
         } else {
           card.style.display = "none";
         }
@@ -54,77 +72,69 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       if (eventsGrid) eventsGrid.style.display = "grid";
       if (noResults) noResults.style.display = "none";
-
-      // Show Load More if we have more matches than the limit AND haven't clicked "Show All"
       if (loadMoreBtn) {
-        if (matchingCount > INITIAL_LIMIT && !showAllMatching) {
-          loadMoreBtn.style.display = "inline-flex";
-        } else {
-          loadMoreBtn.style.display = "none";
-        }
+        loadMoreBtn.style.display = (matchingCount > INITIAL_LIMIT && !showAllMatching) ? "inline-flex" : "none";
       }
     }
   }
 
+  // --- 2. EVENT LISTENERS ---
   heroSearch?.addEventListener("input", (e) => {
     searchText = e.target.value.trim().toLowerCase();
-    showAllMatching = false; // Reset "load more" state on new search
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  locationFilter?.addEventListener("input", (e) => {
+    locationText = e.target.value.trim().toLowerCase();
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  dateFrom?.addEventListener("change", (e) => {
+    startDate = e.target.value;
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  dateTo?.addEventListener("change", (e) => {
+    endDate = e.target.value;
+    showAllMatching = false;
     applyFilters();
   });
 
   filterSection?.addEventListener("click", (e) => {
     if (!e.target.classList.contains("filter-tag")) return;
-
     document.querySelectorAll(".filter-tag").forEach((t) => t.classList.remove("active"));
     e.target.classList.add("active");
-
     currentCategory = e.target.dataset.filter.toLowerCase().trim().replace(/\s+/g, '-');
-    showAllMatching = false; // Reset on new category
-    applyFilters();
-  });
-
-  // --- 2. OLD SEARCH MODAL LOGIC ---
-  document.getElementById("searchBtn")?.addEventListener("click", () => {
-    searchOverlay.classList.toggle("open");
-    if (searchOverlay.classList.contains("open")) {
-      searchInput.focus();
-    }
-  });
-
-  searchOverlay?.addEventListener("click", (e) => {
-    if (e.target === searchOverlay) searchOverlay.classList.remove("open");
-  });
-
-  searchInput?.addEventListener("input", (e) => {
-    searchText = e.target.value.trim().toLowerCase();
-    if (heroSearch) heroSearch.value = e.target.value;
     showAllMatching = false;
     applyFilters();
   });
 
-  // --- 3. DROPDOWN LOGIC ---
-  avatarBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    avatarSidebar.classList.toggle("open");
-    notifDropdown?.classList.remove("open");
+  clearFiltersBtn?.addEventListener("click", () => {
+    // Reset Variables
+    searchText = "";
+    locationText = "";
+    currentCategory = "all";
+    startDate = null;
+    endDate = null;
+    showAllMatching = false;
+
+    // Reset UI
+    if (heroSearch) heroSearch.value = "";
+    if (locationFilter) locationFilter.value = "";
+    if (dateFrom) dateFrom.value = "";
+    if (dateTo) dateTo.value = "";
+    document.querySelectorAll(".filter-tag").forEach((t) => {
+      t.classList.remove("active");
+      if (t.dataset.filter === "all") t.classList.add("active");
+    });
+
+    applyFilters();
   });
 
-  notifBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    notifDropdown?.classList.toggle("open");
-    avatarSidebar?.classList.remove("open");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!avatarSidebar?.contains(e.target) && !avatarBtn?.contains(e.target)) {
-      avatarSidebar?.classList.remove("open");
-    }
-    if (!notifDropdown?.contains(e.target) && !notifBtn?.contains(e.target)) {
-      notifDropdown?.classList.remove("open");
-    }
-  });
-
-  // --- 4. LOAD MORE ---
+  // --- 3. LOAD MORE ---
   loadMoreBtn?.addEventListener("click", () => {
     showAllMatching = true;
     applyFilters();

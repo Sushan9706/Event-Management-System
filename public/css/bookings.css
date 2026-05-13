@@ -519,6 +519,7 @@ a {
 }
 
 @media (max-width: 640px) {
+
   .nav-inner,
   .nav-container {
     flex-direction: column;
@@ -548,6 +549,7 @@ a {
     align-items: flex-start;
   }
 }
+
 .notif-dropdown {
   display: none;
 }
@@ -555,4 +557,3 @@ a {
 .notif-dropdown.open {
   display: block;
 }
-

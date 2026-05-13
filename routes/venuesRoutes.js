@@ -9,7 +9,7 @@ const { isLoggedIn } = require("../middlewares/auth");
 router.get("/", async (req, res) => {
   try {
     let venues = await Venue.find({ active: true }).sort({ name: 1 });
-    
+
     // Seed if empty (first run)
     if (venues.length === 0) {
       venues = await Venue.insertMany([

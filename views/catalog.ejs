@@ -25,7 +25,7 @@
           <a href="/catalog" class="nav-item active">Events</a>
           <a href="/venues" class="nav-item">Venues</a>
           <a href="/bookings" class="nav-item">My Bookings</a>
-          <a href="/venue-bookings" class="nav-item">Venue Bookings</a>
+          <a href="/venue-bookings" class="nav-item">My Venue Bookings</a>
         </nav>
         <div class="nav-right">
           <button class="icon-btn" id="notifBtn" aria-label="Notifications">
@@ -164,18 +164,52 @@
       </div>
     </section>
 
-    <div class="filters" id="filters">
-      <button class="filter-tag active" data-filter="all">All Events</button>
-      <button class="filter-tag" data-filter="music">Music</button>
-      <button class="filter-tag" data-filter="technology">Technology</button>
-      <button class="filter-tag" data-filter="sports">Sports</button>
-      <button class="filter-tag" data-filter="arts">Arts</button>
-      <button class="filter-tag" data-filter="food and drink">
-        Food and Drink
-      </button>
-      <button class="filter-tag" data-filter="networking">Networking</button>
-      <button class="filter-tag" data-filter="education">Education</button>
-      <button class="filter-tag" data-filter="other">Other</button>
+    <div class="filter-section">
+      <div class="filters-top">
+        <div class="filter-group">
+          <label class="filter-label">CATEGORY</label>
+          <div class="filters" id="filters">
+            <button class="filter-tag active" data-filter="all">All</button>
+            <button class="filter-tag" data-filter="music">Music</button>
+            <button class="filter-tag" data-filter="technology">Technology</button>
+            <button class="filter-tag" data-filter="sports">Sports</button>
+            <button class="filter-tag" data-filter="arts">Arts</button>
+            <button class="filter-tag" data-filter="food and drink">Food</button>
+            <button class="filter-tag" data-filter="networking">Networking</button>
+            <button class="filter-tag" data-filter="education">Education</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">LOCATION</label>
+          <div class="search-bar search-bar--sm">
+            <div class="search-bar-input">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <input type="text" id="locationFilter" placeholder="Filter by city or venue..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-bottom">
+        <div class="filter-group">
+          <label class="filter-label">DATE RANGE</label>
+          <div class="date-range-inputs">
+            <input type="date" id="dateFrom" class="date-input" />
+            <span class="date-sep">to</span>
+            <input type="date" id="dateTo" class="date-input" />
+          </div>
+        </div>
+
+        <button id="clearFiltersBtn" class="btn-clear">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          CLEAR ALL FILTERS
+        </button>
+      </div>
     </div>
 
     <section class="events-section">
