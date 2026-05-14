@@ -165,7 +165,7 @@
             let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} -
             ${eventEndDate}`;
             let isFree = event.ticketPrice === 0;
-            let displayPrice = isFree ? "Free" : "$" + event.ticketPrice.toFixed(2);
+            let displayPrice = isFree ? "Free" : "NPR. " + event.ticketPrice.toFixed(2);
             %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
               data-date="<%= event.startDate %>">

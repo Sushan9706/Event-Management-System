@@ -55,7 +55,7 @@
             <div class="info-box highlight">
                 <span class="info-label">STANDARD ENTRY</span>
                 <span class="info-value price">
-                    <% if (event.ticketPrice === 0) { %>Free<% } else { %>$<%= event.ticketPrice.toFixed(2) %><% } %>
+                    <% if (event.ticketPrice === 0) { %>Free<% } else { %>NPR. <%= event.ticketPrice.toFixed(2) %><% } %>
                 </span>
             </div>
         </div>
@@ -86,7 +86,7 @@
                         <% if (event.ticketPrice === 0) { %>
                             <span class="price-amount">Free</span>
                         <% } else { %>
-                            <span class="price-amount">$<%= event.ticketPrice.toFixed(2) %></span>
+                            <span class="price-amount">NPR. <%= event.ticketPrice.toFixed(2) %></span>
                             <span class="price-per">per guest</span>
                         <% } %>
                     </div>
