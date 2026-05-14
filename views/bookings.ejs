@@ -116,42 +116,68 @@
           </div>
         <% } else { %>
           <% bookingList.forEach(function(booking) { 
-              const event = booking.eventId;
-              const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
-              const eventDate = event && event.startDate 
-                ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
-                : 'TBA';
-              const eventDateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
-              const eventLocation = event && event.location ? event.location : 'TBA';
-              const eventImage = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
-              const ticketCount = booking.ticketCount || 1;
-              const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
-              const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+              const isEvent = booking.bookingType === 'event';
+              const isVenue = booking.bookingType === 'venue';
+              
+              let title, dateLabel, dateIso, locationLabel, image, ref, countLabel, totalDisplay, manageUrl, actionLabel, typeLabel;
+
+              if (isEvent) {
+                const event = booking.eventId;
+                title = event ? (event.eventName || event.title || event.name) : 'Event';
+                dateLabel = event && event.startDate 
+                  ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
+                  : 'TBA';
+                dateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
+                locationLabel = event && event.location ? event.location : 'TBA';
+                image = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
+                ref = booking.referenceNumber || '-';
+                const ticketCount = booking.ticketCount || 1;
+                const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
+                totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+                countLabel = `${ticketCount} · ${totalDisplay}`;
+                manageUrl = `/bookings/manage/${booking._id}`;
+                typeLabel = 'EVENT NAME';
+              } else if (isVenue) {
+                const venue = booking.venueId;
+                title = venue ? venue.venueName : 'Venue';
+                const bDate = booking.bookingDate ? new Date(booking.bookingDate) : new Date();
+                dateLabel = bDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                dateIso = bDate.toISOString().slice(0,10);
+                locationLabel = venue ? venue.location : 'TBA';
+                image = venue && (venue.imagePath || venue.image) ? (venue.imagePath || venue.image) : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=300&auto=format&fit=crop';
+                ref = booking.referenceNumber || '-';
+                const totalAmount = booking.totalAmount || 0;
+                totalDisplay = totalAmount === 0 ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+                countLabel = `${booking.startTime || 'TBA'} - ${booking.endTime || 'TBA'} · ${totalDisplay}`;
+                manageUrl = `/venue/${venue ? venue._id : ''}`;
+                typeLabel = 'VENUE NAME';
+              }
+
               const statusGroup = normalizeStatus(booking.status);
-              const actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
+              actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
           %>
-            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
-              <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>" onerror="this.style.display='none'" />
+            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= dateIso %>">
+              <img class="booking-image" src="<%= image %>" alt="<%= title %>" onerror="this.style.display='none'" />
               <div class="booking-meta">
-                <p class="label">EVENT NAME</p>
-                <h3><%= eventName %></h3>
+                <p class="label"><%= typeLabel %></p>
+                <h3><%= title %></h3>
               </div>
               <div class="booking-meta">
                 <p class="label">REFERENCE</p>
-                <div class="reference-pill"><%= booking.referenceNumber || '-' %></div>
+                <div class="reference-pill"><%= ref %></div>
               </div>
               <div class="booking-meta">
                 <p class="label">DATE & LOCATION</p>
-                <p class="date"><%= eventDate %></p>
-                <p class="location"><%= eventLocation %></p>
+                <p class="date"><%= dateLabel %></p>
+                <p class="location"><%= locationLabel %></p>
               </div>
               <div class="booking-meta">
-                <p class="label">TICKETS</p>
-                <p class="value"><%= ticketCount %> · <%= totalDisplay %></p>
+                <p class="label"><%= isEvent ? 'TICKETS' : 'TIME & TOTAL' %></p>
+                <p class="value"><%= countLabel %></p>
               </div>
               <div class="booking-actions">
                 <span class="status <%= statusGroup %>"><%= statusGroup.toUpperCase() %></span>
-                <a href="/bookings/manage/<%= booking._id %>" class="manage-btn"><%= actionLabel %></a>
+                <a href="<%= manageUrl %>" class="manage-btn"><%= actionLabel %></a>
               </div>
             </article>
           <% }); %>

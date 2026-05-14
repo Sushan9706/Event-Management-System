@@ -1,5 +1,6 @@
 const Venue = require('../models/venueModel');
 const userModel = require('../models/user');
+const VenueBooking = require('../models/venueBookingModel');
 
 exports.getVenues = async (req, res) => {
     try {
@@ -55,5 +56,39 @@ exports.searchVenues = async (req, res) => {
     } catch (err) {
         console.error("Search failed:", err);
         res.status(500).send("Search failed");
+    }
+};
+
+exports.bookVenue = async (req, res) => {
+    try {
+        const { venueId, bookingDate, startTime, endTime } = req.body;
+        const userId = req.user.userId;
+
+        const venue = await Venue.findById(venueId);
+        if (!venue) return res.status(404).json({ success: false, message: "Venue not found" });
+
+        // Simple price calculation (assuming start/end are hours for simplicity or just using base price)
+        // For now, let's just use a dummy price or calculate if they are numbers
+        const hours = 4; // Default for now
+        const totalAmount = venue.pricePerHour * hours;
+
+        const referenceNumber = 'V-EMS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+        const newBooking = await VenueBooking.create({
+            venueId,
+            userId,
+            bookingDate,
+            startTime,
+            endTime,
+            totalAmount,
+            status: 'confirmed',
+            paymentStatus: 'paid', // Assuming paid for simplicity
+            referenceNumber
+        });
+
+        res.json({ success: true, message: "Venue booked successfully!", booking: newBooking });
+    } catch (err) {
+        console.error("Booking error:", err);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
