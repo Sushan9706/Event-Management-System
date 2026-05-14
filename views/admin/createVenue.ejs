@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Event – EMS Admin</title>
+    <title>Create Venue – EMS Admin</title>
     <link rel="stylesheet" href="/css/admin-create.css" />
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
@@ -20,7 +20,7 @@
             </div>
             <nav class="nav-links">
                 <a href="/admin/dashboard" class="nav-link">Events</a>
-                <a href="/admin/venues" class="nav-link">Venues</a>
+                <a href="/admin/venues" class="nav-link active">Venues</a>
 
                 <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -37,7 +37,6 @@
                     </div>
                 </div>
 
-                <!-- Replace Register button with User Symbol Dropdown -->
                 <div class="user-menu-container">
                     <button class="user-trigger" id="userTrigger" title="User Account">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -78,50 +77,47 @@
             <div class="left-panel-content">
                 <div class="sidebar-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </div>
-                <h1 class="left-heading">Drafting the<br />Next Experience.</h1>
-                <p class="left-caption">Every great event begins with a vision. Fill in the details, upload your banner,
-                    and let your audience discover something unforgettable.</p>
+                <h1 class="left-heading">Listing a<br />New Venue.</h1>
+                <p class="left-caption">Provide high-quality details about your space. Better descriptions and photos lead to more bookings.</p>
 
                 <div class="quality-checklist">
-                    <p class="checklist-title">Publishing Checklist</p>
+                    <p class="checklist-title">Venue Standards</p>
                     <div class="checklist-item">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>High-resolution event banner</span>
+                        <span>Clear, bright cover image</span>
                     </div>
                     <div class="checklist-item">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>Compelling event description</span>
+                        <span>Accurate capacity limits</span>
                     </div>
                     <div class="checklist-item">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>Venue and timing accuracy</span>
+                        <span>Competitive pricing rates</span>
                     </div>
                 </div>
-
-
             </div>
         </aside>
 
         <!-- ── Right Panel (Form) ── -->
         <section class="right-panel">
             <div style="margin-bottom: 32px;">
-                <a href="/admin/dashboard"
+                <a href="/admin/venues"
                     style="color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
-                    BACK TO EVENTS
+                    BACK TO VENUES
                 </a>
             </div>
             <% if (locals.error && error.length> 0) { %>
@@ -131,17 +127,16 @@
                 </div>
                 <% } %>
 
-                    <form action="/admin/events/create" method="POST" enctype="multipart/form-data" class="event-form"
-                        id="createEventForm">
+                    <form action="/admin/venues/create" method="POST" enctype="multipart/form-data" class="event-form"
+                        id="createVenueForm">
 
-                        <!-- Event Visuals First (Top) -->
                         <div class="form-section">
                             <div class="form-section-head">
-                                <h2 class="form-section-title">Event Cover Image</h2>
+                                <h2 class="form-section-title">Venue Cover Image</h2>
                             </div>
                             <div class="upload-wrapper">
                                 <div class="upload-area" id="uploadArea">
-                                    <input type="file" id="banner_image" name="banner_image" accept="image/*" hidden />
+                                    <input type="file" id="venue_image" name="venue_image" accept="image/*" hidden />
                                     <div class="upload-placeholder" id="uploadPlaceholder">
                                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="1.5">
@@ -149,7 +144,7 @@
                                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                             <polyline points="21 15 16 10 5 21"></polyline>
                                         </svg>
-                                        <p class="upload-text">Upload Event Banner</p>
+                                        <p class="upload-text">Upload Venue Image</p>
                                         <p class="upload-hint">Drag and drop or click to upload</p>
                                     </div>
                                     <div class="upload-preview" id="uploadPreview" style="display:none;">
@@ -169,216 +164,73 @@
                         <div class="form-section">
                             <div class="form-section-head">
                                 <h2 class="form-section-title">Core Information</h2>
-
                             </div>
 
                             <div class="form-group">
-                                <label for="eventName">Event Name</label>
-                                <input type="text" id="eventName" name="eventName"
-                                    placeholder="e.g., Vernacular Summit 2026" required />
+                                <label for="name">Venue Name</label>
+                                <input type="text" id="name" name="name"
+                                    placeholder="e.g., Grand Ballroom A" required />
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="categoryId">Category</label>
-                                    <select id="categoryId" name="categoryId" required>
-                                        <option value="" disabled selected>Select Genre</option>
+                                    <label for="category">Category</label>
+                                    <select id="category" name="category" required>
+                                        <option value="" disabled selected>Select Category</option>
                                         <% categories.forEach(cat=> { %>
-                                            <option value="<%= cat._id %>">
-                                                <%= cat.name %>
+                                            <option value="<%= cat %>">
+                                                <%= cat %>
                                             </option>
                                             <% }) %>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="status">Initial Status</label>
-                                    <select id="status" name="status">
-                                        <option value="upcoming" selected>Upcoming</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
+                                    <label for="capacity">Capacity (Persons)</label>
+                                    <input type="number" id="capacity" name="capacity" placeholder="e.g., 200" required min="1" />
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="description">Event Description</label>
+                                <label for="location">Location / Address</label>
+                                <input type="text" id="location" name="location" placeholder="e.g., 123 Event St, City" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Venue Description</label>
                                 <textarea id="description" name="description" rows="6"
-                                    placeholder="Draft something magical..."></textarea>
+                                    placeholder="Describe the ambiance and facilities..." required></textarea>
                             </div>
                         </div>
 
                         <div class="form-section">
-                            <h2 class="form-section-title">Logistics & Venue</h2>
-
-                            <div class="form-row" style="margin-top: 24px;">
-                                <div class="form-group">
-                                    <label for="startDate">Start Date</label>
-                                    <input type="date" id="startDate" name="startDate" required />
-                                </div>
-                                <div class="form-group">
-                                    <label for="startTime">Start Time</label>
-                                    <input type="time" id="startTime" name="startTime" required />
-                                    <div class="error-msg" id="startTime-error"></div>
-                                </div>
-                            </div>
+                            <h2 class="form-section-title">Pricing Rates</h2>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">At least one rate must be provided.</p>
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="endDate">End Date</label>
-                                    <input type="date" id="endDate" name="endDate" required />
+                                    <label for="hourlyRate">Hourly Rate (NPR)</label>
+                                    <input type="number" id="hourlyRate" name="hourlyRate" placeholder="0.00" min="0" step="0.01" />
                                 </div>
                                 <div class="form-group">
-                                    <label for="endTime">End Time</label>
-                                    <input type="time" id="endTime" name="endTime" required />
-                                    <div class="error-msg" id="endTime-error"></div>
-                                </div>
-                            </div>
-
-                            <div class="form-row three-col">
-                                <div class="form-group">
-                                    <label for="maxCapacity">Max Capacity</label>
-                                    <input type="number" id="maxCapacity" name="maxCapacity" placeholder="e.g., 500" min="0" required />
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="ticketPrice">Ticket Price (NPR)</label>
-                                    <input type="number" id="ticketPrice" name="ticketPrice" placeholder="0.00" min="0"
-                                        step="0.01" />
-                                </div>
-                                <div class="form-group">
-                                    <label for="location">Location / Venue</label>
-                                    <input type="text" id="location" name="location" placeholder="Venue or Address"
-                                        required />
+                                    <label for="dailyRate">Daily Rate (NPR)</label>
+                                    <input type="number" id="dailyRate" name="dailyRate" placeholder="0.00" min="0" step="0.01" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-actions">
                             <button type="button" class="btn-secondary"
-                                onclick="window.location.href='/admin/dashboard'">CANCEL</button>
-                            <button type="submit" class="btn-primary">PUBLISH EVENT</button>
+                                onclick="window.location.href='/admin/venues'">CANCEL</button>
+                            <button type="submit" class="btn-primary">CREATE VENUE</button>
                         </div>
                     </form>
         </section>
     </main>
 
     <script>
-        // Enforce today or future date for selection
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const minDate = `${year}-${month}-${day}`;
-        
-        startDateInput.min = minDate;
-        endDateInput.min = minDate;
-
-        const startTimeInput = document.getElementById('startTime');
-        const endTimeInput = document.getElementById('endTime');
-
-        function updateTimeConstraints() {
-            const now = new Date();
-            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            const selectedStartDate = startDateInput.value;
-            const selectedEndDate = endDateInput.value;
-
-            if (selectedStartDate === minDate) {
-                startTimeInput.min = currentTime;
-            } else {
-                startTimeInput.removeAttribute('min');
-            }
-
-            if (selectedStartDate && selectedEndDate && selectedStartDate === selectedEndDate) {
-                if (startTimeInput.value) {
-                    endTimeInput.min = startTimeInput.value;
-                } else {
-                    endTimeInput.removeAttribute('min');
-                }
-            } else {
-                endTimeInput.removeAttribute('min');
-            }
-        }
-
-        const startTimeError = document.getElementById('startTime-error');
-        const endTimeError = document.getElementById('endTime-error');
-
-        function showError(element, errorElement, message) {
-            element.closest('.form-group').classList.add('has-error');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-
-        function clearErrors() {
-            document.querySelectorAll('.form-group').forEach(group => group.classList.remove('has-error'));
-            document.querySelectorAll('.error-msg').forEach(msg => {
-                msg.textContent = '';
-                msg.style.display = 'none';
-            });
-        }
-
-        function validateInputs() {
-            clearErrors();
-            const now = new Date();
-            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            let hasError = false;
-
-            if (startDate === minDate && startTime && startTime < currentTime) {
-                showError(startTimeInput, startTimeError, 'Start time cannot be in the past for today.');
-                hasError = true;
-            }
-
-            if (startDate === endDate && startTime && endTime) {
-                if (startTime >= endTime) {
-                    showError(endTimeInput, endTimeError, 'End time must be after the start time.');
-                    hasError = true;
-                }
-            }
-            return !hasError;
-        }
-
-        startDateInput.addEventListener('change', () => {
-            if (startDateInput.value) {
-                endDateInput.min = startDateInput.value;
-                if (endDateInput.value && endDateInput.value < startDateInput.value) {
-                    endDateInput.value = startDateInput.value;
-                }
-            }
-            updateTimeConstraints();
-            validateInputs();
-        });
-
-        endDateInput.addEventListener('change', () => {
-            updateTimeConstraints();
-            validateInputs();
-        });
-
-        startTimeInput.addEventListener('input', validateInputs);
-        endTimeInput.addEventListener('input', validateInputs);
-
-        const eventForm = document.querySelector('form');
-        eventForm.addEventListener('submit', (e) => {
-            if (!validateInputs()) {
-                e.preventDefault();
-                const firstError = document.querySelector('.has-error');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        });
-
         // File upload handling
         const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('banner_image');
+        const fileInput = document.getElementById('venue_image');
         const placeholder = document.getElementById('uploadPlaceholder');
         const preview = document.getElementById('uploadPreview');
         const previewImg = document.getElementById('previewImg');
@@ -423,6 +275,17 @@
             placeholder.style.display = 'block';
         });
 
+        // Form validation for rates
+        document.getElementById('createVenueForm').addEventListener('submit', function(e) {
+            const hourly = document.getElementById('hourlyRate').value;
+            const daily = document.getElementById('dailyRate').value;
+            
+            if (!hourly && !daily) {
+                e.preventDefault();
+                alert('At least one rate (hourly or daily) must be provided.');
+            }
+        });
+
         // ─── Navbar Elements ───
         const userTrigger = document.getElementById('userTrigger');
         const userDropdown = document.getElementById('userDropdown');
@@ -443,8 +306,7 @@
             });
         }
 
-        // ─── Notifications Toggle & Fetch ───
-        notifBtn.addEventListener('click', (e) => {
+        notifBtn?.addEventListener('click', (e) => {
             e.stopPropagation();
             notifDropdown.classList.toggle('show');
             userDropdown.classList.remove('show');
@@ -460,44 +322,33 @@
                 renderNotifications(data);
             } catch (err) {
                 console.error('Error fetching notifications:', err);
-                notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
+                if (notifList) notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
             }
         }
 
         function renderNotifications(notifications) {
             if (!notifications || notifications.length === 0) {
-                notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
-                notifDot.style.display = 'none';
+                if (notifList) notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
+                if (notifDot) notifDot.style.display = 'none';
                 return;
             }
-
-            notifDot.style.display = 'block';
-
-            notifList.innerHTML = notifications.map(n => {
-                const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
-                const date = new Date(n.createdAt).toLocaleString('en-US', {
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
-                return `
-                    <div class="notif-item">
-                        <p class="notif-item-title">New Booking: ${n.userName}</p>
-                        <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
-                        <p class="notif-time">${date}</p>
-                    </div>
-                `;
-            }).join('');
+            if (notifDot) notifDot.style.display = 'block';
+            if (notifList) {
+                notifList.innerHTML = notifications.map(n => {
+                    const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
+                    const date = new Date(n.createdAt).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    return `
+                        <div class="notif-item">
+                            <p class="notif-item-title">New Booking: ${n.userName}</p>
+                            <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
+                            <p class="notif-time">${date}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
-        fetchNotifications();
-
-        // Auto-dismiss flash messages
-        document.querySelectorAll('.flash-error').forEach(msg => {
-            setTimeout(() => {
-                msg.classList.add('fade-out');
-                setTimeout(() => {
-                    msg.remove();
-                }, 400); // Wait for animation to finish
-            }, 2000); // 2 seconds delay
-        });
     </script>
 </body>
 

@@ -106,14 +106,14 @@
           %>
           <div class="event-card" data-id="<%= venue._id %>">
             <div class="card-img">
-              <img src="<%= imgUrl %>" alt="<%= venue.venueName %>" />
+              <img src="<%= imgUrl %>" alt="<%= venue.name %>" />
               <span class="card-tag">
                 Capacity: <%= venue.capacity %>
               </span>
             </div>
             <div class="card-body">
               <p class="card-name">
-                <%= venue.venueName %>
+                <%= venue.name %>
               </p>
               <div class="card-meta">
                 <div class="card-meta-row">
@@ -126,7 +126,7 @@
               </div>
               <div class="card-footer">
                 <span class="card-price">
-                  $<%= venue.pricePerHour %>/hr
+                  NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %>/hr
                 </span>
                 <button class="btn-details">Details →</button>
               </div>

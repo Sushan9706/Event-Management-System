@@ -27,7 +27,29 @@ exports.getVenueById = async (req, res) => {
         const venue = await Venue.findById(req.params.id).lean();
         if (!venue) return res.status(404).render('404', { title: '404 - Not Found' });
 
-        res.render('venueDetail', { venue, user: req.user || null });
+        // Fetch existing bookings to show availability
+        const bookings = await VenueBooking.find({ 
+            venueId: req.params.id,
+            status: { $ne: 'cancelled' }
+        }).select('startDate endDate').lean();
+
+        // Expand ranges into individual days for the calendar
+        const bookedDates = [];
+        bookings.forEach(b => {
+            let curr = new Date(b.startDate);
+            const end = new Date(b.endDate);
+            // Ensure we include the end date by comparing properly
+            while (curr <= end) {
+                bookedDates.push(new Date(curr).toISOString().split('T')[0]);
+                curr.setDate(curr.getDate() + 1);
+            }
+        });
+
+        res.render('venueDetail', { 
+            venue, 
+            user: req.user || null,
+            bookedDates: JSON.stringify(bookedDates)
+        });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -40,7 +62,7 @@ exports.searchVenues = async (req, res) => {
         let queryObj = { status: { $ne: 'maintenance' } };
 
         if (q) {
-            queryObj.venueName = { $regex: q, $options: "i" };
+            queryObj.name = { $regex: q, $options: "i" };
         }
 
         if (location) {
@@ -61,28 +83,45 @@ exports.searchVenues = async (req, res) => {
 
 exports.bookVenue = async (req, res) => {
     try {
-        const { venueId, bookingDate, startTime, endTime } = req.body;
+        const { venueId, startDate, endDate, startTime, endTime } = req.body;
         const userId = req.user.userId;
 
         const venue = await Venue.findById(venueId);
         if (!venue) return res.status(404).json({ success: false, message: "Venue not found" });
 
-        // Simple price calculation (assuming start/end are hours for simplicity or just using base price)
-        // For now, let's just use a dummy price or calculate if they are numbers
-        const hours = 4; // Default for now
-        const totalAmount = venue.pricePerHour * hours;
+        // Check if any date in the range is already booked
+        const existingBookings = await VenueBooking.find({
+            venueId,
+            status: { $ne: 'cancelled' },
+            $or: [
+                { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } }
+            ]
+        });
+
+        if (existingBookings.length > 0) {
+            return res.status(400).json({ success: false, message: "Venue is already booked for some dates in this range." });
+        }
+
+        // Calculate days
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        const totalAmount = (venue.hourlyRate || venue.dailyRate || 0) * 4 * diffDays; // Dummy calculation for now
 
         const referenceNumber = 'V-EMS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
         const newBooking = await VenueBooking.create({
             venueId,
             userId,
-            bookingDate,
+            startDate,
+            endDate,
             startTime,
             endTime,
             totalAmount,
             status: 'confirmed',
-            paymentStatus: 'paid', // Assuming paid for simplicity
+            paymentStatus: 'paid',
             referenceNumber
         });
 

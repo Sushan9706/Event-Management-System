@@ -135,10 +135,13 @@
                 typeLabel = 'EVENT NAME';
               } else if (isVenue) {
                 const venue = booking.venueId;
-                title = venue ? venue.venueName : 'Venue';
-                const bDate = booking.bookingDate ? new Date(booking.bookingDate) : new Date();
-                dateLabel = bDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-                dateIso = bDate.toISOString().slice(0,10);
+                title = venue ? venue.name : 'Venue';
+                const sDate = booking.startDate ? new Date(booking.startDate) : new Date();
+                const eDate = booking.endDate ? new Date(booking.endDate) : sDate;
+                const sLabel = sDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                const eLabel = eDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                dateLabel = sLabel === eLabel ? sLabel : `${sLabel} - ${eLabel}`;
+                dateIso = sDate.toISOString().slice(0,10);
                 locationLabel = venue ? venue.location : 'TBA';
                 image = venue && (venue.imagePath || venue.image) ? (venue.imagePath || venue.image) : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=300&auto=format&fit=crop';
                 ref = booking.referenceNumber || '-';

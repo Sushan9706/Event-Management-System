@@ -105,10 +105,9 @@ exports.getResetPassword = (req, res) => {
 };
 
 exports.postLogin = async (req, res) => {
-try{
-  try {
-    const { email, password } = req.body;
-    const identifier = (email || "").trim().toLowerCase();
+    try {
+        const { email, password } = req.body;
+        const identifier = (email || "").trim().toLowerCase();
 
         if (!identifier || !password) {
             return res.render('login', {
@@ -136,7 +135,7 @@ try{
         if (looksHashed) {
             isMatch = await bcrypt.compare(password, user.password);
         } else {
-            // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
+            // Legacy plaintext fallback
             isMatch = password === user.password;
             if (isMatch) {
                 const salt = await bcrypt.genSalt(10);
@@ -153,11 +152,10 @@ try{
             );
             res.cookie("token", token);
 
-            // THE REDIRECT LOGIC
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
             }
-            return res.redirect('/user'); // Regular user landing page
+            return res.redirect('/user');
         }
 
         return res.render('login', {
@@ -166,63 +164,9 @@ try{
         });
     } catch (err) {
         console.error("Login Error:", err);
-        res.redirect('/login');
+        res.render('login', { error: 'An internal error occurred. Please try again.' });
     }
-
-    const query = identifier.includes("@")
-      ? { email: identifier }
-      : { username: identifier };
-
-    const user = await userModel.findOne(query);
-
-    if (!user) {
-      return res.render("login", {
-        error: "Invalid Credentials",
-        formData: { email: identifier },
-      });
-    }
-
-    const looksHashed =
-      typeof user.password === "string" && user.password.startsWith("$2");
-    let isMatch = false;
-
-    if (looksHashed) {
-      isMatch = await bcrypt.compare(password, user.password);
-    } else {
-      // Legacy plaintext fallback: if matched, upgrade to bcrypt hash
-      isMatch = password === user.password;
-      if (isMatch) {
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-        user.password = hash;
-        await user.save();
-      }
-    }
-
-    if (isMatch) {
-      const token = jwt.sign(
-        { email: user.email, userId: user._id, role: user.role },
-        "shhhhhhhhh"
-      );
-      res.cookie("token", token);
-
-      // THE REDIRECT LOGIC
-      if (user.role === "admin") {
-        return res.redirect("/admin/dashboard");
-      }
-      return res.redirect("/catalog"); // Regular user landing page
-    }
-
-    return res.render("login", {
-      error: "Invalid Credentials",
-      formData: { email: identifier },
-    });
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.redirect("/login");
-  }
 };
-
 
 exports.getUserDashboard = async (req, res) => {
     try {

@@ -199,7 +199,7 @@
       <aside class="booking-sidebar">
         <p class="entry-label">STANDARD ENTRY</p>
         <div class="price-row">
-          <span class="price"><%= eventPrice === 0 ? "Free" : "$" + eventPrice %></span>
+          <span class="price"><%= eventPrice === 0 ? "Free" : "NPR. " + eventPrice %></span>
           <span class="price-per">/ per guest</span>
         </div>
         <ul class="perks">
@@ -440,7 +440,7 @@
             </div>
             <div class="summary-row">
               <span>Total</span>
-              <strong id="bookingTotalPrice"><%= eventPrice === 0 ? "Free" : "$0" %></strong>
+              <strong id="bookingTotalPrice"><%= eventPrice === 0 ? "Free" : "NPR. 0" %></strong>
             </div>
           </div>
 
@@ -572,12 +572,12 @@
       const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
       const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
       const maxTicketsPerBooking = 5;
-      const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+      const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*NPR. /;
 
       function formatAmount(amount, pricePerTicket) {
         if (pricePerTicket === 0) return "Free";
         const fixed = Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
-        return `$${fixed}`;
+        return `NPR. ${fixed}`;
       }
 
       function getAvailableTickets() {
@@ -588,7 +588,7 @@
 
       function getTicketCount() {
         const rawValue = ticketInput.value.trim();
-        if (!/^[1-9]\d*$/.test(rawValue)) return null;
+        if (!/^[1-9]\d*NPR. /.test(rawValue)) return null;
         let count = Number(rawValue);
         if (count > maxTicketsPerBooking) {
           count = maxTicketsPerBooking;
@@ -818,7 +818,7 @@
         const email = document.getElementById("bookingEmail").value.trim();
         const ticketCount = getTicketCount();
         const availableTickets = getAvailableTickets();
-        const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
+        const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+NPR. /;
         if (!email) {
           bookingError.textContent = "Please enter your email address.";
           return;

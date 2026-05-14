@@ -12,7 +12,11 @@ const venueBookingSchema = new mongoose.Schema(
             ref: 'user',
             required: true
         },
-        bookingDate: {
+        startDate: {
+            type: Date,
+            required: true
+        },
+        endDate: {
             type: Date,
             required: true
         },

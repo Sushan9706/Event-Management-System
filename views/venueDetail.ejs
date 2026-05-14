@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= venue.venueName %> - EMS Venues</title>
+    <title><%= venue.name %> - EMS Venues</title>
     <link rel="stylesheet" href="/css/venueDetail.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -28,7 +28,7 @@
         <div class="hero-overlay">
             <div class="hero-content">
                 <span class="venue-status"><%= venue.status || 'Available' %></span>
-                <h1><%= venue.venueName %></h1>
+                <h1><%= venue.name %></h1>
             </div>
         </div>
     </div>
@@ -47,15 +47,33 @@
             <div class="info-box highlight">
                 <span class="info-label">BASE RATE</span>
                 <span class="info-value price">
-                    $<%= venue.pricePerHour %>/hr
+                    NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %>/hr
                 </span>
             </div>
         </div>
 
         <div class="venue-body">
+            <div class="venue-sidebar">
+                <div class="availability-calendar-container">
+                    <label class="section-label">AVAILABILITY CALENDAR</label>
+                    <div class="calendar-header">
+                        <button type="button" id="prevMonth">&lt;</button>
+                        <h4 id="currentMonthYear">May 2026</h4>
+                        <button type="button" id="nextMonth">&gt;</button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Days injected by JS -->
+                    </div>
+                    <div class="calendar-legend">
+                        <div class="legend-item"><span class="dot available"></span> Available</div>
+                        <div class="legend-item"><span class="dot booked"></span> Booked</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="venue-description">
                 <h2>About This Venue</h2>
-                <p><%= venue.description || 'Experience the perfect blend of elegance and functionality at ' + venue.venueName + '. Ideal for both intimate gatherings and large-scale celebrations, this space offers modern amenities in a prime location.' %></p>
+                <p><%= venue.description || 'Experience the perfect blend of elegance and functionality at ' + venue.name + '. Ideal for both intimate gatherings and large-scale celebrations, this space offers modern amenities in a prime location.' %></p>
 
                 <div class="amenities">
                     <div class="amenity-item">
@@ -81,24 +99,27 @@
                 <div class="booking-card">
                     <h3>Inquiry & Booking</h3>
                     <div class="price-display">
-                        <span class="price-amount">$<%= venue.pricePerHour %></span>
+                        <span class="price-amount">NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %></span>
                         <span class="price-per">starting per hour</span>
                     </div>
 
                     <% if (venue.status === 'available' && user) { %>
-                        <div class="booking-inputs" style="margin-bottom: 20px;">
-                            <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px;">SELECT DATE</label>
-                            <input type="date" id="bookingDate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px;">
-                            
-                            <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1;">
-                                    <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px;">START TIME</label>
-                                    <input type="time" id="startTime" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                                </div>
-                                <div style="flex: 1;">
-                                    <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px;">END TIME</label>
-                                    <input type="time" id="endTime" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                                </div>
+                        <div class="booking-inputs-grid">
+                            <div class="input-group">
+                                <label>START DATE</label>
+                                <input type="date" id="startDate">
+                            </div>
+                            <div class="input-group">
+                                <label>START TIME</label>
+                                <input type="time" id="startTime">
+                            </div>
+                            <div class="input-group">
+                                <label>END DATE</label>
+                                <input type="date" id="endDate">
+                            </div>
+                            <div class="input-group">
+                                <label>END TIME</label>
+                                <input type="time" id="endTime">
                             </div>
                         </div>
                         <button class="book-btn" id="confirmBookingBtn">Confirm Booking</button>
@@ -109,13 +130,93 @@
                     <% } %>
 
                     <script>
+                        const bookedDates = <%- bookedDates %>;
+                        const calendarGrid = document.getElementById('calendarGrid');
+                        const monthYearLabel = document.getElementById('currentMonthYear');
+                        const prevBtn = document.getElementById('prevMonth');
+                        const nextBtn = document.getElementById('nextMonth');
+
+                        let currentDate = new Date();
+
+                        function getYYYYMMDD(date) {
+                            const y = date.getFullYear();
+                            const m = String(date.getMonth() + 1).padStart(2, '0');
+                            const d = String(date.getDate()).padStart(2, '0');
+                            return `${y}-${m}-${d}`;
+                        }
+
+                        function renderCalendar() {
+                            calendarGrid.innerHTML = '';
+                            const year = currentDate.getFullYear();
+                            const month = currentDate.getMonth();
+
+                            monthYearLabel.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                            const firstDay = new Date(year, month, 1).getDay();
+                            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                            ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+                                const el = document.createElement('div');
+                                el.className = 'calendar-day-header';
+                                el.textContent = day;
+                                calendarGrid.appendChild(el);
+                            });
+
+                            for (let i = 0; i < firstDay; i++) {
+                                const el = document.createElement('div');
+                                el.className = 'calendar-day empty';
+                                calendarGrid.appendChild(el);
+                            }
+
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            for (let day = 1; day <= daysInMonth; day++) {
+                                const date = new Date(year, month, day);
+                                const dateStr = getYYYYMMDD(date);
+                                const isPast = date < today;
+                                const isBooked = bookedDates.includes(dateStr);
+                                
+                                const el = document.createElement('div');
+                                el.className = 'calendar-day';
+                                el.textContent = day;
+
+                                if (isPast) el.classList.add('past');
+                                else if (isBooked) {
+                                    el.classList.add('booked');
+                                    el.title = 'Venue is already booked for this date';
+                                }
+                                else el.classList.add('available');
+
+                                calendarGrid.appendChild(el);
+                            }
+                        }
+
+                        prevBtn?.addEventListener('click', () => {
+                            currentDate.setMonth(currentDate.getMonth() - 1);
+                            renderCalendar();
+                        });
+
+                        nextBtn?.addEventListener('click', () => {
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                            renderCalendar();
+                        });
+
+                        renderCalendar();
+
                         document.getElementById('confirmBookingBtn')?.addEventListener('click', async () => {
-                            const bookingDate = document.getElementById('bookingDate').value;
+                            const startDate = document.getElementById('startDate').value;
+                            const endDate = document.getElementById('endDate').value;
                             const startTime = document.getElementById('startTime').value;
                             const endTime = document.getElementById('endTime').value;
 
-                            if (!bookingDate || !startTime || !endTime) {
-                                alert('Please fill all booking details.');
+                            if (!startDate || !endDate || !startTime || !endTime) {
+                                alert('Please select both start and end dates and times.');
+                                return;
+                            }
+
+                            if (new Date(startDate) > new Date(endDate)) {
+                                alert('Start date cannot be after end date.');
                                 return;
                             }
 
@@ -125,7 +226,8 @@
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         venueId: '<%= venue._id %>',
-                                        bookingDate,
+                                        startDate,
+                                        endDate,
                                         startTime,
                                         endTime
                                     })
@@ -134,7 +236,7 @@
                                 const data = await response.json();
                                 if (data.success) {
                                     alert('Venue booked successfully!');
-                                    window.location.href = '/venue/my-bookings';
+                                    window.location.href = '/bookings';
                                 } else {
                                     alert(data.message || 'Booking failed.');
                                 }

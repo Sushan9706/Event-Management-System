@@ -1,27 +1,28 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const venueSchema = new mongoose.Schema({
-    venueName: { type: String, required: true },
+    name: { type: String, required: true },
+    description: { type: String, required: true },
     location: { type: String, required: true },
-    description: { type: String },
-    capacity: { type: Number, required: true, default: 0 },
-    image: { type: String },
-    imagePath: { type: String },
-    contactInfo: { type: String },
-    pricePerHour: { type: Number, default: 0 },
-    status: { type: String, enum: ['available', 'maintenance', 'booked'], default: 'available' }
+    category: { 
+        type: String, 
+        required: true,
+        enum: ['Conference Room', 'Ballroom', 'Outdoor Space', 'Auditorium', 'Exhibition Hall', 'Meeting Room', 'Other']
+    },
+    capacity: { type: Number, required: true },
+    hourlyRate: { type: Number },
+    dailyRate: { type: Number },
+    imagePath: { type: String, default: '/images/default-venue.png' },
+    status: { type: String, enum: ['available', 'maintenance', 'archived'], default: 'available' }
 }, { timestamps: true });
 
-// Pre-save middleware to synchronize imagePath and image
-venueSchema.pre('save', async function () {
-    if (this.isModified('imagePath')) {
-        this.image = this.imagePath;
-    } else if (this.isModified('image')) {
-        this.imagePath = this.image;
-    } else {
-        if (this.imagePath && !this.image) this.image = this.imagePath;
-        if (this.image && !this.imagePath) this.imagePath = this.image;
+// Validation: At least one rate must be provided
+venueSchema.pre('validate', function(next) {
+    if (!this.hourlyRate && !this.dailyRate) {
+        this.invalidate('hourlyRate', 'At least one rate (hourly or daily) must be provided.');
+        this.invalidate('dailyRate', 'At least one rate (hourly or daily) must be provided.');
     }
+    next();
 });
 
-module.exports = mongoose.model("Venue", venueSchema);
+module.exports = mongoose.model('Venue', venueSchema);

@@ -592,8 +592,8 @@ exports.getBookingsPage = async (req, res) => {
 
         // 3. Merge and Sort
         let allBookings = [...eventBookings, ...venueBookings].sort((a, b) => {
-            const dateA = a.bookingType === 'event' ? (a.eventId ? a.eventId.startDate : a.createdAt) : a.bookingDate;
-            const dateB = b.bookingType === 'event' ? (b.eventId ? b.eventId.startDate : b.createdAt) : b.bookingDate;
+            const dateA = a.bookingType === 'event' ? (a.eventId ? a.eventId.startDate : a.createdAt) : a.startDate;
+            const dateB = b.bookingType === 'event' ? (b.eventId ? b.eventId.startDate : b.createdAt) : b.startDate;
             return new Date(dateB) - new Date(dateA);
         });
 
