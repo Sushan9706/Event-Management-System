@@ -8,6 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="notificationToast" class="notification-toast">
+        <span class="notification-icon" id="notifIcon"></span>
+        <span class="notification-message" id="notifMessage"></span>
+    </div>
 
     <header class="navbar">
         <div class="logo">EMS</div>
@@ -204,6 +208,20 @@
 
                         renderCalendar();
 
+                        function showNotification(message, type = 'error') {
+                            const toast = document.getElementById('notificationToast');
+                            const icon = document.getElementById('notifIcon');
+                            const msg = document.getElementById('notifMessage');
+
+                            toast.className = `notification-toast show ${type}`;
+                            msg.textContent = message;
+                            icon.textContent = type === 'success' ? '✓' : '⚠';
+
+                            setTimeout(() => {
+                                toast.classList.remove('show');
+                            }, 4000);
+                        }
+
                         document.getElementById('confirmBookingBtn')?.addEventListener('click', async () => {
                             const startDate = document.getElementById('startDate').value;
                             const endDate = document.getElementById('endDate').value;
@@ -211,12 +229,12 @@
                             const endTime = document.getElementById('endTime').value;
 
                             if (!startDate || !endDate || !startTime || !endTime) {
-                                alert('Please select both start and end dates and times.');
+                                showNotification('Please select both start and end dates and times.');
                                 return;
                             }
 
                             if (new Date(startDate) > new Date(endDate)) {
-                                alert('Start date cannot be after end date.');
+                                showNotification('Start date cannot be after end date.');
                                 return;
                             }
 
@@ -235,14 +253,16 @@
 
                                 const data = await response.json();
                                 if (data.success) {
-                                    alert('Venue booked successfully!');
-                                    window.location.href = '/bookings';
+                                    showNotification('Venue booked successfully!', 'success');
+                                    setTimeout(() => {
+                                        window.location.href = '/bookings';
+                                    }, 1500);
                                 } else {
-                                    alert(data.message || 'Booking failed.');
+                                    showNotification(data.message || 'Booking failed.');
                                 }
                             } catch (err) {
                                 console.error(err);
-                                alert('An error occurred. Please try again.');
+                                showNotification('An error occurred. Please try again.');
                             }
                         });
                     </script>

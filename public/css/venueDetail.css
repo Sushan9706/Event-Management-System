@@ -450,6 +450,46 @@ body {
     color: #fff !important;
 }
 
+/* Notification Toast */
+.notification-toast {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    padding: 15px 25px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 9999;
+    border-left: 5px solid #2c3e50;
+}
+
+.notification-toast.show {
+    transform: translateX(0);
+}
+
+.notification-toast.error {
+    border-left-color: #e74c3c;
+}
+
+.notification-toast.success {
+    border-left-color: #2ecc71;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+}
+
+.notification-message {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
 .time-picker-row {
     display: flex;
     gap: 15px;
