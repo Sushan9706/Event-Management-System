@@ -96,15 +96,11 @@
           <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">CANCELLED <span><%= cancelledCount %></span></button>
         </div>
         <div class="filters">
-          <button class="filter-btn" type="button" id="filterToggle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="7" y1="12" x2="17" y2="12"></line>
-              <line x1="10" y1="18" x2="14" y2="18"></line>
-            </svg>
-            FILTER BY DATE
-          </button>
-          <input type="date" id="dateFilter" class="date-filter" />
+          <div class="type-filter">
+            <button class="type-btn active" data-type="both">BOTH</button>
+            <button class="type-btn" data-type="event">EVENTS</button>
+            <button class="type-btn" data-type="venue">VENUES</button>
+          </div>
         </div>
       </section>
 
@@ -156,7 +152,7 @@
               const statusGroup = normalizeStatus(booking.status);
               actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
           %>
-            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= dateIso %>">
+            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= dateIso %>" data-type="<%= isEvent ? 'event' : 'venue' %>">
               <img class="booking-image" src="<%= image %>" alt="<%= title %>" onerror="this.style.display='none'" />
               <div class="booking-meta">
                 <p class="label"><%= typeLabel %></p>
@@ -217,9 +213,8 @@
 
     <script>
       const tabs = document.querySelectorAll('.tab');
+      const typeBtns = document.querySelectorAll('.type-btn');
       const cards = document.querySelectorAll('.booking-card');
-      const dateFilter = document.getElementById('dateFilter');
-      const filterToggle = document.getElementById('filterToggle');
 
       function setActiveTab(status) {
         tabs.forEach(t => t.classList.remove('active'));
@@ -234,11 +229,12 @@
 
       function applyFilters() {
         const activeStatus = document.querySelector('.tab.active')?.dataset.status || 'confirmed';
-        const dateValue = dateFilter.value;
+        const activeType = document.querySelector('.type-btn.active')?.dataset.type || 'both';
+
         cards.forEach(card => {
           const matchesStatus = card.dataset.status === activeStatus;
-          const matchesDate = !dateValue || card.dataset.date === dateValue;
-          card.style.display = matchesStatus && matchesDate ? 'grid' : 'none';
+          const matchesType = activeType === 'both' || card.dataset.type === activeType;
+          card.style.display = matchesStatus && matchesType ? 'grid' : 'none';
         });
       }
 
@@ -250,15 +246,13 @@
         });
       });
 
-      filterToggle.addEventListener('click', () => {
-        dateFilter.classList.toggle('open');
-        if (!dateFilter.classList.contains('open')) {
-          dateFilter.value = '';
+      typeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          typeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
           applyFilters();
-        }
+        });
       });
-
-      dateFilter.addEventListener('change', applyFilters);
 
       applyFilters();
 

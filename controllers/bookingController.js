@@ -591,7 +591,11 @@ exports.getBookingsPage = async (req, res) => {
             });
 
         // 3. Merge and Sort
-        let allBookings = [...eventBookings, ...venueBookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        let allBookings = [...eventBookings, ...venueBookings].sort((a, b) => {
+            const dateA = a.bookingType === 'event' ? (a.eventId ? a.eventId.startDate : a.createdAt) : a.bookingDate;
+            const dateB = b.bookingType === 'event' ? (b.eventId ? b.eventId.startDate : b.createdAt) : b.bookingDate;
+            return new Date(dateB) - new Date(dateA);
+        });
 
         // Optional: Group event bookings (keeping the logic from before for event bookings)
         // Note: The user might want both types to be grouped or just list them.

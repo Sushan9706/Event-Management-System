@@ -271,32 +271,35 @@ a {
   gap: 12px;
 }
 
-.filter-btn {
-  border: 1px solid var(--border);
-  background: #fff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  color: var(--muted);
+.type-filter {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.date-filter {
-  border: 1px solid var(--border);
-  background: #fff;
-  padding: 8px 12px;
+  background: #eeebe8;
+  padding: 3px;
   border-radius: 8px;
-  font-size: 12px;
-  display: none;
+  gap: 2px;
 }
 
-.date-filter.open {
-  display: block;
+.type-btn {
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-btn:hover {
+  color: var(--text);
+}
+
+.type-btn.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .booking-list {
