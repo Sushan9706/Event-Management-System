@@ -15,12 +15,12 @@
   <header class="navbar">
     <div class="nav-inner">
       <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
-      <nav class="nav-links">
-        <a href="/user" class="nav-item">Home</a>
-        <a href="/catalog" class="nav-item">Events</a>
-        <a href="/venue" class="nav-item active">Venues</a>
-        <a href="/bookings" class="nav-item">My Bookings</a>
-      </nav>
+        <nav class="nav-links">
+          <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+          <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+          <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+          <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+        </nav>
       <div class="nav-right">
         <button class="icon-btn" id="notifBtn" aria-label="Notifications">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,7 +126,7 @@
               </div>
               <div class="card-footer">
                 <span class="card-price">
-                  NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %>/hr
+                  NPR. <%= venue.dailyRate || venue.hourlyRate || 0 %>/<%= venue.dailyRate ? 'day' : 'hr' %>
                 </span>
                 <button class="btn-details">Details →</button>
               </div>

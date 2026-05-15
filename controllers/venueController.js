@@ -108,7 +108,18 @@ exports.bookVenue = async (req, res) => {
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-        const totalAmount = (venue.hourlyRate || venue.dailyRate || 0) * 4 * diffDays; // Dummy calculation for now
+        // Calculate total amount based on daily or hourly rate
+        let totalAmount = 0;
+        if (venue.dailyRate) {
+            totalAmount = venue.dailyRate * diffDays;
+        } else if (venue.hourlyRate) {
+            // Simple hourly calculation: (endTime - startTime) * days * rate
+            const startT = startTime.split(':');
+            const endT = endTime.split(':');
+            const hours = (parseInt(endT[0]) + parseInt(endT[1])/60) - (parseInt(startT[0]) + parseInt(startT[1])/60);
+            const totalHours = Math.max(hours, 0) * diffDays;
+            totalAmount = venue.hourlyRate * totalHours;
+        }
 
         const referenceNumber = 'V-EMS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 

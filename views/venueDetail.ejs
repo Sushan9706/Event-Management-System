@@ -16,10 +16,10 @@
     <header class="navbar">
       <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
       <nav class="nav-links">
-        <a href="/user">Home</a>
-        <a href="/catalog">Events</a>
-        <a href="/venue" class="active">Venues</a>
-        <a href="/bookings">My Bookings</a>
+        <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+        <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+        <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+        <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
       </nav>
       <div class="nav-icons">
         <% if (locals.user) { %>
@@ -68,7 +68,7 @@
             <div class="info-box highlight">
                 <span class="info-label">BASE RATE</span>
                 <span class="info-value price">
-                    NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %>/hr
+                    NPR. <%= venue.dailyRate || venue.hourlyRate || 0 %>/<%= venue.dailyRate ? 'day' : 'hr' %>
                 </span>
             </div>
         </div>
@@ -120,8 +120,8 @@
                 <div class="booking-card">
                     <h3>Inquiry & Booking</h3>
                     <div class="price-display">
-                        <span class="price-amount">NPR. <%= venue.hourlyRate || venue.dailyRate || 0 %></span>
-                        <span class="price-per">starting per hour</span>
+                        <span class="price-amount">NPR. <%= venue.dailyRate || venue.hourlyRate || 0 %></span>
+                        <span class="price-per">starting per <%= venue.dailyRate ? 'day' : 'hour' %></span>
                     </div>
 
                     <% if (venue.status === 'available' && user) { %>
