@@ -59,23 +59,48 @@ body {
   color: var(--text-primary);
 }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.nav-link {
+.nav-links .nav-link {
   text-decoration: none;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 400;
-  transition: color 0.2s;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  position: relative;
+  padding: 4px 0;
+  display: inline-block;
 }
 
-.nav-link:hover,
-.nav-link.active {
+.nav-links .nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-blue);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+/* Hover Animation: Only for non-active links */
+.nav-links .nav-link:not(.active):hover {
   color: var(--text-primary);
+}
+
+.nav-links .nav-link:not(.active):hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Active State: Always show underline and bold font */
+.nav-links .nav-link.active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.nav-links .nav-link.active::after {
+  transform: scaleX(1);
 }
 
 .btn-get-started {
