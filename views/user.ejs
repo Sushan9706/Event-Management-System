@@ -201,7 +201,7 @@
                     <small style="color: #999; font-size: 0.7rem;">${b.type.toUpperCase()}</small>
                   </div>
                 </div>
-                <div class="td"><span class="pill pill--ok" style="${statusColor}">${b.status.toUpperCase()}</span></div>
+                <div class="td"><span class="pill pill--ok" style="${statusColor}">${(b.status || 'confirmed').toUpperCase()}</span></div>
                 <div class="td">${dateStr}</div>
                 <div class="td">${actionHtml}</div>
               `;
@@ -231,7 +231,7 @@
 
 <aside class="avatar-sidebar" id="avatarSidebar">
     <div class="sidebar-user-info">
-        Hi, <%= user ? user.username : 'User' %>
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
     </div>
     
     <div class="sidebar-divider"></div>

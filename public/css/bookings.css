@@ -65,7 +65,7 @@ a {
   transform: translateX(-50%);
 }
 
-.nav-links a {
+.nav-links .nav-link {
   font-size: 13px;
   font-weight: 500;
   color: var(--muted);
@@ -75,31 +75,37 @@ a {
   display: inline-block;
 }
 
-.nav-links a::after {
+.nav-links .nav-link::after {
   content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(--text);
+  background: #4a7cdc;
   transform: scaleX(0);
   transform-origin: bottom right;
   transition: transform 0.3s ease-out;
 }
 
-.nav-links a:hover {
+/* Hover Animation: Only for non-active links */
+.nav-links .nav-link:not(.active):hover {
   color: var(--text);
 }
 
-.nav-links a:hover::after {
+.nav-links .nav-link:not(.active):hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
 }
 
-.nav-links a.active {
+/* Active State: Always show underline and bold font */
+.nav-links .nav-link.active {
   color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.nav-links .nav-link.active::after {
+  transform: scaleX(1);
 }
 
 .nav-right,

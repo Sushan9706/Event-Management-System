@@ -159,14 +159,21 @@
             if(imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
             imgUrl = '/' + imgUrl;
             }
-            let eventStartDate = new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
-            year: 'numeric' });
-            let eventEndDate = new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit',
-            year: 'numeric' });
-            let eventDateDisplay = eventStartDate === eventEndDate ? eventStartDate : `${eventStartDate} -
-            ${eventEndDate}`;
+            const formatEventDateSafe = (start, end) => {
+              if (!start) return 'Date TBD';
+              const d1 = new Date(start);
+              if (isNaN(d1.getTime())) return 'Date TBD';
+              const options = { month: 'short', day: '2-digit', year: 'numeric' };
+              const sStr = d1.toLocaleDateString('en-US', options);
+              if (!end) return sStr;
+              const d2 = new Date(end);
+              if (isNaN(d2.getTime())) return sStr;
+              const eStr = d2.toLocaleDateString('en-US', options);
+              return sStr === eStr ? sStr : `${sStr} - ${eStr}`;
+            };
+            let eventDateDisplay = formatEventDateSafe(event.startDate || event.date, event.endDate);
             let isFree = event.ticketPrice === 0;
-            let displayPrice = isFree ? "Free" : "NPR. " + event.ticketPrice.toFixed(2);
+            let displayPrice = isFree ? "Free" : "NPR. " + (event.ticketPrice ? event.ticketPrice.toFixed(2) : "0.00");
             %>
             <div class="event-card" data-id="<%= event._id %>" data-category="<%= catStr %>"
               data-date="<%= event.startDate %>">
