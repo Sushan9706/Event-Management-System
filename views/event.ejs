@@ -944,20 +944,6 @@
         });
       }
 
-      // Notifications
-      const notifBtn = document.getElementById("notifBtn");
-      const notifDropdown = document.getElementById("notifDropdown");
-      if (notifBtn && notifDropdown) {
-        notifBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifDropdown.classList.toggle("open");
-        });
-        document.addEventListener("click", (e) => {
-          if (notifDropdown && !notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-            notifDropdown.classList.remove("open");
-          }
-        });
-      }
     </script>
     <% } %>
 </body>
