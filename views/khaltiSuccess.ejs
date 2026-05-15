@@ -271,7 +271,7 @@
 
     <main class="page-shell">
       <div class="topbar">
-        <div class="brand">EMS</div>
+        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="brand" style="text-decoration: none; color: inherit;">EMS</a>
         <a href="/bookings">Back to My Bookings</a>
       </div>
 

@@ -14,7 +14,7 @@
     </div>
 
     <header class="navbar">
-      <div class="logo">EMS</div>
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
       <nav class="nav-links">
         <a href="/user">Home</a>
         <a href="/catalog">Events</a>

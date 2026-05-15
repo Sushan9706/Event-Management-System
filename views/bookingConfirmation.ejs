@@ -9,7 +9,7 @@
 <body>
 
     <header class="navbar">
-        <a href="/" class="logo">EMS</a>
+        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
         <nav>
             <a href="/events">Events</a>
             <a href="/logout" class="btn-logout-nav">Logout</a>

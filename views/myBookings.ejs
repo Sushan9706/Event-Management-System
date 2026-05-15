@@ -13,7 +13,7 @@
     <!-- NAVBAR -->
     <header class="navbar">
         <div class="nav-inner">
-            <a href="/" class="nav-logo">EMS</a>
+            <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo">EMS</a>
             <nav class="nav-links">
                 <a href="/events">Events</a>
                 <a href="/bookings">My Bookings</a>
