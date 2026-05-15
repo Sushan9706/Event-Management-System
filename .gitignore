@@ -6,3 +6,4 @@ node_modules.desktop-bad/
 .env
 .DS_Store
 DASHBOARD_ENHANCEMENT_REPORT.md 
+.env.example
