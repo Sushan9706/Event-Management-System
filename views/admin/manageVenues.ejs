@@ -4,12 +4,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage Events – EMS Admin</title>
+    <title>Manage Venues – EMS Admin</title>
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="/css/admin-manage.css" />
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
         rel="stylesheet" />
+    <style>
+        .icon-venues { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .icon-available { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .icon-maintenance { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .status-available { background: #dcfce7; color: #15803d; }
+        .status-maintenance { background: #fef3c7; color: #92400e; }
+    </style>
 </head>
 
 <body>
@@ -20,8 +27,8 @@
                 <span class="logo">EMS</span>
             </div>
             <nav class="nav-links">
-                <a href="/admin/dashboard" class="nav-link active">Events</a>
-                <a href="/admin/venues" class="nav-link">Venues</a>
+                <a href="/admin/dashboard" class="nav-link">Events</a>
+                <a href="/admin/venues" class="nav-link active">Venues</a>
                 
                 <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -34,12 +41,10 @@
                 <div class="notif-dropdown" id="notifDropdown">
                     <p class="notif-title">RECENT BOOKINGS</p>
                     <div id="notifList">
-                        <!-- Notifications populate here -->
                         <p class="notif-empty">Loading notifications...</p>
                     </div>
                 </div>
 
-                <!-- Replace Register button with User Symbol Dropdown -->
                 <div class="user-menu-container">
                     <button class="user-trigger" id="userTrigger" title="User Account">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -79,14 +84,14 @@
         <div class="page-header">
             <div class="header-content">
                 <p class="page-eyebrow">Administration</p>
-                <h1 class="page-title">Manage Events</h1>
+                <h1 class="page-title">Manage Venues</h1>
             </div>
-            <a href="/admin/events/create" class="btn-create">
+            <a href="/admin/venues/create" class="btn-create">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Create Event
+                Create Venue
             </a>
         </div>
 
@@ -115,60 +120,41 @@
                         <!-- ── Stats Grid ── -->
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-icon icon-events">
+                                <div class="stat-icon icon-venues">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                        <path d="M16 2v4"></path>
-                                        <path d="M8 2v4"></path>
-                                        <path d="M3 10h18"></path>
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                                     </svg>
                                 </div>
-                                <p class="stat-label">Total Events</p>
+                                <p class="stat-label">Total Venues</p>
                                 <p class="stat-value">
-                                    <%= stats.totalEvents %>
+                                    <%= stats.totalVenues %>
                                 </p>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-icon icon-active">
+                                <div class="stat-icon icon-available">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                                     </svg>
                                 </div>
-                                <p class="stat-label">Active Now</p>
+                                <p class="stat-label">Available</p>
                                 <p class="stat-value">
-                                    <%= stats.activeEvents %>
+                                    <%= stats.availableVenues %>
                                 </p>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-icon icon-revenue">
+                                <div class="stat-icon icon-maintenance">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
-                                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                                     </svg>
                                 </div>
-                                <p class="stat-label">Total Attendees</p>
+                                <p class="stat-label">Maintenance</p>
                                 <p class="stat-value">
-                                    <%= stats.totalAttendees>= 1000 ? (stats.totalAttendees/1000).toFixed(1) + 'k' :
-                                        stats.totalAttendees %>
-                                </p>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon icon-attendance">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                </div>
-                                <p class="stat-label">Avg. Attendance</p>
-                                <p class="stat-value">
-                                    <%= stats.avgAttendance %>%
+                                    <%= stats.maintenanceVenues %>
                                 </p>
                             </div>
                         </div>
@@ -183,73 +169,78 @@
                                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                     </svg>
                                     <input type="text" id="searchInput"
-                                        placeholder="Search events by name, venue or ID..." />
+                                        placeholder="Search venues by name, location or category..." />
                                 </div>
                                 <div class="filter-group">
-                                    <select class="select-plain" id="statusFilter">
-                                        <option value="all">All Statuses</option>
-                                        <option value="upcoming">Upcoming</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
+                                    <select class="select-plain" id="categoryFilter">
+                                        <option value="all">All Categories</option>
+                                        <option value="Conference Room">Conference Room</option>
+                                        <option value="Ballroom">Ballroom</option>
+                                        <option value="Outdoor Space">Outdoor Space</option>
+                                        <option value="Auditorium">Auditorium</option>
+                                        <option value="Exhibition Hall">Exhibition Hall</option>
+                                        <option value="Meeting Room">Meeting Room</option>
+                                        <option value="Other">Other</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div id="eventsTableBody">
+                            <div id="venuesTableBody">
                                 <table class="events-table">
                                     <thead>
                                         <tr>
-                                            <th>Event Details</th>
-                                            <th>Date</th>
+                                            <th>Venue Details</th>
+                                            <th>Capacity & Rate</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% if (events.length===0) { %>
+                                        <% if (venues.length===0) { %>
                                             <tr>
                                                 <td colspan="4"
                                                     style="text-align: center; padding: 48px; color: var(--text-muted);">
-                                                    No events found.
+                                                    No venues found.
                                                 </td>
                                             </tr>
                                             <% } else { %>
-                                                <% events.forEach(event=> { %>
+                                                <% venues.forEach(venue=> { %>
                                                     <tr>
                                                         <td>
                                                             <div class="event-cell">
-                                                                <img src="<%= event.imagePath || event.image || '/images/default-event.png' %>"
-                                                                    alt="<%= event.eventName || event.title %>"
+                                                                <img src="<%= venue.imagePath || '/images/default-venue.png' %>"
+                                                                    alt="<%= venue.name %>"
                                                                     class="event-img" />
                                                                 <div class="event-info-cell">
                                                                     <p class="event-name">
-                                                                        <%= event.eventName %>
+                                                                        <%= venue.name %>
                                                                     </p>
                                                                     <p class="event-location">
-                                                                        <%= event.location %>
+                                                                        <%= venue.location %>
                                                                     </p>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td>
                                                             <p style="font-weight: 500;">
-                                                                <%= new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %> - <%= new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                                                Capacity: <%= venue.capacity %>
                                                             </p>
                                                             <p style="font-size: 12px; color: var(--text-light);">
-                                                                <%= event.startTime %> - <%= event.endTime %>
+                                                                <%= venue.hourlyRate ? 'NPR. ' + venue.hourlyRate + '/hr' : '' %> 
+                                                                <%= venue.hourlyRate && venue.dailyRate ? ' | ' : '' %>
+                                                                <%= venue.dailyRate ? 'NPR. ' + venue.dailyRate + '/day' : '' %>
                                                             </p>
                                                         </td>
                                                         <td>
                                                             <span
-                                                                class="status-pill status-<%= event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status %>">
-                                                                <%= event.status %>
+                                                                class="status-pill status-<%= venue.status %>">
+                                                                <%= venue.status %>
                                                             </span>
                                                         </td>
                                                         <td class="actions-cell">
-                                                            <a href="/admin/events/<%= event._id %>/bookings"
-                                                                class="btn-view">VIEW</a>
-                                                            <a href="/admin/events/edit/<%= event._id %>"
+                                                            <a href="/admin/venues/<%= venue._id %>/bookings"
+                                                                class="btn-view">BOOKINGS</a>
+                                                            <a href="/admin/venues/edit/<%= venue._id %>"
                                                                 class="btn-icon" title="Edit">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24"
                                                                     fill="none" stroke="currentColor" stroke-width="2">
@@ -262,8 +253,8 @@
                                                                 </svg>
                                                             </a>
                                                             <button type="button" class="btn-icon delete delete-trigger"
-                                                                title="Delete" data-id="<%= event._id %>"
-                                                                data-name="<%= event.eventName %>">
+                                                                title="Delete" data-id="<%= venue._id %>"
+                                                                data-name="<%= venue.name %>">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24"
                                                                     fill="none" stroke="currentColor" stroke-width="2">
                                                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -316,28 +307,31 @@
         const notifDot = document.getElementById('notifDot');
 
         // ─── Dropdown Toggles ───
-        userTrigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('show');
-            notifDropdown.classList.remove('show');
-        });
+        if (userTrigger) {
+            userTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                notifDropdown.classList.remove('show');
+            });
+        }
 
-        notifBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifDropdown.classList.toggle('show');
-            userDropdown.classList.remove('show');
-            if (notifDropdown.classList.contains('show')) {
-                fetchNotifications();
-            }
-        });
+        if (notifBtn) {
+            notifBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notifDropdown.classList.toggle('show');
+                userDropdown.classList.remove('show');
+                if (notifDropdown.classList.contains('show')) {
+                    fetchNotifications();
+                }
+            });
+        }
 
         document.addEventListener('click', () => {
-            userDropdown.classList.remove('show');
-            notifDropdown.classList.remove('show');
+            if (userDropdown) userDropdown.classList.remove('show');
+            if (notifDropdown) notifDropdown.classList.remove('show');
         });
 
         // ─── Notifications Fetch ───
-
         async function fetchNotifications() {
             try {
                 const response = await fetch('/admin/notifications');
@@ -345,101 +339,109 @@
                 renderNotifications(data);
             } catch (err) {
                 console.error('Error fetching notifications:', err);
-                notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
+                if (notifList) notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
             }
         }
 
         function renderNotifications(notifications) {
             if (!notifications || notifications.length === 0) {
-                notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
-                notifDot.style.display = 'none';
+                if (notifList) notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
+                if (notifDot) notifDot.style.display = 'none';
                 return;
             }
 
-            // Show dot if there are notifications (simplified logic)
-            notifDot.style.display = 'block';
+            if (notifDot) notifDot.style.display = 'block';
 
-            notifList.innerHTML = notifications.map(n => {
-                const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
-                const date = new Date(n.createdAt).toLocaleString('en-US', { 
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                });
-                return `
-                    <div class="notif-item">
-                        <p class="notif-item-title">New Booking: ${n.userName}</p>
-                        <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
-                        <p class="notif-time">${date}</p>
-                    </div>
-                `;
-            }).join('');
+            if (notifList) {
+                notifList.innerHTML = notifications.map(n => {
+                    const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
+                    const date = new Date(n.createdAt).toLocaleString('en-US', { 
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                    });
+                    return `
+                        <div class="notif-item">
+                            <p class="notif-item-title">New Booking: ${n.userName}</p>
+                            <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
+                            <p class="notif-time">${date}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
-        // Fetch once on load to show dot if needed
         fetchNotifications();
 
         // ─── Real-time Search & Filter (AJAX) ───
         const searchInput = document.getElementById('searchInput');
-        const statusFilter = document.getElementById('statusFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
         let searchTimeout;
 
-        const updateEvents = async () => {
+        const updateVenues = async () => {
             const search = searchInput.value;
-            const status = statusFilter.value;
-            const url = `/admin/dashboard?search=${search}&status=${status}`;
+            const category = categoryFilter.value;
+            const url = `/admin/venues?search=${search}&category=${category}`;
 
             try {
                 const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
                 const data = await response.json();
-                renderTable(data.events, data.pagination);
+                renderTable(data.venues, data.pagination);
             } catch (err) {
                 console.error('Fetch error:', err);
             }
         };
 
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(updateEvents, 300);
-        });
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(updateVenues, 300);
+            });
+        }
 
-        statusFilter.addEventListener('change', updateEvents);
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', updateVenues);
+        }
 
-        const renderTable = (events, pagination) => {
+        const renderTable = (venues, pagination) => {
             const tbody = document.querySelector('.events-table tbody');
             const paginationDiv = document.querySelector('.pagination');
 
-            if (events.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--text-muted);">No events found.</td></tr>';
+            if (venues.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--text-muted);">No venues found.</td></tr>';
                 paginationDiv.innerHTML = '';
                 return;
             }
 
-            tbody.innerHTML = events.map(event => `
+            tbody.innerHTML = venues.map(venue => `
                 <tr>
                     <td>
                         <div class="event-cell">
-                            <img src="${event.imagePath || event.image || '/images/default-event.png'}" alt="${event.eventName || event.title || 'Event'}" class="event-img" />
+                            <img src="${venue.imagePath || '/images/default-venue.png'}" alt="${venue.name}" class="event-img" />
                             <div class="event-info-cell">
-                                <p class="event-name">${event.eventName}</p>
-                                <p class="event-location">${event.location}</p>
+                                <p class="event-name">${venue.name}</p>
+                                <p class="event-location">${venue.location}</p>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <p style="font-weight: 500;">${new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                        <p style="font-size: 12px; color: var(--text-light);">${event.startTime} - ${event.endTime}</p>
+                        <p style="font-weight: 500;">Capacity: ${venue.capacity}</p>
+                        <p style="font-size: 12px; color: var(--text-light);">
+                            ${venue.hourlyRate ? 'NPR. ' + venue.hourlyRate + '/hr' : ''} 
+                            ${venue.hourlyRate && venue.dailyRate ? ' | ' : ''}
+                            ${venue.dailyRate ? 'NPR. ' + venue.dailyRate + '/day' : ''}
+                        </p>
                     </td>
                     <td>
-                        <span class="status-pill status-${event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status}">${event.status}</span>
+                        <span class="status-pill status-${venue.status}">${venue.status}</span>
                     </td>
                     <td class="actions-cell">
-                        <a href="/admin/events/${event._id}/bookings" class="btn-view">VIEW</a>
-                        <a href="/admin/events/edit/${event._id}" class="btn-icon" title="Edit">
+                        <a href="/admin/venues/${venue._id}/bookings" class="btn-view">BOOKINGS</a>
+                        <a href="/admin/venues/edit/${venue._id}" class="btn-icon" title="Edit">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                         </a>
-                        <button type="button" class="btn-icon delete delete-trigger" title="Delete" data-id="${event._id}" data-name="${event.eventName || event.title}">
+                        <button type="button" class="btn-icon delete delete-trigger" title="Delete" data-id="${venue._id}" data-name="${venue.name}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -468,26 +470,26 @@
 
         window.goToPage = async (page) => {
             const search = searchInput.value;
-            const status = statusFilter.value;
-            const url = `/admin/dashboard?page=${page}&search=${search}&status=${status}`;
+            const category = categoryFilter.value;
+            const url = `/admin/venues?page=${page}&search=${search}&category=${category}`;
 
             try {
                 const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
                 const data = await response.json();
-                renderTable(data.events, data.pagination);
+                renderTable(data.venues, data.pagination);
             } catch (err) {
                 console.error('Fetch error:', err);
             }
         };
 
         // ─── Delete Modal Logic ───
-        const showDeleteModal = (eventId, eventName) => {
+        const showDeleteModal = (venueId, venueName) => {
             const deleteModal = document.getElementById('deleteModal');
             const deleteForm = document.getElementById('deleteForm');
-            const eventNameSpan = document.getElementById('deleteEventName');
+            const venueNameSpan = document.getElementById('deleteVenueName');
 
-            if (eventNameSpan) eventNameSpan.textContent = eventName;
-            if (deleteForm) deleteForm.action = `/admin/events/delete/${eventId}`;
+            if (venueNameSpan) venueNameSpan.textContent = venueName;
+            if (deleteForm) deleteForm.action = `/admin/venues/delete/${venueId}`;
             if (deleteModal) deleteModal.classList.add('show');
         };
 
@@ -536,11 +538,11 @@
                     <line x1="14" y1="11" x2="14" y2="17"></line>
                 </svg>
             </div>
-            <h2 class="modal-title">Delete Event?</h2>
+            <h2 class="modal-title">Delete Venue?</h2>
             <p class="modal-text">
                 Are you sure you want to permanently remove
-                <span id="deleteEventName" class="modal-event-name">Event Name</span>
-                This action cannot be undone.
+                <span id="deleteVenueName" class="modal-event-name">Venue Name</span>
+                All upcoming events at this venue will be cancelled. This action cannot be undone.
             </p>
             <div class="modal-actions">
                 <button type="button" class="modal-btn btn-cancel" onclick="closeDeleteModal()">CANCEL</button>

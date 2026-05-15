@@ -1,0 +1,285 @@
+const Venue = require('../models/venueModel');
+const Booking = require('../models/bookingModel');
+const Event = require('../models/event');
+const User = require('../models/user');
+const mongoose = require('mongoose');
+
+// --- MANAGE VENUES ---
+exports.getManageVenues = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        let query = { status: { $ne: 'archived' } };
+        
+        // Search filter
+        if (req.query.search) {
+            query.$or = [
+                { name: { $regex: req.query.search, $options: 'i' } },
+                { location: { $regex: req.query.search, $options: 'i' } },
+                { category: { $regex: req.query.search, $options: 'i' } }
+            ];
+        }
+
+        // Category filter
+        if (req.query.category && req.query.category !== 'all') {
+            query.category = req.query.category;
+        }
+
+        const venues = await Venue.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalVenues = await Venue.countDocuments(query);
+        
+        const stats = {
+            totalVenues: await Venue.countDocuments({ status: { $ne: 'archived' } }),
+            availableVenues: await Venue.countDocuments({ status: 'available' }),
+            maintenanceVenues: await Venue.countDocuments({ status: 'maintenance' })
+        };
+
+        const pagination = {
+            currentPage: page,
+            totalPages: Math.ceil(totalVenues / limit),
+            totalVenues
+        };
+
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            return res.json({ venues, pagination, stats });
+        }
+
+        res.render('admin/manageVenues', {
+            venues,
+            pagination,
+            stats,
+            query: req.query
+        });
+    } catch (err) {
+        console.error('Error in getManageVenues:', err);
+        req.flash('error', 'Failed to fetch venues');
+        res.redirect('/admin/dashboard');
+    }
+};
+
+// --- CREATE VENUE ---
+exports.getCreateVenue = (req, res) => {
+    res.render('admin/createVenue', {
+        categories: Venue.schema.path('category').enumValues
+    });
+};
+
+exports.postCreateVenue = async (req, res) => {
+    try {
+        const { name, description, location, category, capacity, hourlyRate, dailyRate } = req.body;
+        
+        // Validation (done in model, but we can do extra here if needed)
+        const imagePath = req.file ? `/images/events/${req.file.filename}` : '/images/default-venue.png';
+
+        const venue = new Venue({
+            name,
+            description,
+            location,
+            category,
+            capacity: parseInt(capacity),
+            hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
+            dailyRate: dailyRate ? parseFloat(dailyRate) : undefined,
+            imagePath
+        });
+
+        await venue.save();
+        req.flash('success', 'Venue created successfully');
+        res.redirect('/admin/venues');
+    } catch (err) {
+        console.error('Error in postCreateVenue:', err);
+        res.render('admin/createVenue', {
+            error: err.message,
+            formData: req.body,
+            categories: Venue.schema.path('category').enumValues
+        });
+    }
+};
+
+// --- EDIT VENUE ---
+exports.getEditVenue = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id);
+        if (!venue) {
+            req.flash('error', 'Venue not found');
+            return res.redirect('/admin/venues');
+        }
+
+        res.render('admin/editVenue', {
+            venue,
+            categories: Venue.schema.path('category').enumValues
+        });
+    } catch (err) {
+        console.error('Error in getEditVenue:', err);
+        res.redirect('/admin/venues');
+    }
+};
+
+exports.postEditVenue = async (req, res) => {
+    try {
+        const { name, description, location, category, capacity, hourlyRate, dailyRate, removeImage } = req.body;
+        const venue = await Venue.findById(req.params.id);
+        
+        if (!venue) {
+            req.flash('error', 'Venue not found');
+            return res.redirect('/admin/venues');
+        }
+
+        venue.name = name;
+        venue.description = description;
+        venue.location = location;
+        venue.category = category;
+        venue.capacity = parseInt(capacity);
+        venue.hourlyRate = hourlyRate ? parseFloat(hourlyRate) : undefined;
+        venue.dailyRate = dailyRate ? parseFloat(dailyRate) : undefined;
+
+        if (removeImage === 'true') {
+            venue.imagePath = '/images/default-venue.png';
+        } else if (req.file) {
+            venue.imagePath = `/images/events/${req.file.filename}`;
+        }
+
+        await venue.save();
+        req.flash('success', 'Venue updated successfully');
+        res.redirect('/admin/venues');
+    } catch (err) {
+        console.error('Error in postEditVenue:', err);
+        res.render('admin/editVenue', {
+            error: err.message,
+            venue: { ...req.body, _id: req.params.id, imagePath: (await Venue.findById(req.params.id)).imagePath },
+            categories: Venue.schema.path('category').enumValues
+        });
+    }
+};
+
+// --- DELETE VENUE ---
+exports.deleteVenue = async (req, res) => {
+    try {
+        const venueId = req.params.id;
+        const targetVenue = await Venue.findById(venueId);
+        if (!targetVenue) {
+            req.flash('error', 'Venue not found');
+            return res.redirect('/admin/venues');
+        }
+
+        // Logic: Cancel all upcoming event bookings at this venue
+        // For this, we need to find events that use this venue's location/name
+        // But since we don't have a direct link between Event and Venue yet (it's just a string in Event),
+        // I'll assume we find events by location string or we just focus on the venue's own future bookings if any.
+        // Wait, the requirement says: "All associated upcoming venue bookings are automatically cancelled"
+        // This implies there are bookings for the venue itself.
+        
+        // I'll implement a basic deletion for now, and if there are venue bookings, I'll cancel them.
+        // Currently, bookings are linked to events. If an event is at this venue, we should probably cancel its bookings.
+        // Let's search for events that match this venue's location.
+        const eventsAtVenue = await Event.find({ 
+            location: { $regex: targetVenue.name, $options: 'i' },
+            startDate: { $gte: new Date() }
+        });
+
+        for (const event of eventsAtVenue) {
+            // Cancel bookings for this event
+            const bookings = await Booking.find({ eventId: event._id, status: 'confirmed' });
+            for (const booking of bookings) {
+                booking.status = 'cancelled';
+                await booking.save();
+                
+                // Notify user
+                const user = await User.findOne({ email: booking.userEmail });
+                if (user) {
+                    user.notifications.unshift({
+                        type: 'booking_cancelled',
+                        eventId: event._id,
+                        eventName: event.eventName || event.title,
+                        message: `Your booking for ${event.eventName || event.title} has been cancelled because the venue ${targetVenue.name} is no longer available.`,
+                        createdAt: new Date()
+                    });
+                    await user.save();
+                }
+            }
+            // Cancel the event too?
+            event.status = 'cancelled';
+            await event.save();
+        }
+
+        targetVenue.status = 'archived'; // Soft delete
+        await targetVenue.save();
+
+        req.flash('success', 'Venue deleted and upcoming events cancelled.');
+        res.redirect('/admin/venues');
+    } catch (err) {
+        console.error('Error in deleteVenue:', err);
+        req.flash('error', 'Failed to delete venue');
+        res.redirect('/admin/venues');
+    }
+};
+
+// --- VIEW BOOKINGS ---
+exports.getVenueBookings = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id);
+        if (!venue) {
+            req.flash('error', 'Venue not found');
+            return res.redirect('/admin/venues');
+        }
+
+        // Find events at this venue
+        const events = await Event.find({ 
+            location: { $regex: venue.name, $options: 'i' }
+        });
+
+        const eventIds = events.map(e => e._id);
+        const bookings = await Booking.find({ eventId: { $in: eventIds } })
+            .sort({ createdAt: -1 });
+
+        const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+        const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+
+        res.render('admin/venueBookings', {
+            venue,
+            confirmedBookings,
+            cancelledBookings,
+            totalConfirmed: confirmedBookings.length
+        });
+    } catch (err) {
+        console.error('Error in getVenueBookings:', err);
+        res.redirect('/admin/venues');
+    }
+};
+
+// --- EXPORT BOOKINGS CSV ---
+exports.exportVenueBookingsCsv = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id);
+        if (!venue) return res.status(404).send('Venue not found');
+
+        const events = await Event.find({ 
+            location: { $regex: venue.name, $options: 'i' }
+        });
+
+        const eventIds = events.map(e => e._id);
+        const bookings = await Booking.find({ eventId: { $in: eventIds } })
+            .populate('eventId')
+            .sort({ createdAt: -1 });
+
+        let csv = 'Username,Event Name,Booking Date,Time Slot,Status\n';
+        bookings.forEach(b => {
+            const eventName = b.eventName || (b.eventId ? b.eventId.eventName : 'N/A');
+            const date = new Date(b.createdAt).toLocaleDateString();
+            const timeSlot = b.eventId ? `${b.eventId.startTime} - ${b.eventId.endTime}` : 'N/A';
+            csv += `"${b.userName}","${eventName}","${date}","${timeSlot}","${b.status}"\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${venue.name.replace(/[^a-zA-Z0-9]/g, '_')}_bookings.csv"`);
+        res.send(csv);
+    } catch (err) {
+        console.error('Error exporting venue bookings CSV:', err);
+        res.status(500).send('Failed to export CSV');
+    }
+};

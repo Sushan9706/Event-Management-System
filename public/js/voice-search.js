@@ -154,13 +154,13 @@ class VoiceSearch {
 
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    const heroSearch = document.getElementById('heroSearch');
+    const searchInput = document.getElementById('heroSearch') || document.getElementById('venueSearch');
     const micBtn = document.getElementById('voiceSearchBtn');
     const voiceStatus = document.getElementById('voiceStatus');
 
-    if (heroSearch && micBtn) {
+    if (searchInput && micBtn) {
         new VoiceSearch({
-            inputElement: heroSearch,
+            inputElement: searchInput,
             micButton: micBtn,
             statusElement: voiceStatus,
             onResult: (text) => {

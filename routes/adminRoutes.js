@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminEventController = require('../controllers/adminEventController');
+const adminVenueController = require('../controllers/adminVenueController');
 const { isLoggedIn, isAdmin } = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
 
@@ -32,5 +33,23 @@ router.get('/notifications', adminEventController.getNotifications);
 
 // ─── EXPORT CSV ──────────────────────────────────────────────
 router.get('/events/:id/bookings/export', adminEventController.exportBookingsCsv);
+
+// ─── MANAGE VENUES ────────────────────────────────────────────
+router.get('/venues', adminVenueController.getManageVenues);
+
+// ─── CREATE VENUE ─────────────────────────────────────────────
+router.get('/venues/create', adminVenueController.getCreateVenue);
+router.post('/venues/create', upload.eventUpload.single('venue_image'), adminVenueController.postCreateVenue);
+
+// ─── EDIT VENUE ───────────────────────────────────────────────
+router.get('/venues/edit/:id', adminVenueController.getEditVenue);
+router.post('/venues/edit/:id', upload.eventUpload.single('venue_image'), adminVenueController.postEditVenue);
+
+// ─── DELETE VENUE ─────────────────────────────────────────────
+router.post('/venues/delete/:id', adminVenueController.deleteVenue);
+
+// ─── VIEW VENUE BOOKINGS ──────────────────────────────────────
+router.get('/venues/:id/bookings', adminVenueController.getVenueBookings);
+router.get('/venues/export-csv/:id', adminVenueController.exportVenueBookingsCsv);
 
 module.exports = router;

@@ -38,6 +38,7 @@
         <nav class="nav-links">
           <a href="/user" class="nav-item">Home</a>
           <a href="/catalog" class="nav-item">Events</a>
+          <a href="/venue" class="nav-item">Venues</a>
           <a href="/bookings" class="nav-item active">My Bookings</a>
         </nav>
         <div class="nav-right">
@@ -95,15 +96,11 @@
           <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">CANCELLED <span><%= cancelledCount %></span></button>
         </div>
         <div class="filters">
-          <button class="filter-btn" type="button" id="filterToggle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="7" y1="12" x2="17" y2="12"></line>
-              <line x1="10" y1="18" x2="14" y2="18"></line>
-            </svg>
-            FILTER BY DATE
-          </button>
-          <input type="date" id="dateFilter" class="date-filter" />
+          <div class="type-filter">
+            <button class="type-btn active" data-type="both">BOTH</button>
+            <button class="type-btn" data-type="event">EVENTS</button>
+            <button class="type-btn" data-type="venue">VENUES</button>
+          </div>
         </div>
       </section>
 
@@ -115,42 +112,71 @@
           </div>
         <% } else { %>
           <% bookingList.forEach(function(booking) { 
-              const event = booking.eventId;
-              const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
-              const eventDate = event && event.startDate 
-                ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
-                : 'TBA';
-              const eventDateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
-              const eventLocation = event && event.location ? event.location : 'TBA';
-              const eventImage = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
-              const ticketCount = booking.ticketCount || 1;
-              const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
-              const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+              const isEvent = booking.bookingType === 'event';
+              const isVenue = booking.bookingType === 'venue';
+              
+              let title, dateLabel, dateIso, locationLabel, image, ref, countLabel, totalDisplay, manageUrl, actionLabel, typeLabel;
+
+              if (isEvent) {
+                const event = booking.eventId;
+                title = event ? (event.eventName || event.title || event.name) : 'Event';
+                dateLabel = event && event.startDate 
+                  ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) 
+                  : 'TBA';
+                dateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
+                locationLabel = event && event.location ? event.location : 'TBA';
+                image = event && event.image ? event.image : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
+                ref = booking.referenceNumber || '-';
+                const ticketCount = booking.ticketCount || 1;
+                const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
+                totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+                countLabel = `${ticketCount} · ${totalDisplay}`;
+                manageUrl = `/bookings/manage/${booking._id}`;
+                typeLabel = 'EVENT NAME';
+              } else if (isVenue) {
+                const venue = booking.venueId;
+                title = venue ? venue.name : 'Venue';
+                const sDate = booking.startDate ? new Date(booking.startDate) : new Date();
+                const eDate = booking.endDate ? new Date(booking.endDate) : sDate;
+                const sLabel = sDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                const eLabel = eDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                dateLabel = sLabel === eLabel ? sLabel : `${sLabel} - ${eLabel}`;
+                dateIso = sDate.toISOString().slice(0,10);
+                locationLabel = venue ? venue.location : 'TBA';
+                image = venue && (venue.imagePath || venue.image) ? (venue.imagePath || venue.image) : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=300&auto=format&fit=crop';
+                ref = booking.referenceNumber || '-';
+                const totalAmount = booking.totalAmount || 0;
+                totalDisplay = totalAmount === 0 ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+                countLabel = `${booking.startTime || 'TBA'} - ${booking.endTime || 'TBA'} · ${totalDisplay}`;
+                manageUrl = `/venue/${venue ? venue._id : ''}`;
+                typeLabel = 'VENUE NAME';
+              }
+
               const statusGroup = normalizeStatus(booking.status);
-              const actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
+              actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
           %>
-            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
-              <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>" onerror="this.style.display='none'" />
+            <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= dateIso %>" data-type="<%= isEvent ? 'event' : 'venue' %>">
+              <img class="booking-image" src="<%= image %>" alt="<%= title %>" onerror="this.style.display='none'" />
               <div class="booking-meta">
-                <p class="label">EVENT NAME</p>
-                <h3><%= eventName %></h3>
+                <p class="label"><%= typeLabel %></p>
+                <h3><%= title %></h3>
               </div>
               <div class="booking-meta">
                 <p class="label">REFERENCE</p>
-                <div class="reference-pill"><%= booking.referenceNumber || '-' %></div>
+                <div class="reference-pill"><%= ref %></div>
               </div>
               <div class="booking-meta">
                 <p class="label">DATE & LOCATION</p>
-                <p class="date"><%= eventDate %></p>
-                <p class="location"><%= eventLocation %></p>
+                <p class="date"><%= dateLabel %></p>
+                <p class="location"><%= locationLabel %></p>
               </div>
               <div class="booking-meta">
-                <p class="label">TICKETS</p>
-                <p class="value"><%= ticketCount %> · <%= totalDisplay %></p>
+                <p class="label"><%= isEvent ? 'TICKETS' : 'TIME & TOTAL' %></p>
+                <p class="value"><%= countLabel %></p>
               </div>
               <div class="booking-actions">
                 <span class="status <%= statusGroup %>"><%= statusGroup.toUpperCase() %></span>
-                <a href="/bookings/manage/<%= booking._id %>" class="manage-btn"><%= actionLabel %></a>
+                <a href="<%= manageUrl %>" class="manage-btn"><%= actionLabel %></a>
               </div>
             </article>
           <% }); %>
@@ -190,9 +216,8 @@
 
     <script>
       const tabs = document.querySelectorAll('.tab');
+      const typeBtns = document.querySelectorAll('.type-btn');
       const cards = document.querySelectorAll('.booking-card');
-      const dateFilter = document.getElementById('dateFilter');
-      const filterToggle = document.getElementById('filterToggle');
 
       function setActiveTab(status) {
         tabs.forEach(t => t.classList.remove('active'));
@@ -207,11 +232,12 @@
 
       function applyFilters() {
         const activeStatus = document.querySelector('.tab.active')?.dataset.status || 'confirmed';
-        const dateValue = dateFilter.value;
+        const activeType = document.querySelector('.type-btn.active')?.dataset.type || 'both';
+
         cards.forEach(card => {
           const matchesStatus = card.dataset.status === activeStatus;
-          const matchesDate = !dateValue || card.dataset.date === dateValue;
-          card.style.display = matchesStatus && matchesDate ? 'grid' : 'none';
+          const matchesType = activeType === 'both' || card.dataset.type === activeType;
+          card.style.display = matchesStatus && matchesType ? 'grid' : 'none';
         });
       }
 
@@ -223,15 +249,13 @@
         });
       });
 
-      filterToggle.addEventListener('click', () => {
-        dateFilter.classList.toggle('open');
-        if (!dateFilter.classList.contains('open')) {
-          dateFilter.value = '';
+      typeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          typeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
           applyFilters();
-        }
+        });
       });
-
-      dateFilter.addEventListener('change', applyFilters);
 
       applyFilters();
 

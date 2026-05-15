@@ -1,4 +1,5 @@
 const Booking = require('../models/bookingModel');
+const VenueBooking = require('../models/venueBookingModel');
 const Event = require('../models/event');
 const User = require('../models/user');
 const mongoose = require('mongoose');
@@ -550,61 +551,92 @@ exports.getBookingsPage = async (req, res) => {
             return res.render("bookings", { user: null, bookings: [], initialStatus: requestedStatus });
         }
 
-        let bookings = await Booking.find({ userEmail: user.email })
+        // 1. Fetch Event Bookings
+        let eventBookings = await Booking.find({ userEmail: user.email })
             .populate('eventId')
             .sort({ createdAt: -1 });
 
-        await syncBookingsExpiry(bookings);
+        await syncBookingsExpiry(eventBookings);
 
-        bookings = bookings
+        eventBookings = eventBookings
             .filter(booking => booking.eventId)
             .map(booking => {
-                const ticketCount = booking.ticketCount || 1;
-                const unitPrice = typeof booking.unitPrice === 'number'
-                    ? booking.unitPrice
-                    : (booking.eventId && typeof booking.eventId.ticketPrice === 'number' ? booking.eventId.ticketPrice : 0);
-                booking.ticketCount = ticketCount;
-                booking.unitPrice = unitPrice;
-                booking.totalAmount = typeof booking.totalAmount === 'number'
-                    ? booking.totalAmount
+                const b = booking.toObject ? booking.toObject() : { ...booking };
+                const ticketCount = b.ticketCount || 1;
+                const unitPrice = typeof b.unitPrice === 'number'
+                    ? b.unitPrice
+                    : (b.eventId && typeof b.eventId.ticketPrice === 'number' ? b.eventId.ticketPrice : 0);
+                b.ticketCount = ticketCount;
+                b.unitPrice = unitPrice;
+                b.totalAmount = typeof b.totalAmount === 'number'
+                    ? b.totalAmount
                     : unitPrice * ticketCount;
-                return booking;
+                b.bookingType = 'event';
+                return b;
             });
+
+        // 2. Fetch Venue Bookings
+        let venueBookings = await VenueBooking.find({ userId: user._id })
+            .populate('venueId')
+            .sort({ createdAt: -1 });
+
+        venueBookings = venueBookings
+            .filter(booking => booking.venueId)
+            .map(booking => {
+                const b = booking.toObject ? booking.toObject() : { ...booking };
+                b.bookingType = 'venue';
+                // For sorting/compatibility
+                b.createdAt = b.createdAt || new Date();
+                return b;
+            });
+
+        // 3. Merge and Sort
+        let allBookings = [...eventBookings, ...venueBookings].sort((a, b) => {
+            const dateA = a.bookingType === 'event' ? (a.eventId ? a.eventId.startDate : a.createdAt) : a.startDate;
+            const dateB = b.bookingType === 'event' ? (b.eventId ? b.eventId.startDate : b.createdAt) : b.startDate;
+            return new Date(dateB) - new Date(dateA);
+        });
+
+        // Optional: Group event bookings (keeping the logic from before for event bookings)
+        // Note: The user might want both types to be grouped or just list them.
+        // For simplicity and to match the "My Venue Bookings" separate view which was a list, 
+        // I will just pass the combined list but I'll keep the grouping logic if possible or just use the list.
+        // The original code grouped event bookings by eventId and status. 
+        // Let's keep that but only for 'event' types.
 
         const groupedBookings = [];
         const groupedByEventAndStatus = new Map();
-        for (const booking of bookings) {
-            const status = (booking.status || 'confirmed').toLowerCase();
-            const safeStatus = ['cancelled', 'expired'].includes(status) ? status : 'confirmed';
-            const eventId = booking.eventId && booking.eventId._id ? booking.eventId._id.toString() : String(booking.eventId);
-            const key = `${safeStatus}:${eventId}`;
-            const ticketCount = booking.ticketCount || 1;
-            const totalAmount = typeof booking.totalAmount === 'number'
-                ? booking.totalAmount
-                : (booking.unitPrice || 0) * ticketCount;
 
-            if (!groupedByEventAndStatus.has(key)) {
-                const plain = typeof booking.toObject === 'function' ? booking.toObject() : { ...booking };
-                plain.ticketCount = ticketCount;
-                plain.totalAmount = totalAmount;
-                plain.status = safeStatus;
-                plain.references = [booking.referenceNumber].filter(Boolean);
-                plain.ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
-                groupedByEventAndStatus.set(key, plain);
-                groupedBookings.push(plain);
+        for (const booking of allBookings) {
+            if (booking.bookingType === 'event') {
+                const status = (booking.status || 'confirmed').toLowerCase();
+                const safeStatus = ['cancelled', 'expired'].includes(status) ? status : 'confirmed';
+                const eventId = booking.eventId && booking.eventId._id ? booking.eventId._id.toString() : String(booking.eventId);
+                const key = `${safeStatus}:${eventId}`;
+                
+                if (!groupedByEventAndStatus.has(key)) {
+                    booking.status = safeStatus;
+                    booking.references = [booking.referenceNumber].filter(Boolean);
+                    booking.ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+                    groupedByEventAndStatus.set(key, booking);
+                    groupedBookings.push(booking);
+                } else {
+                    const group = groupedByEventAndStatus.get(key);
+                    group.ticketCount += booking.ticketCount;
+                    group.totalAmount += booking.totalAmount;
+                    if (booking.referenceNumber && !group.references.includes(booking.referenceNumber)) {
+                        group.references.push(booking.referenceNumber);
+                    }
+                    if (Array.isArray(booking.ticketCodes)) {
+                        group.ticketCodes.push(...booking.ticketCodes);
+                    }
+                    group.referenceNumber = group.references.length > 1
+                        ? `${group.references[0]} + ${group.references.length - 1} more`
+                        : group.references[0];
+                }
             } else {
-                const group = groupedByEventAndStatus.get(key);
-                group.ticketCount += ticketCount;
-                group.totalAmount += totalAmount;
-                if (booking.referenceNumber && !group.references.includes(booking.referenceNumber)) {
-                    group.references.push(booking.referenceNumber);
-                }
-                if (Array.isArray(booking.ticketCodes)) {
-                    group.ticketCodes.push(...booking.ticketCodes);
-                }
-                group.referenceNumber = group.references.length > 1
-                    ? `${group.references[0]} + ${group.references.length - 1} more`
-                    : group.references[0];
+                // Venue bookings - just add them directly for now as they aren't grouped in the model usually
+                groupedBookings.push(booking);
             }
         }
 

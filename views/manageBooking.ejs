@@ -28,7 +28,7 @@
         ? `${event.startTime || "TBA"}${event.endTime ? " - " + event.endTime : ""}`
         : (event && event.time ? event.time : "TBA");
       const printBaseUrl = (typeof publicBaseUrl === "string" && publicBaseUrl)
-        ? publicBaseUrl.replace(/\/+$/, "")
+        ? publicBaseUrl.replace(/\/+NPR. /, "")
         : "";
       const eventLocation = event && event.location ? event.location : "TBA";
       const eventImage = (event && (event.image || event.imagePath))
@@ -61,8 +61,8 @@
       const attendeeNames = Array.isArray(booking.attendeeNames) ? booking.attendeeNames : [];
       const attendeeList = Array.from({ length: ticketSlots }, (_, index) => attendeeNames[index] || (index === 0 ? booking.userName : "")).filter(Boolean);
       const attendeeNamesDisplay = attendeeList.length ? attendeeList.join(", ") : "-";
-      const unitPriceDisplay = unitPrice === 0 ? "Free" : `$${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`;
-      const totalDisplay = totalAmount === 0 ? "Free" : `$${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+      const unitPriceDisplay = unitPrice === 0 ? "Free" : `NPR. ${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`;
+      const totalDisplay = totalAmount === 0 ? "Free" : `NPR. ${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
       const bookingDate = booking.createdAt
         ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
         : "TBA";
@@ -484,7 +484,7 @@
         if (!cancelTicketCountInput || !cancelBtn) return null;
         const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
         const rawValue = cancelTicketCountInput.value.trim();
-        if (!/^[1-9]\d*$/.test(rawValue)) return null;
+        if (!/^[1-9]\d*NPR. /.test(rawValue)) return null;
         return Math.min(parseInt(rawValue, 10), totalTickets);
       };
       const updateCancelButtonLabel = () => {
