@@ -1,6 +1,8 @@
 const Event = require('../models/event');
 const Category = require('../models/categoryModel');
 const Booking = require('../models/bookingModel');
+const VenueBooking = require('../models/venueBookingModel');
+const User = require('../models/user');
 const path = require('path');
 const fs = require('fs');
 
@@ -415,13 +417,42 @@ exports.exportBookingsCsv = async (req, res) => {
 // ─── GET NOTIFICATIONS (AJAX) ────────────────────────────────
 exports.getNotifications = async (req, res) => {
     try {
-        // Fetch last 10 bookings as notifications
-        const notifications = await Booking.find()
+        // Fetch last 10 event bookings
+        const eventBookings = await Booking.find()
             .populate('eventId')
             .sort({ createdAt: -1 })
             .limit(10);
 
-        res.json(notifications);
+        // Fetch last 10 venue bookings
+        const venueBookings = await VenueBooking.find()
+            .populate('venueId')
+            .populate('userId')
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        // Normalize and merge
+        const merged = [
+            ...eventBookings.map(b => ({
+                _id: b._id,
+                type: 'event',
+                userName: b.userName,
+                name: b.eventId ? (b.eventId.eventName || b.eventId.title) : 'Event',
+                countLabel: `${b.ticketCount} tickets`,
+                createdAt: b.createdAt
+            })),
+            ...venueBookings.map(b => ({
+                _id: b._id,
+                type: 'venue',
+                userName: b.userId ? b.userId.username : 'Guest',
+                name: b.venueId ? b.venueId.name : 'Venue',
+                countLabel: `Venue Booking`,
+                createdAt: b.createdAt
+            }))
+        ]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 10);
+
+        res.json(merged);
     } catch (err) {
         console.error('Error fetching notifications:', err);
         res.status(500).json({ error: 'Failed to fetch notifications' });

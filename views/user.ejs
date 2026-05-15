@@ -110,7 +110,7 @@
                   <%= event.eventName || event.title %>
                 </h3>
                 <p class="ecard-meta">
-                  <%= new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                  <%= new Date(event.startDate || event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
                   <% if (event.location) { %> • <%= event.location %><% } %>
                 </p>
               </div>
@@ -130,24 +130,27 @@
         </div>
         <div class="tbl">
           <div class="tbl-head">
-            <span class="th">EVENT NAME</span>
+            <span class="th">EVENT AND VENUE NAME</span>
             <span class="th">STATUS</span>
             <span class="th">DATE</span>
             <span class="th">ACTION</span>
           </div>
           <% if (locals.recentBookings && recentBookings.length > 0) { %>
-            <% recentBookings.forEach(booking => { 
-                const event = booking.eventId;
-            %>
+            <% recentBookings.forEach(booking => { %>
               <div class="tbl-row">
                 <div class="td td-event">
-                  <div class="ri"><img src="<%= event.image || event.imagePath %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
-                  <div><p class="rn"><%= event.eventName || event.title %></p><p class="rid"><%= event.location %></p></div>
+                  <div class="ri"><img src="<%= booking.image %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
+                  <div>
+                    <p class="rn"><%= booking.name %></p>
+                    <p class="rid"><%= booking.location %></p>
+                    <small style="color: #999; font-size: 0.7rem;"><%= booking.type.toUpperCase() %></small>
+                  </div>
                 </div>
                 <div class="td"><span class="pill pill--ok" <%= (booking.status === 'cancelled') ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status === 'expired') ? 'style="background: #f0f0f0; color: #666;"' : '') %>><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
-                <div class="td"><%= new Date(event.date || event.startDate || new Date()).toLocaleDateString() %></div>
+                <div class="td"><%= new Date(booking.date).toLocaleDateString() %></div>
                 <div class="td">
-                   <a href="/bookings/manage/<%= booking._id %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                   <% const actionHref = booking.type === 'event' ? '/bookings/manage/' + booking.targetId : '/venue/' + booking.targetId; %>
+                   <a href="<%= actionHref %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                    </a>
                 </div>
@@ -157,7 +160,7 @@
             <p style="padding: 20px; color: #999; text-align: center;">No recent bookings found.</p>
           <% } %>
         </div>
-        <% if (locals.recentBookings && recentBookings.length === 3) { %>
+        <% if (locals.hasMore) { %>
           <div style="text-align: center; margin-top: 20px;">
             <button id="loadMoreBtn" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-page); color: var(--text-dark); cursor: pointer; font-family: var(--sans);">Load More Bookings</button>
           </div>
@@ -180,22 +183,27 @@
           if (data.success && data.bookings.length > 0) {
             const tbl = document.querySelector('.tbl');
             data.bookings.forEach(b => {
-              const dateStr = b.eventDate || b.eventStartDate ? new Date(b.eventDate || b.eventStartDate).toLocaleDateString() : 'N/A';
+              const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
               const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
+              const actionHref = b.type === 'event' ? `/bookings/manage/${b.targetId}` : `/venue/${b.targetId}`;
+              const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                  </a>`;
+
               const row = document.createElement('div');
               row.className = 'tbl-row';
               row.innerHTML = `
                 <div class="td td-event">
-                  <div class="ri"><img src="${b.eventImage}" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
-                  <div><p class="rn">${b.eventName}</p><p class="rid">${b.eventLocation || ''}</p></div>
+                  <div class="ri"><img src="${b.image}" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
+                  <div>
+                    <p class="rn">${b.name}</p>
+                    <p class="rid">${b.location || ''}</p>
+                    <small style="color: #999; font-size: 0.7rem;">${b.type.toUpperCase()}</small>
+                  </div>
                 </div>
                 <div class="td"><span class="pill pill--ok" style="${statusColor}">${b.status.toUpperCase()}</span></div>
                 <div class="td">${dateStr}</div>
-                <div class="td">
-                   <a href="/bookings/manage/${b._id}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                   </a>
-                </div>
+                <div class="td">${actionHtml}</div>
               `;
               tbl.appendChild(row);
             });
