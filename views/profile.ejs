@@ -20,9 +20,7 @@
     <% if (user && user.role === 'admin') { %>
       <header class="navbar">
           <div class="nav-inner">
-              <div class="nav-brand">
-                  <span class="logo">EMS</span>
-              </div>
+                  <a href="/admin/dashboard" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
               <nav class="nav-links">
                   <a href="/admin/dashboard" class="nav-link">Events</a>
                   <a href="/venue" class="nav-link">Venues</a>
@@ -77,7 +75,7 @@
       </header>
     <% } else { %>
       <nav>
-        <a href="/user" class="nav-logo">EMS</a>
+        <a href="<%= locals.user ? (user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo">EMS</a>
         <ul class="nav-links">
           <li><a href="/user">Home</a></li>
           <li><a href="/catalog">Events</a></li>
@@ -232,6 +230,9 @@
       </div>
     </div>
 
+    <script>
+      window.userRole = '<%= user ? user.role : "user" %>';
+    </script>
     <script src="/js/profile.js"></script>
     <% if (user && user.role === 'admin') { %>
       <script>

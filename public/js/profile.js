@@ -90,7 +90,7 @@ async function saveChanges() {
             showToast("Profile updated successfully!");
             // Reload after a short delay so user sees the success toast
             setTimeout(() => {
-                window.location.reload();
+                window.location.href = window.userRole === 'admin' ? '/admin/dashboard' : '/user';
             }, 1000);
         } else {
             showToast(result.message || "Failed to update profile", "error");
@@ -173,11 +173,12 @@ async function updatePassword() {
 
         const result = await response.json();
         if (response.ok) {
-            showToast("Password updated!");
-            // Clear inputs
-            document.getElementById('currentPw').value = "";
-            document.getElementById('newPw').value = "";
             document.getElementById('confirmPw').value = "";
+            
+            showToast("Redirecting to dashboard...");
+            setTimeout(() => {
+                window.location.href = window.userRole === 'admin' ? '/admin/dashboard' : '/user';
+            }, 1000);
         } else {
             showToast(result.message, "error");
         }
