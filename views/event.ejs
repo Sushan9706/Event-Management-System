@@ -80,8 +80,9 @@
     <header class="navbar">
       <div class="logo">EMS</div>
       <nav class="nav-links">
-        <a href="/user">Home </a>
-        <a href="/catalog">Events</a>
+        <a href="/user">Home</a>
+        <a href="/catalog" class="active">Events</a>
+        <a href="/venue">Venues</a>
         <a href="/bookings">My Bookings</a>
       </nav>
       <div class="nav-icons">
@@ -98,7 +99,7 @@
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
         </button>
-        <div class="avatar" id="avatarBtn" style="cursor: pointer">
+        <div class="avatar" id="profileTrigger" style="cursor: pointer">
           <img
             src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
             alt="User avatar"
@@ -959,5 +960,68 @@
         }
       });
     </script>
+    <% if (locals.user) { %>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest' %>
+      </div>
+      <div class="sidebar-divider"></div>
+      <a href="/profile" class="sidebar-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+        My Profile
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-logout" id="logoutBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+        Log Out
+      </button>
+    </aside>
+
+    <script>
+      // Profile Toggle
+      const profileTrigger = document.getElementById("profileTrigger");
+      const avatarSidebar = document.getElementById("avatarSidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      const toggleSidebar = (state) => {
+        if (avatarSidebar && sidebarOverlay) {
+          if (state) {
+            avatarSidebar.classList.add("open");
+            sidebarOverlay.classList.add("open");
+          } else {
+            avatarSidebar.classList.remove("open");
+            sidebarOverlay.classList.remove("open");
+          }
+        }
+      };
+
+      if (profileTrigger) profileTrigger.addEventListener("click", () => toggleSidebar(true));
+      if (sidebarOverlay) sidebarOverlay.addEventListener("click", () => toggleSidebar(false));
+
+      // Logout
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to log out?")) window.location.href = "/logout";
+        });
+      }
+
+      // Notifications
+      const notifBtn = document.getElementById("notifBtn");
+      const notifDropdown = document.getElementById("notifDropdown");
+      if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle("open");
+        });
+        document.addEventListener("click", (e) => {
+          if (notifDropdown && !notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifDropdown.classList.remove("open");
+          }
+        });
+      }
+    </script>
+    <% } %>
   </body>
 </html>

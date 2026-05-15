@@ -14,18 +14,35 @@
     </div>
 
     <header class="navbar">
-        <div class="logo">EMS</div>
-        <nav>
-            <a href="/user">Home</a>
-            <a href="/catalog">Events</a>
-            <a href="/venue">Venues</a>
-            <% if (user) { %>
-                <a href="/bookings">My Bookings</a>
-                <a href="/logout" class="btn-logout-nav">Logout</a>
-            <% } else { %>
-                <a href="/login" class="btn-login-nav">Login</a>
-            <% } %>
-        </nav>
+      <div class="logo">EMS</div>
+      <nav class="nav-links">
+        <a href="/user">Home</a>
+        <a href="/catalog">Events</a>
+        <a href="/venue" class="active">Venues</a>
+        <a href="/bookings">My Bookings</a>
+      </nav>
+      <div class="nav-icons">
+        <% if (locals.user) { %>
+        <button class="icon-btn" aria-label="Notifications" id="notifBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <% if (locals.notifications && notifications.length > 0) { %>
+            <span class="notif-dot"></span>
+          <% } %>
+        </button>
+        <div class="avatar" id="profileTrigger" style="cursor: pointer">
+          <img
+            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
+            alt="User avatar"
+            onerror="this.style.display='none'"
+          />
+        </div>
+        <% } else { %>
+          <a href="/login" class="login-link">Login</a>
+        <% } %>
+      </div>
     </header>
 
     <div class="venue-hero" <% if (venue.imagePath || venue.image) { %>style="background-image: url('<%= venue.imagePath || venue.image %>')"<% } %>>
@@ -278,6 +295,105 @@
         </div>
 
     </main>
+
+    <% if (locals.user) { %>
+    <%
+      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+      const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      };
+    %>
+    <div class="notif-dropdown" id="notifDropdown">
+      <p class="notif-title">NOTIFICATIONS</p>
+      <% if (notifications.length === 0) { %>
+        <p class="notif-empty">No new notifications</p>
+      <% } else { %>
+        <% notifications.forEach(function(note) { 
+            const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
+            const eventTitle = note.eventName || 'Event';
+            const countLabel = formatTicketCount(note.ticketCount || 1);
+            const timeLabel = formatNotifTime(note.createdAt);
+        %>
+          <div class="notif-item">
+            <p class="notif-item-title"><%= title %></p>
+            <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
+            <p class="notif-time"><%= timeLabel %></p>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest' %>
+      </div>
+      <div class="sidebar-divider"></div>
+      <a href="/profile" class="sidebar-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+        My Profile
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-logout" id="logoutBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+        Log Out
+      </button>
+    </aside>
+
+    <script>
+      // Notification Dropdown Logic
+      const notifBtn = document.getElementById("notifBtn");
+      const notifDropdown = document.getElementById("notifDropdown");
+      if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle("open");
+        });
+        document.addEventListener("click", (e) => {
+          if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifDropdown.classList.remove("open");
+          }
+        });
+      }
+
+      // Sidebar Toggle Logic (taken from dashboard)
+      const profileTrigger = document.getElementById("profileTrigger");
+      const avatarSidebar = document.getElementById("avatarSidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      const toggleSidebar = (state) => {
+        if (avatarSidebar && sidebarOverlay) {
+          if (state) {
+            avatarSidebar.classList.add("open");
+            sidebarOverlay.classList.add("open");
+          } else {
+            avatarSidebar.classList.remove("open");
+            sidebarOverlay.classList.remove("open");
+          }
+        }
+      };
+
+      if (profileTrigger) {
+        profileTrigger.addEventListener("click", () => toggleSidebar(true));
+      }
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", () => toggleSidebar(false));
+      }
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to log out?")) {
+            window.location.href = "/logout";
+          }
+        });
+      }
+    </script>
+    <% } %>
 
     <footer class="footer">
         <div class="footer-left">COPYRIGHT &copy; 2026 EMS. ALL RIGHTS RESERVED.</div>
