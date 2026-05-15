@@ -15,20 +15,12 @@
 <body>
   <header class="navbar">
     <div class="nav-inner">
-<<<<<<< HEAD
       <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
-      <nav class="nav-links">
-        <a href="/user" class="nav-item">Home</a>
-        <a href="/catalog" class="nav-item active">Events</a>
-        <a href="/venue" class="nav-item">Venues</a>
-        <a href="/bookings" class="nav-item">My Bookings</a>
-=======
-      <a href="/user" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
       <nav class="nav-links">
         <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
         <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+        <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
         <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
->>>>>>> 87a4595 (Minor Bug Fix)
       </nav>
       <div class="nav-right">
         <button class="icon-btn" id="notifBtn" aria-label="Notifications">
@@ -47,16 +39,10 @@
           </div>
 
           <aside class="avatar-sidebar" id="avatarSidebar">
-            <div style="
-                  padding: 10px 22px;
-                  font-weight: 700;
-                  font-size: 12px;
-                  color: var(--dark);
-                ">
+            <div style="padding: 10px 22px; font-weight: 700; font-size: 12px; color: var(--dark);">
               Hi, <%= user ? user.username : 'Guest' %>
             </div>
             <div class="sidebar-divider"></div>
-
             <a href="/profile" class="sidebar-link"> My Profile </a>
             <div class="sidebar-divider"></div>
             <a href="/logout" class="sidebar-logout"> Log Out </a>
@@ -110,7 +96,8 @@
           </svg>
           <input type="text" id="heroSearch" placeholder="Search for events, venues, or cities..." />
           <button class="mic-btn" id="voiceSearchBtn" title="Search by voice">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
               <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
               <line x1="12" y1="19" x2="12" y2="22"></line>
@@ -168,16 +155,16 @@
             imgUrl = '/' + imgUrl;
             }
             const formatEventDateSafe = (start, end) => {
-              if (!start) return 'Date TBD';
-              const d1 = new Date(start);
-              if (isNaN(d1.getTime())) return 'Date TBD';
-              const options = { month: 'short', day: '2-digit', year: 'numeric' };
-              const sStr = d1.toLocaleDateString('en-US', options);
-              if (!end) return sStr;
-              const d2 = new Date(end);
-              if (isNaN(d2.getTime())) return sStr;
-              const eStr = d2.toLocaleDateString('en-US', options);
-              return sStr === eStr ? sStr : `${sStr} - ${eStr}`;
+            if (!start) return 'Date TBD';
+            const d1 = new Date(start);
+            if (isNaN(d1.getTime())) return 'Date TBD';
+            const options = { month: 'short', day: '2-digit', year: 'numeric' };
+            const sStr = d1.toLocaleDateString('en-US', options);
+            if (!end) return sStr;
+            const d2 = new Date(end);
+            if (isNaN(d2.getTime())) return sStr;
+            const eStr = d2.toLocaleDateString('en-US', options);
+            return sStr === eStr ? sStr : `${sStr} - ${eStr}`;
             };
             let eventDateDisplay = formatEventDateSafe(event.startDate || event.date, event.endDate);
             let isFree = event.ticketPrice === 0;

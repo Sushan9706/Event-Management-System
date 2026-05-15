@@ -62,7 +62,7 @@
       </title>
       <link rel="stylesheet" href="/css/event.css" />
       <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Syne:wght@800&display=swap"
         rel="stylesheet" />
 </head>
 
@@ -71,16 +71,11 @@
     <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo"
       style="text-decoration: none; color: inherit;">EMS</a>
     <nav class="nav-links">
-      <a href="/user">Home</a>
-      <a href="/catalog" class="active">Events</a>
-      <a href="/venue">Venues</a>
-      <a href="/bookings">My Bookings</a>
-      <a href="/user" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
-      <nav class="nav-links">
-        <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home </a>
-        <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
-        <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
-      </nav>
+      <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+      <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+      <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+      <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+    </nav>
       <div class="nav-icons">
         <button class="icon-btn" aria-label="Notifications" id="notifBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
