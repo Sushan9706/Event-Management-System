@@ -651,6 +651,7 @@ body {
 .calendar-day.past {
     color: #ecf0f1;
     text-decoration: line-through;
+    cursor: not-allowed;
 }
 
 .calendar-day.booked {

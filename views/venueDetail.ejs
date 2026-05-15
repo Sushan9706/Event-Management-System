@@ -166,6 +166,20 @@
                             return `${y}-${m}-${d}`;
                         }
 
+                        // Set min date for inputs to today
+                        const todayStr = getYYYYMMDD(new Date());
+                        const startDateInput = document.getElementById('startDate');
+                        const endDateInput = document.getElementById('endDate');
+                        if (startDateInput) startDateInput.min = todayStr;
+                        if (endDateInput) endDateInput.min = todayStr;
+
+                        startDateInput?.addEventListener('change', (e) => {
+                            if (endDateInput) endDateInput.min = e.target.value;
+                            if (endDateInput && endDateInput.value < e.target.value) {
+                                endDateInput.value = e.target.value;
+                            }
+                        });
+
                         function renderCalendar() {
                             calendarGrid.innerHTML = '';
                             const year = currentDate.getFullYear();
@@ -247,6 +261,13 @@
 
                             if (!startDate || !endDate || !startTime || !endTime) {
                                 showNotification('Please select both start and end dates and times.');
+                                return;
+                            }
+
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (new Date(startDate) < today) {
+                                showNotification('Cannot book a date in the past.');
                                 return;
                             }
 
