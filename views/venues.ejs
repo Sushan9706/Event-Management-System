@@ -240,17 +240,17 @@
     </div>
 
     <footer class="footer">
-      <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+      <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
       <div class="footer-links">
-        <a href="#">PRIVACY POLICY</a>
-        <a href="#">TERMS OF SERVICE</a>
-        <a href="#">CONTACT</a>
+        <a href="/privacy">PRIVACY</a>
+        <a href="/terms">TERMS</a>
+        <a href="/contact">CONTACT</a>
       </div>
     </footer>
 
-    <script>
-      window.__VENUES__ = <%- JSON.stringify(venues || []) %>;
-    </script>
+    <!-- Data container for client-side JS -->
+    <div id="venues-data-bridge" data-venues='<%- JSON.stringify(venues || []) %>' style="display:none;"></div>
+
     <script src="/js/venues.js"></script>
     <script>
       const notifBtn = document.getElementById("notifBtn");

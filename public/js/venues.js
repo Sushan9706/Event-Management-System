@@ -89,8 +89,9 @@
     }
   }
 
-  /* ─────────────── VENUE MODAL ─────────────── */
-  var venuesData = window.__VENUES__ || [];
+  /* ─────────────── VENUE DATA BRIDGE ─────────────── */
+  const dataBridge = document.getElementById("venues-data-bridge");
+  const venuesData = dataBridge ? JSON.parse(dataBridge.getAttribute("data-venues")) : [];
 
   window.openVenueModal = function (venueId) {
     var venue = venuesData.find(function (v) {

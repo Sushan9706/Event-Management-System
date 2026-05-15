@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const pagesController = require("../controllers/pagesController");
+
 const {
   isLoggedIn,
   isAdmin,
@@ -146,5 +148,11 @@ router.post(
   userController.markAllNotificationsRead
 );
 
+// --- STATIC PAGES ---
+router.get("/terms", pagesController.getTerms);
+router.get("/privacy", pagesController.getPrivacy);
+router.get("/contact", pagesController.getContact);
+router.post("/contact", pagesController.postContact);
 
 module.exports = router; // ✅ always last
+
