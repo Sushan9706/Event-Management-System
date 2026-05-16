@@ -74,17 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Avatar Sidebar Toggle
-    if (avatarBtn && avatarSidebar) {
-        avatarBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            avatarSidebar.classList.toggle('active');
-        });
-        document.addEventListener('click', () => {
-            avatarSidebar.classList.remove('active');
-        });
-    }
-
     // Voice search initialization is handled by voice-search.js
     // but we can add specific logic if needed.
     // The voice-search.js already triggers 'input' event on heroSearch/venueSearch

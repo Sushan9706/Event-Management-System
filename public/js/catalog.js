@@ -102,28 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
     applyFilters();
   });
 
-  // --- 3. DROPDOWN LOGIC ---
-  avatarBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    avatarSidebar.classList.toggle("open");
-    notifDropdown?.classList.remove("open");
-  });
-
-  notifBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    notifDropdown?.classList.toggle("open");
-    avatarSidebar?.classList.remove("open");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!avatarSidebar?.contains(e.target) && !avatarBtn?.contains(e.target)) {
-      avatarSidebar?.classList.remove("open");
-    }
-    if (!notifDropdown?.contains(e.target) && !notifBtn?.contains(e.target)) {
-      notifDropdown?.classList.remove("open");
-    }
-  });
-
   // --- 4. LOAD MORE ---
   loadMoreBtn?.addEventListener("click", () => {
     showAllMatching = true;
