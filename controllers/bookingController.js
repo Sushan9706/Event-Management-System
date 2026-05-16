@@ -399,13 +399,16 @@ exports.getBookingsPage = async (req, res) => {
         const requestedStatus = req.query && ['cancelled', 'expired'].includes(req.query.status) ? req.query.status : 'confirmed';
         const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.render("bookings", { user: null, bookings: [], initialStatus: requestedStatus });
-
+            return res.render("bookings", { user: null, bookings: [], venueBookings: [], initialStatus: requestedStatus });
         }
 
-        let bookings = await Booking.find({ userEmail: user.email })
-            .populate('eventId')
-            .sort({ createdAt: -1 });
+        // 1. Fetch Event Bookings
+        let bookings = await Booking.find({ 
+            userEmail: user.email,
+            eventId: { $exists: true, $ne: null }
+        })
+        .populate('eventId')
+        .sort({ createdAt: -1 });
 
         await syncBookingsExpiry(bookings);
 
@@ -461,11 +464,32 @@ exports.getBookingsPage = async (req, res) => {
             }
         }
 
-        return res.render("bookings", { user, bookings: groupedBookings, initialStatus: requestedStatus });
+        // 2. Fetch Venue Bookings
+        const venueBookingsRaw = await Booking.find({ 
+            userEmail: user.email,
+            venueId: { $exists: true, $ne: null }
+        })
+        .populate('venueId')
+        .sort({ createdAt: -1 })
+        .lean();
+
+        // Separate and sort for venues (maintaining the confirmed/cancelled filter logic in the frontend if needed)
+        // For simplicity, we pass them as a single list and let the frontend filter by status like events
+        const venueBookings = (venueBookingsRaw || []).map(b => {
+            b.isVenue = true;
+            return b;
+        });
+
+        return res.render("bookings", { 
+            user, 
+            bookings: groupedBookings, 
+            venueBookings,
+            initialStatus: requestedStatus 
+        });
     } catch (err) {
         console.error("Get Bookings Error:", err);
         const requestedStatus = req.query && ['cancelled', 'expired'].includes(req.query.status) ? req.query.status : 'confirmed';
-        return res.render("bookings", { user: req.user || null, bookings: [], initialStatus: requestedStatus });
+        return res.render("bookings", { user: req.user || null, bookings: [], venueBookings: [], initialStatus: requestedStatus });
     }
 };
 
@@ -565,35 +589,4 @@ exports.getTicketDetails = async (req, res) => {
         return res.status(500).render("404", { title: "Ticket Not Found" });
     }
 };
-exports.getVenueBookingsPage = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) return res.redirect('/login');
 
-        const venueBookings = await Booking.find({ 
-            userEmail: user.email,
-            venueId: { $exists: true, $ne: null }
-        })
-        .populate('venueId')
-        .lean();
-
-        // Separate and sort
-        const confirmed = venueBookings
-            .filter(b => b.status === 'confirmed')
-            .sort((a, b) => (a.venueDate || a.createdAt) - (b.venueDate || b.createdAt));
-
-        const cancelled = venueBookings
-            .filter(b => b.status === 'cancelled')
-            .sort((a, b) => (b.venueDate || b.createdAt) - (a.venueDate || a.createdAt));
-
-        res.render("venue-bookings", { 
-            user, 
-            confirmed, 
-            cancelled,
-            notifications: user.notifications || []
-        });
-    } catch (err) {
-        console.error("Venue Bookings Page Error:", err);
-        res.status(500).send("Error loading venue bookings: " + err.message);
-    }
-};

@@ -139,10 +139,7 @@ app.use("/venues", require("./routes/venuesRoutes"));
 // app.use('/auth', authRoutes);
 
 app.get("/test-route", (req, res) => res.send("Router is working!"));
-app.get("/venue-bookings", (req, res, next) => {
-  console.log("Direct app.get /venue-bookings hit");
-  next();
-}, require("./controllers/bookingController").getVenueBookingsPage);
+
 
 // 404 handler
 app.use((req, res) => {

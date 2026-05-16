@@ -207,6 +207,50 @@ a {
   display: block;
 }
 
+.type-selector {
+  margin-top: 32px;
+}
+
+.type-tabs {
+  display: flex;
+  gap: 32px;
+  border-bottom: 2px solid var(--border);
+}
+
+.type-tab {
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  position: relative;
+  letter-spacing: 0.1em;
+}
+
+.type-tab.active {
+  color: var(--text);
+}
+
+.type-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+}
+
+.booking-type-content {
+  display: none;
+}
+
+.booking-type-content.active {
+  display: block;
+}
+
 .page-shell {
   max-width: 1500px;
   margin: 0 auto;

@@ -14,21 +14,35 @@
 </head>
 
 <body>
-  <% const bookingList=bookings || []; const normalizeStatus=(status)=> {
-    const value = (status || 'confirmed').toLowerCase(); return ['cancelled',
-    'expired'].includes(value) ? value : 'confirmed'; }; const confirmedCount =
-    bookingList.filter(b => normalizeStatus(b.status) === 'confirmed').length;
-    const expiredCount = bookingList.filter(b => normalizeStatus(b.status) ===
-    'expired').length; const cancelledCount = bookingList.filter(b =>
-    normalizeStatus(b.status) === 'cancelled').length; const activeStatus =
-    (typeof initialStatus === 'string' && ['cancelled',
-    'expired'].includes(initialStatus)) ? initialStatus : 'confirmed'; const
-    notifications = Array.isArray(locals.notifications) ? locals.notifications :
-    []; const formatTicketCount = (count) => `${count} ticket${count === 1 ? ''
-    : 's'}`; const formatNotifTime = (date) => { if (!date) return "Just now";
-    const d = new Date(date); if (Number.isNaN(d.getTime())) return "Just now";
-    return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour:
-    "2-digit", minute: "2-digit" }); }; %>
+  <% 
+    const eventBookings = locals.bookings || [];
+    const vBookings = locals.venueBookings || [];
+    
+    const normalizeStatus = (status) => {
+        const value = (status || 'confirmed').toLowerCase(); 
+        return ['cancelled', 'expired'].includes(value) ? value : 'confirmed'; 
+    };
+
+    // Event counts
+    const confirmedCount = eventBookings.filter(b => normalizeStatus(b.status) === 'confirmed').length;
+    const expiredCount = eventBookings.filter(b => normalizeStatus(b.status) === 'expired').length;
+    const cancelledCount = eventBookings.filter(b => normalizeStatus(b.status) === 'cancelled').length;
+
+    // Venue counts
+    const vConfirmedCount = vBookings.filter(b => normalizeStatus(b.status) === 'confirmed').length;
+    const vCancelledCount = vBookings.filter(b => normalizeStatus(b.status) === 'cancelled').length;
+
+    const activeStatus = (typeof locals.initialStatus === 'string' && ['cancelled', 'expired'].includes(locals.initialStatus)) ? locals.initialStatus : 'confirmed';
+    const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+    
+    const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+    const formatNotifTime = (date) => { 
+        if (!date) return "Just now";
+        const d = new Date(date); 
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }); 
+    };
+    %>
     <header class="navbar">
       <div class="nav-inner">
         <div class="nav-logo">EMS</div>
@@ -37,7 +51,6 @@
           <a href="/catalog" class="nav-item">Events</a>
           <a href="/venues" class="nav-item">Venues</a>
           <a href="/bookings" class="nav-item active">My Bookings</a>
-          <a href="/venue-bookings" class="nav-item">My Venue Bookings</a>
         </nav>
         <div class="nav-right">
           <div class="notif-wrap">
@@ -123,7 +136,7 @@
           </div>
           <div class="avatar-btn" id="avatarBtn">
             <img
-              src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+              src="<%= (locals.user && locals.user.profileImage) ? locals.user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? locals.user.username : 'User') + '&background=e74c3c&color=fff' %>"
               alt="User avatar" class="avatar-circle"
               onerror="this.style.background='#3b4254';this.removeAttribute('src')" />
           </div>
@@ -134,120 +147,165 @@
     <main class="page-shell">
       <section class="page-hero">
         <h1>My Bookings</h1>
-        <p>
-          Manage your upcoming experiences and track past attendances in our
-          curated environment.
-        </p>
+        <p>Manage your upcoming experiences and venue reservations in our curated environment.</p>
       </section>
 
-      <section class="booking-controls">
-        <div class="tabs">
-          <button class="tab <%= activeStatus === 'confirmed' ? 'active' : '' %>" data-status="confirmed">
-            CONFIRMED <span>
-              <%= confirmedCount %>
-            </span>
-          </button>
-          <button class="tab <%= activeStatus === 'expired' ? 'active' : '' %>" data-status="expired">
-            EXPIRED <span>
-              <%= expiredCount %>
-            </span>
-          </button>
-          <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">
-            CANCELLED <span>
-              <%= cancelledCount %>
-            </span>
-          </button>
-        </div>
-        <div class="filters">
-          <button class="filter-btn" type="button" id="filterToggle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="7" y1="12" x2="17" y2="12"></line>
-              <line x1="10" y1="18" x2="14" y2="18"></line>
-            </svg>
-            FILTER BY DATE
-          </button>
-          <input type="date" id="dateFilter" class="date-filter" />
+      <section class="type-selector">
+        <div class="type-tabs">
+          <button class="type-tab active" data-type="events">EVENT BOOKINGS</button>
+          <button class="type-tab" data-type="venues">VENUE BOOKINGS</button>
         </div>
       </section>
 
-      <section class="booking-list">
-        <% if (bookingList.length===0) { %>
-          <div class="empty-state">
-            <p>You have no bookings yet.</p>
-            <a href="/catalog" class="link-btn">Browse events</a>
+      <!-- Event Bookings Section -->
+      <div id="eventsSection" class="booking-type-content active">
+        <section class="booking-controls">
+          <div class="tabs">
+            <button class="tab <%= activeStatus === 'confirmed' ? 'active' : '' %>" data-status="confirmed">
+              CONFIRMED <span><%= confirmedCount %></span>
+            </button>
+            <button class="tab <%= activeStatus === 'expired' ? 'active' : '' %>" data-status="expired">
+              EXPIRED <span><%= expiredCount %></span>
+            </button>
+            <button class="tab <%= activeStatus === 'cancelled' ? 'active' : '' %>" data-status="cancelled">
+              CANCELLED <span><%= cancelledCount %></span>
+            </button>
           </div>
+          <div class="filters">
+            <button class="filter-btn" type="button" id="filterToggle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+                <line x1="10" y1="18" x2="14" y2="18"></line>
+              </svg>
+              FILTER BY DATE
+            </button>
+            <input type="date" id="dateFilter" class="date-filter" />
+          </div>
+        </section>
+
+        <section class="booking-list">
+          <% if (eventBookings.length === 0) { %>
+            <div class="empty-state">
+              <p>You have no event bookings yet.</p>
+              <a href="/catalog" class="link-btn">Browse events</a>
+            </div>
           <% } else { %>
-            <% bookingList.forEach(function(booking) { const event=booking.eventId; const eventName=event ?
-              (event.eventName || event.title || event.name) : 'Event' ; const eventDate=event && event.startDate ? new
-              Date(event.startDate).toLocaleDateString('en-US', { month: 'short' , day: '2-digit' , year: 'numeric' })
-              : 'TBA' ; const eventDateIso=event && event.startDate ? new
-              Date(event.startDate).toISOString().slice(0,10) : '' ; const eventLocation=event && event.location ?
-              event.location : 'TBA' ; const eventImage=event && event.image ? event.image
-              : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop' ; const
-              ticketCount=booking.ticketCount || 1; const totalAmount=typeof booking.totalAmount==='number' ?
-              booking.totalAmount : (booking.unitPrice || 0) * ticketCount; const totalDisplay=(booking.unitPrice===0 ||
-              totalAmount===0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) :
-              totalAmount.toFixed(2)}`; const statusGroup=normalizeStatus(booking.status); const
-              actionLabel=statusGroup==='confirmed' ? 'Manage' : 'View' ; %>
+            <% eventBookings.forEach(function(booking) { 
+                const event = booking.eventId;
+                const eventName = event ? (event.eventName || event.title || event.name) : 'Event';
+                const eventDate = event && event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBA';
+                const eventDateIso = event && event.startDate ? new Date(event.startDate).toISOString().slice(0,10) : '';
+                const eventLocation = event && event.location ? event.location : 'TBA';
+                const eventImage = event && (event.image || event.imagePath) ? (event.image || event.imagePath) : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop';
+                const ticketCount = booking.ticketCount || 1;
+                const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * ticketCount;
+                const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${Number.isInteger(totalAmount) ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+                const statusGroup = normalizeStatus(booking.status);
+                const actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
+            %>
               <article class="booking-card" data-status="<%= statusGroup %>" data-date="<%= eventDateIso %>">
-                <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>"
-                  onerror="this.style.display='none'" />
+                <img class="booking-image" src="<%= eventImage %>" alt="<%= eventName %>" onerror="this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop'" />
                 <div class="booking-meta">
                   <p class="label">EVENT NAME</p>
-                  <h3>
-                    <%= eventName %>
-                  </h3>
+                  <h3><%= eventName %></h3>
                 </div>
                 <div class="booking-meta">
                   <p class="label">REFERENCE</p>
-                  <div class="reference-pill">
-                    <%= booking.referenceNumber || '-' %>
-                  </div>
+                  <div class="reference-pill"><%= booking.referenceNumber || '-' %></div>
                 </div>
                 <div class="booking-meta">
                   <p class="label">DATE & LOCATION</p>
-                  <p class="date">
-                    <%= eventDate %>
-                  </p>
-                  <p class="location">
-                    <%= eventLocation %>
-                  </p>
+                  <p class="date"><%= eventDate %></p>
+                  <p class="location"><%= eventLocation %></p>
                 </div>
                 <div class="booking-meta">
                   <p class="label">TICKETS</p>
-                  <p class="value">
-                    <%= ticketCount %> · <%= totalDisplay %>
-                  </p>
+                  <p class="value"><%= ticketCount %> · <%= totalDisplay %></p>
                 </div>
                 <div class="booking-actions">
-                  <span class="status <%= statusGroup %>">
-                    <%= statusGroup.toUpperCase() %>
-                  </span>
-                  <a href="/bookings/manage/<%= booking._id %>" class="manage-btn">
-                    <%= actionLabel %>
-                  </a>
+                  <span class="status <%= statusGroup %>"><%= statusGroup.toUpperCase() %></span>
+                  <a href="/bookings/manage/<%= booking._id %>" class="manage-btn"><%= actionLabel %></a>
                 </div>
               </article>
-              <% }); %>
-                <% } %>
-      </section>
+            <% }); %>
+          <% } %>
+        </section>
+      </div>
+
+      <!-- Venue Bookings Section -->
+      <div id="venuesSection" class="booking-type-content">
+        <section class="booking-controls">
+          <div class="tabs">
+            <button class="tab active" data-status="v-confirmed">
+              CONFIRMED <span><%= vConfirmedCount %></span>
+            </button>
+            <button class="tab" data-status="v-cancelled">
+              CANCELLED <span><%= vCancelledCount %></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="booking-list">
+          <% if (vBookings.length === 0) { %>
+            <div class="empty-state">
+              <p>You have no venue reservations yet.</p>
+              <a href="/venues" class="link-btn">Browse venues</a>
+            </div>
+          <% } else { %>
+            <% vBookings.forEach(function(booking) { 
+                const venue = booking.venueId;
+                const venueName = venue ? (venue.name || venue.venueName) : 'Venue';
+                const bookingDate = booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBA';
+                const venueDate = booking.venueDate ? new Date(booking.venueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : bookingDate;
+                const venueLocation = venue && venue.location ? venue.location : 'TBA';
+                const venueImage = venue && (venue.image || venue.imagePath) ? (venue.image || venue.imagePath) : 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=300&auto=format&fit=crop';
+                const statusGroup = normalizeStatus(booking.status);
+                const displayStatus = statusGroup === 'confirmed' ? 'v-confirmed' : 'v-cancelled';
+            %>
+              <article class="booking-card venue-booking-card" data-status="<%= displayStatus %>">
+                <img class="booking-image" src="<%= venueImage %>" alt="<%= venueName %>" onerror="this.src='https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=300&auto=format&fit=crop'" />
+                <div class="booking-meta">
+                  <p class="label">VENUE NAME</p>
+                  <h3><%= venueName %></h3>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">REFERENCE</p>
+                  <div class="reference-pill"><%= booking.bookingRef || booking.referenceNumber || '-' %></div>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">RESERVATION DATE</p>
+                  <p class="date"><%= venueDate %></p>
+                  <p class="location"><%= venueLocation %></p>
+                </div>
+                <div class="booking-meta">
+                  <p class="label">RATE</p>
+                  <p class="value">NPR <%= (booking.totalAmount || (venue && venue.ratePerDay) || 0).toLocaleString() %></p>
+                </div>
+                <div class="booking-actions">
+                  <span class="status <%= statusGroup %>"><%= statusGroup.toUpperCase() %></span>
+                  <a href="/venues" class="manage-btn">View</a>
+                </div>
+              </article>
+            <% }); %>
+          <% } %>
+        </section>
+      </div>
     </main>
 
-    <footer class="footer">
-      <span>COPYRIGHT 2026 EMS MANAGEMENT</span>
-      <div class="footer-links">
-        <a href="#">PRIVACY POLICY</a>
-        <a href="#">TERMS OF SERVICE</a>
-        <a href="#">CONTACT</a>
-      </div>
-    </footer>
+  <footer class="footer">
+    <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+    <div class="footer-links">
+      <a href="/terms">TERMS</a>
+      <a href="/privacy">PRIVACY</a>
+      <a href="/contact">CONTACT</a>
+    </div>
+  </footer>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="avatar-sidebar" id="avatarSidebar">
       <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User'
-          %>
+        Hi, <%= (locals.user && locals.user.username) ? locals.user.username.charAt(0).toUpperCase() + locals.user.username.slice(1) : 'User' %>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -258,15 +316,6 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
         My Profile
-      </a>
-      <a href="/venue-bookings" class="sidebar-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        My Venue Bookings
       </a>
       <div class="sidebar-divider"></div>
 
@@ -282,7 +331,10 @@
 
     <script>
       const tabs = document.querySelectorAll(".tab");
-      const cards = document.querySelectorAll(".booking-card");
+      const typeTabs = document.querySelectorAll(".type-tab");
+      const typeContents = document.querySelectorAll(".booking-type-content");
+      const eventCards = document.querySelectorAll("#eventsSection .booking-card");
+      const venueCards = document.querySelectorAll("#venuesSection .booking-card");
       const dateFilter = document.getElementById("dateFilter");
       const filterToggle = document.getElementById("filterToggle");
 
@@ -294,45 +346,66 @@
         if (target) target.classList.add("active");
       }
 
-      const urlStatus = new URLSearchParams(window.location.search).get(
-        "status"
-      );
-      if (
-        urlStatus === "cancelled" ||
-        urlStatus === "confirmed" ||
-        urlStatus === "expired"
-      ) {
+      const urlStatus = new URLSearchParams(window.location.search).get("status");
+      if (urlStatus === "cancelled" || urlStatus === "confirmed" || urlStatus === "expired") {
         setActiveTab(urlStatus);
       }
 
       function applyFilters() {
-        const activeStatus =
-          document.querySelector(".tab.active")?.dataset.status || "confirmed";
-        const dateValue = dateFilter.value;
-        cards.forEach((card) => {
-          const matchesStatus = card.dataset.status === activeStatus;
-          const matchesDate = !dateValue || card.dataset.date === dateValue;
-          card.style.display = matchesStatus && matchesDate ? "grid" : "none";
-        });
+        const activeType = document.querySelector(".type-tab.active")?.dataset.type || "events";
+        
+        if (activeType === "events") {
+            const activeStatus = document.querySelector("#eventsSection .tab.active")?.dataset.status || "confirmed";
+            const dateValue = dateFilter.value;
+            eventCards.forEach((card) => {
+                const matchesStatus = card.dataset.status === activeStatus;
+                const matchesDate = !dateValue || card.dataset.date === dateValue;
+                card.style.display = matchesStatus && matchesDate ? "grid" : "none";
+            });
+        } else {
+            const activeStatus = document.querySelector("#venuesSection .tab.active")?.dataset.status || "v-confirmed";
+            venueCards.forEach((card) => {
+                const matchesStatus = card.dataset.status === activeStatus;
+                card.style.display = matchesStatus ? "grid" : "none";
+            });
+        }
       }
+
+      typeTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          typeTabs.forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          
+          const type = tab.dataset.type;
+          typeContents.forEach(content => {
+            content.classList.toggle("active", content.id === `${type}Section`);
+          });
+          applyFilters();
+        });
+      });
 
       tabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-          tabs.forEach((t) => t.classList.remove("active"));
+          const parentSection = tab.closest(".booking-type-content");
+          parentSection.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
           tab.classList.add("active");
           applyFilters();
         });
       });
 
-      filterToggle.addEventListener("click", () => {
-        dateFilter.classList.toggle("open");
-        if (!dateFilter.classList.contains("open")) {
-          dateFilter.value = "";
-          applyFilters();
-        }
-      });
+      if (filterToggle) {
+        filterToggle.addEventListener("click", () => {
+            dateFilter.classList.toggle("open");
+            if (!dateFilter.classList.contains("open")) {
+                dateFilter.value = "";
+                applyFilters();
+            }
+        });
+      }
 
-      dateFilter.addEventListener("change", applyFilters);
+      if (dateFilter) {
+        dateFilter.addEventListener("change", applyFilters);
+      }
 
       applyFilters();
 
@@ -341,8 +414,8 @@
       if (bellBtn && bellDropdown) {
         bellBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          const isOpen = bellDropdown.style.display === "block";
-          bellDropdown.style.display = isOpen ? "none" : "block";
+          const isOpen = bellDropdown.classList.contains("open");
+          bellDropdown.classList.toggle("open", !isOpen);
           if (!isOpen) {
             fetch("/notifications/mark-all-read", {
               method: "POST",
@@ -363,13 +436,11 @@
           }
         });
         document.addEventListener("click", () => {
-          bellDropdown.style.display = "none";
+          bellDropdown.classList.remove("open");
         });
       }
 
-      const avatar =
-        document.getElementById("avatarBtn") ||
-        document.querySelector(".avatar-circle");
+      const avatar = document.getElementById("avatarBtn");
       const sidebar = document.getElementById("avatarSidebar");
       const overlay = document.getElementById("sidebarOverlay");
       const toggleSidebar = (state) => {
@@ -377,8 +448,7 @@
         if (overlay) overlay.classList.toggle("open", state);
       };
       if (avatar) avatar.addEventListener("click", () => toggleSidebar(true));
-      if (overlay)
-        overlay.addEventListener("click", () => toggleSidebar(false));
+      if (overlay) overlay.addEventListener("click", () => toggleSidebar(false));
 
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
@@ -401,8 +471,6 @@
                 .forEach((el) => el.classList.remove("notif-item--unread"));
               const dot = document.querySelector(".notif-dot");
               if (dot) dot.style.display = "none";
-              const badge = document.querySelector(".notif-badge");
-              if (badge) badge.style.display = "none";
               const btn = document.getElementById("markAllReadBtn");
               if (btn) btn.style.display = "none";
             }
@@ -410,5 +478,4 @@
       }
     </script>
 </body>
-
 </html>
