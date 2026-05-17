@@ -32,11 +32,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 3. NOTIFICATION DROPDOWN ---
     if (notifBtn && notifDropdown) {
-        notifBtn.addEventListener("click", (e) => {
+        notifBtn.addEventListener("click", async (e) => {
             e.stopPropagation();
             notifDropdown.classList.toggle("open");
             // Also close sidebar if open
             toggleSidebar(false);
+            
+            const dot = notifBtn.querySelector(".notif-dot");
+            if (dot && notifDropdown.classList.contains("open")) {
+                try {
+                    const res = await fetch("/api/notifications/read", { method: "POST" });
+                    if (res.ok) dot.remove();
+                } catch(err) { console.error(err); }
+            }
         });
 
         document.addEventListener("click", (e) => {

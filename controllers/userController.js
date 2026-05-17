@@ -1002,3 +1002,25 @@ exports.postCreatePassword = async (req, res) => {
         res.redirect('/create-password');
     }
 };
+
+exports.markNotificationsRead = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.userId);
+        if (user && Array.isArray(user.notifications)) {
+            let modified = false;
+            user.notifications.forEach(n => {
+                if (!n.isRead) {
+                    n.isRead = true;
+                    modified = true;
+                }
+            });
+            if (modified) {
+                await user.save();
+            }
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Mark notifications read error:", error);
+        res.status(500).json({ success: false });
+    }
+};

@@ -78,6 +78,7 @@ router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSu
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
 router.get('/events/search', userController.searchEvents);
+router.post('/api/notifications/read', isLoggedIn, userController.markNotificationsRead);
 
 
 
