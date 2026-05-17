@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy - EMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/common-nav.css" />
+  <link rel="stylesheet" href="/css/policies.css" />
+  <link rel="stylesheet" href="/css/catalog.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
+      
+      <nav class="nav-center">
+        <a href="/user" class="nav-link">Home</a>
+        <a href="/catalog" class="nav-link">Events</a>
+        <a href="/venue" class="nav-link">Venues</a>
+        <% if (locals.user) { %>
+        <a href="/bookings" class="nav-link">My Bookings</a>
+        <% } %>
+      </nav>
+
+      <div class="nav-right">
+        <% if (locals.user) { %>
+          <img src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>" 
+               alt="User avatar" class="avatar-circle" id="profileTrigger" />
+        <% } else { %>
+          <a href="/login" class="nav-link">Login</a>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <div class="policy-header">
+    <h1>Privacy Policy</h1>
+    <p>How we collect, use, and protect your data.</p>
+  </div>
+
+  <main class="policy-container">
+    <div class="policy-section">
+      <h2>1. Information We Collect</h2>
+      <ul>
+        <li><strong>Personal:</strong> first name, last name, username, email address</li>
+        <li><strong>Booking data:</strong> events and venues booked, ticket holder names, booking dates</li>
+        <li><strong>Payment data:</strong> transaction IDs only — we do not store card details</li>
+        <li><strong>Usage data:</strong> pages visited, actions taken</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>2. How We Use Your Information</h2>
+      <ul>
+        <li>To create and manage your account</li>
+        <li>To process event and venue bookings</li>
+        <li>To send booking confirmations and email notifications</li>
+        <li>To send password reset codes</li>
+        <li>To display your booking history</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>3. How We Store Your Information</h2>
+      <ul>
+        <li>All data stored securely in our database</li>
+        <li>Passwords are encrypted using industry standard hashing</li>
+        <li>We do not sell your data to third parties</li>
+        <li>We do not share your data except as required to process payments</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>4. Email Communications</h2>
+      <p>We send emails for:</p>
+      <ul>
+        <li>Account registration verification</li>
+        <li>Password reset codes</li>
+        <li>Booking confirmations</li>
+        <li>Cancellation confirmations</li>
+        <li>Event and venue update notifications</li>
+      </ul>
+      <p>You cannot opt out of transactional emails as they are essential to the service.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2>5. Cookies</h2>
+      <ul>
+        <li>We use session cookies to keep you logged in</li>
+        <li>We do not use advertising or tracking cookies</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>6. Your Rights</h2>
+      <ul>
+        <li>You can view your personal data on your profile page</li>
+        <li>You can update your password at any time</li>
+        <li>You can delete your account which removes your personal data</li>
+        <li>Booking records may be retained for administrative purposes</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>7. Third Party Services</h2>
+      <ul>
+        <li>We use a payment gateway to process payments securely</li>
+        <li>Your payment details are handled by the gateway directly</li>
+        <li>We only receive a transaction ID confirming payment success</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>8. Data Retention</h2>
+      <ul>
+        <li>Account data retained while account is active</li>
+        <li>On account deletion personal data is removed</li>
+        <li>Booking records retained for a reasonable period for audit purposes</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>9. Changes to This Policy</h2>
+      <ul>
+        <li>We may update this policy at any time</li>
+        <li>Continued use of EMS constitutes acceptance of the updated policy</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>10. Contact</h2>
+      <p>For privacy concerns contact us through the <a href="/contact">Contact</a> page.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+    <div class="footer-links">
+      <a href="/privacy">PRIVACY POLICY</a>
+      <a href="/terms">TERMS OF SERVICE</a>
+      <a href="/contact">CONTACT</a>
+    </div>
+  </footer>
+
+  <% if (locals.user) { %>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">
+          Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
+      </div>
+      <div class="sidebar-divider"></div>
+      <a href="/profile" class="sidebar-link">My Profile</a>
+      <div class="sidebar-divider"></div>
+      <a href="/logout" class="sidebar-logout" id="logoutBtn">Log Out</a>
+  </aside>
+  <% } %>
+
+  <script src="/js/user.js"></script>
+</body>
+</html>

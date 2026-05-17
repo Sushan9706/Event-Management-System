@@ -85,4 +85,24 @@ router.get("/eventcreat", (req, res) => {
     res.send("this is the file yet to be created.");
 });
 
+// --- POLICY & CONTACT ROUTES ---
+router.get("/terms", (req, res) => {
+    res.render("terms");
+});
+
+router.get("/privacy", (req, res) => {
+    res.render("privacy");
+});
+
+router.get("/contact", (req, res) => {
+    res.render("contact");
+});
+
+router.post("/contact", (req, res) => {
+    // Basic form handling: in a real app, this would send an email or save to DB.
+    // For now, we'll just show a success flash message and redirect back to the form.
+    req.flash("success", "Thank you for your message. We will get back to you shortly.");
+    res.redirect("/contact");
+});
+
 module.exports = router;

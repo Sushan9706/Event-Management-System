@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service - EMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/common-nav.css" />
+  <link rel="stylesheet" href="/css/policies.css" />
+  <link rel="stylesheet" href="/css/catalog.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
+      
+      <nav class="nav-center">
+        <a href="/user" class="nav-link">Home</a>
+        <a href="/catalog" class="nav-link">Events</a>
+        <a href="/venue" class="nav-link">Venues</a>
+        <% if (locals.user) { %>
+        <a href="/bookings" class="nav-link">My Bookings</a>
+        <% } %>
+      </nav>
+
+      <div class="nav-right">
+        <% if (locals.user) { %>
+          <img src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>" 
+               alt="User avatar" class="avatar-circle" id="profileTrigger" />
+        <% } else { %>
+          <a href="/login" class="nav-link">Login</a>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <div class="policy-header">
+    <h1>Terms of Service</h1>
+    <p>Please read these terms carefully before using EMS.</p>
+  </div>
+
+  <main class="policy-container">
+    <div class="policy-section">
+      <h2>1. Acceptance of Terms</h2>
+      <p>By using EMS you agree to these terms. If you do not agree do not use the service.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2>2. User Accounts</h2>
+      <ul>
+        <li>You must register to book events or venues.</li>
+        <li>You are responsible for keeping your credentials secure.</li>
+        <li>You must not share your account with others.</li>
+        <li>Admin accounts are managed by EMS only.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>3. Booking Policy</h2>
+      <ul>
+        <li>All bookings are subject to availability.</li>
+        <li>Bookings are confirmed only after successful payment.</li>
+        <li>Pending bookings expire after 30 minutes if unpaid.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>4. Payment Policy</h2>
+      <ul>
+        <li>All payments are processed securely through our payment gateway.</li>
+        <li>Ticket prices and venue rates are displayed before payment.</li>
+        <li>Payment must be completed within the 30 minute window.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>5. Refund Policy — NON REFUNDABLE</h2>
+      <ul>
+        <li>All payments made on EMS are strictly non-refundable.</li>
+        <li>This includes event tickets and venue bookings.</li>
+        <li>Cancellation of a booking does not entitle the user to any refund.</li>
+        <li>In exceptional circumstances refund requests may be considered at the sole discretion of the administrator.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>6. Cancellation Policy</h2>
+      <ul>
+        <li>Users may cancel bookings at any time.</li>
+        <li>Cancellation releases the spot back to other users.</li>
+        <li>No refund is issued for cancellations regardless of notice given.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>7. User Conduct</h2>
+      <ul>
+        <li>Users must not abuse the platform.</li>
+        <li>Users must not attempt to book venues or events fraudulently.</li>
+        <li>Misuse may result in account suspension or termination.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>8. Intellectual Property</h2>
+      <ul>
+        <li>All content on EMS is owned by the platform.</li>
+        <li>Users may not reproduce or distribute content without permission.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>9. Limitation of Liability</h2>
+      <ul>
+        <li>EMS is not liable for any loss arising from use of the platform.</li>
+        <li>EMS is not responsible for event cancellations by organisers.</li>
+        <li>EMS is not responsible for venue unavailability due to unforeseen circumstances.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>10. Changes to Terms</h2>
+      <ul>
+        <li>EMS reserves the right to update these terms at any time.</li>
+        <li>Continued use of the platform constitutes acceptance of new terms.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2>11. Governing Law</h2>
+      <p>These terms are governed by applicable law in the jurisdiction of operation.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+    <div class="footer-links">
+      <a href="/privacy">PRIVACY POLICY</a>
+      <a href="/terms">TERMS OF SERVICE</a>
+      <a href="/contact">CONTACT</a>
+    </div>
+  </footer>
+
+  <% if (locals.user) { %>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">
+          Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
+      </div>
+      <div class="sidebar-divider"></div>
+      <a href="/profile" class="sidebar-link">My Profile</a>
+      <div class="sidebar-divider"></div>
+      <a href="/logout" class="sidebar-logout" id="logoutBtn">Log Out</a>
+  </aside>
+  <% } %>
+
+  <script src="/js/user.js"></script>
+</body>
+</html>
