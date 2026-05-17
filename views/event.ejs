@@ -193,7 +193,7 @@
         <% } else if (isSoldOut) { %>
           <button class="book-btn" type="button" disabled>Sold Out</button>
           <% } else { %>
-            <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
+            <button class="book-btn" type="button" onclick="handleBooking()">Continue Booking</button>
             <% } %>
               <p class="secure-note">
                 SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
@@ -328,6 +328,7 @@
     data-event-location="<%= eventLocation %>" data-event-price="<%= eventPrice %>"
     data-available-tickets="<%= hasCapacityLimit ? availableTickets : "" %>"
     data-has-capacity-limit="<%= hasCapacityLimit %>" data-has-ended="<%= hasEnded %>"
+    data-api-token="<%= locals.apiToken || '' %>"
     data-authenticated="<%= isAuthenticated %>" data-already-booked="<%= alreadyBookedTickets %>">
     <div class="booking-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
       <button class="booking-close" type="button" onclick="closeBooking()" aria-label="Close booking form">
@@ -409,7 +410,7 @@
 
           <p class="booking-error" id="bookingError" aria-live="polite"></p>
           <p class="booking-countdown" id="paymentTimerNote" hidden>30:00</p>
-          <button class="booking-submit" id="bookingSubmitBtn" type="submit">Continue Booking</button>
+          <button class="booking-submit" id="bookingSubmitBtn" type="button">Continue Booking</button>
         </form>
       </div>
 
@@ -502,7 +503,8 @@
     const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
     const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
     const maxTicketsPerBooking = 5;
-    const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*NPR. /;
+    const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+    let esewaRequestInFlight = false;
 
     function formatAmount(amount, pricePerTicket) {
       if (pricePerTicket === 0) return "Free";
@@ -518,7 +520,7 @@
 
     function getTicketCount() {
       const rawValue = ticketInput.value.trim();
-      if (!/^[1-9]\d*NPR. /.test(rawValue)) return null;
+      if (!/^[1-9]\d*$/.test(rawValue)) return null;
       let count = Number(rawValue);
       if (count > maxTicketsPerBooking) {
         count = maxTicketsPerBooking;
@@ -551,16 +553,12 @@
       const requiresPayment = bookingStep === "attendee" && pricePerTicket > 0 && !!ticketCount;
 
       if (bookingSubmitBtn) {
-        bookingSubmitBtn.disabled = false;
-        bookingSubmitBtn.textContent = requiresPayment ? "Pay with Khalti" : "Continue Booking";
+        bookingSubmitBtn.disabled = esewaRequestInFlight;
+        bookingSubmitBtn.textContent = requiresPayment ? "Pay with eSewa" : "Continue Booking";
       }
       if (paymentTimerNote) {
         paymentTimerNote.hidden = !requiresPayment;
-        if (requiresPayment && !bookingTimerInterval) {
-          paymentTimerNote.textContent = formatCountdown(paymentTimerRemainingMs);
-        } else if (!requiresPayment) {
-          paymentTimerNote.textContent = "";
-        }
+        paymentTimerNote.textContent = requiresPayment ? formatCountdown(bookingTimerRemainingMs) : "";
       }
     }
 
@@ -603,6 +601,7 @@
 
     function resetBookingStep() {
       bookingStep = "tickets";
+      esewaRequestInFlight = false;
       if (attendeeStep) attendeeStep.hidden = true;
       if (attendeeNameFields) attendeeNameFields.innerHTML = "";
       resetBookingTimer();
@@ -650,27 +649,78 @@
       bookingStep = "attendee";
       buildAttendeeFields(ticketCount);
       if (attendeeStep) attendeeStep.hidden = false;
+      const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
+      const shouldShowPaymentTimer = pricePerTicket > 0;
+      if (shouldShowPaymentTimer) {
+        startBookingTimer();
+      } else {
+        resetBookingTimer();
+        if (paymentTimerNote) {
+          paymentTimerNote.hidden = true;
+          paymentTimerNote.textContent = "";
+        }
+      }
       updatePaymentActions();
-      startBookingTimer();
       focusAttendeeName(0);
     }
 
-    async function initiateKhaltiPayment(payload) {
-      const response = await fetch("/api/khalti/initiate", {
+    async function initiateEsewaPayment(payload) {
+      const apiToken = bookingModal?.dataset?.apiToken || "";
+      const headers = { "Content-Type": "application/json" };
+      if (apiToken) {
+        headers.Authorization = `Bearer ${apiToken}`;
+      }
+      const response = await fetch("/api/esewa/initiate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "same-origin",
         body: JSON.stringify(payload),
       });
       if (response.redirected && response.url.includes("/login")) {
-        window.location.href = "/login";
-        return null;
+        return { success: false, message: "Session expired. Please login again and retry payment." };
       }
+      const parseBody = async () => {
+        const type = response.headers.get("content-type") || "";
+        if (type.includes("application/json")) {
+          try { return await response.json(); } catch { return null; }
+        }
+        return null;
+      };
+
       if (response.status === 401 || response.status === 403) {
-        window.location.href = "/login";
-        return null;
+        const body = await parseBody();
+        const backendMsg = body && body.message ? body.message : "";
+        const looksAuthError = /unauthorized|session expired|login/i.test(backendMsg);
+        return {
+          success: false,
+          message: looksAuthError
+            ? "Session unauthorized. Please login again and retry payment."
+            : (backendMsg || "Unable to start eSewa payment.")
+        };
       }
-      return response.json();
+      if (response.redirected && response.url.includes("/user")) {
+        return { success: false, message: "Unexpected redirect to dashboard. Payment was not started." };
+      }
+      if (!response.ok) {
+        const body = await parseBody();
+        if (body && typeof body === "object") return body;
+        return { success: false, message: "Unable to start eSewa payment." };
+      }
+      const body = await parseBody();
+      return body || { success: false, message: "Unable to start eSewa payment." };
+    }
+
+    function isValidEsewaPaymentUrl(url) {
+      if (!url || typeof url !== "string") return false;
+      try {
+        const parsed = new URL(url, window.location.origin);
+        const host = parsed.hostname.toLowerCase();
+        const isKhaltiHost = host === "rc-epay.esewa.com.np" || host === "epay.esewa.com.np";
+        const isHttp = parsed.protocol === "https:" || parsed.protocol === "http:";
+        return isKhaltiHost && isHttp;
+      } catch (error) {
+        return false;
+      }
     }
 
     function handleBooking() {
@@ -741,14 +791,15 @@
       updateTicketSummary();
     });
 
-    bookingForm.addEventListener("submit", async function (e) {
+    async function handleBookingSubmit(e) {
       e.preventDefault();
+      if (esewaRequestInFlight) return;
       bookingError.textContent = "";
 
       const email = document.getElementById("bookingEmail").value.trim();
       const ticketCount = getTicketCount();
       const availableTickets = getAvailableTickets();
-      const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+NPR. /;
+      const emailPattern = /^[^\s@]*[A-Za-z][^\s@]*@[^\s@]+\.[^\s@]+$/;
       if (!email) {
         bookingError.textContent = "Please enter your email address.";
         return;
@@ -821,7 +872,9 @@
 
       try {
         if (requiresPayment) {
-          const khaltiData = await initiateKhaltiPayment({
+          esewaRequestInFlight = true;
+          updatePaymentActions();
+          const khaltiData = await initiateEsewaPayment({
             eventId,
             email,
             ticketCount,
@@ -835,10 +888,27 @@
             return;
           }
           if (!khaltiData.success || !khaltiData.payment_url) {
-            bookingError.textContent = khaltiData.message || "Unable to start Khalti payment.";
+            bookingError.textContent = khaltiData.message || "Unable to start eSewa payment.";
             return;
           }
-          window.location.href = khaltiData.payment_url;
+          if (!isValidEsewaPaymentUrl(khaltiData.payment_url)) {
+            bookingError.textContent = "Invalid eSewa redirect URL received. Please verify sandbox key setup.";
+            return;
+          }
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = khaltiData.payment_url;
+          form.style.display = "none";
+          const fields = khaltiData.form_fields || {};
+          Object.entries(fields).forEach(([key, value]) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = String(value ?? "");
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
           return;
         }
 
@@ -849,11 +919,11 @@
           body: JSON.stringify({ eventId, email, ticketCount, attendeeNames }),
         });
         if (response.redirected && response.url.includes("/login")) {
-          window.location.href = "/login";
+          bookingError.textContent = "Session expired. Please login again.";
           return;
         }
         if (response.status === 401 || response.status === 403) {
-          window.location.href = "/login";
+          bookingError.textContent = "Session unauthorized. Please login again.";
           return;
         }
         const data = await response.json();
@@ -864,11 +934,18 @@
         }
 
         const bookingId = data.bookingId || null;
-        window.location.href = `/payments/khalti/success?provider=free&bookingId=${encodeURIComponent(bookingId || '')}&eventName=${encodeURIComponent(eventName || '')}`;
+        window.location.href = `/payments/esewa/success?provider=free&bookingId=${encodeURIComponent(bookingId || '')}&eventName=${encodeURIComponent(eventName || '')}`;
       } catch (err) {
         bookingError.textContent = "Booking failed. Please try again.";
+      } finally {
+        esewaRequestInFlight = false;
+        updatePaymentActions();
       }
-    });
+    }
+
+    // Prevent native form navigation and handle booking only via JS.
+    bookingForm.addEventListener("submit", handleBookingSubmit);
+    bookingSubmitBtn.addEventListener("click", handleBookingSubmit);
 
     if (downloadTicketBtn) {
       downloadTicketBtn.addEventListener("click", () => {

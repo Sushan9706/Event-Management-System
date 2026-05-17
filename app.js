@@ -14,6 +14,7 @@ const indexRouter = require("./routes/index");
 const adminRoutes = require("./routes/adminRoutes");
 const User = require("./models/user");
 const Booking = require("./models/bookingModel");
+const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || "ems_token";
 
 const app = express();
 
@@ -43,15 +44,22 @@ app.use(flash());
 // make user, notifications, and flash available in views
 app.use(async (req, res, next) => {
   const jwt = require("jsonwebtoken");
-  const token = req.cookies.token;
+  const token = req.cookies[AUTH_COOKIE_NAME] || req.cookies.token;
   res.locals.user = null;
   res.locals.notifications = [];
+  res.locals.apiToken = "";
 
   if (token) {
     try {
       const decoded = jwt.verify(token, "shhhhhhhhh");
       req.user = decoded;
       res.locals.user = decoded;
+      // Dedicated API token avoids cookie collision issues on localhost multi-app setups.
+      res.locals.apiToken = jwt.sign(
+        { email: decoded.email, userId: decoded.userId, role: decoded.role, source: "web" },
+        "shhhhhhhhh",
+        { expiresIn: "2h" }
+      );
 
       // Fetch user data for the navbar/sidebar (cached in res.locals)
       const userDoc = await User.findById(decoded.userId).select(

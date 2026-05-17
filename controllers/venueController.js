@@ -1,6 +1,88 @@
 const Venue = require('../models/venueModel');
 const userModel = require('../models/user');
 const VenueBooking = require('../models/venueBookingModel');
+const {
+    ESEWA_PRODUCT_CODE,
+    ESEWA_FORM_URL,
+    buildEsewaPaymentPayload,
+    lookupEsewaPayment,
+    toEsewaAmount
+} = require('../config/esewa');
+
+const VENUE_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const VENUE_PHONE_REGEX = /^(?:\+?977[-\s]?)?(98\d{8})$/;
+
+const getVenuePaymentCheckouts = (req) => {
+    if (!req.session.venuePaymentCheckouts) {
+        req.session.venuePaymentCheckouts = {};
+    }
+    return req.session.venuePaymentCheckouts;
+};
+
+const decodeEsewaDataPayload = (encoded) => {
+    const raw = String(encoded || '').trim();
+    if (!raw) return null;
+    try {
+        const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+        const decoded = Buffer.from(padded, 'base64').toString('utf8');
+        const parsed = JSON.parse(decoded);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (err) {
+        return null;
+    }
+};
+
+const normalizePhoneNumber = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const digits = raw.replace(/[^\d]/g, '');
+    if (digits.startsWith('977') && digits.length === 12) {
+        return digits.slice(3);
+    }
+    return digits;
+};
+
+const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) => {
+    if (!startDate || !endDate || !startTime || !endTime) {
+        return 'Please select both start and end dates and times.';
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        return 'Please select valid start and end dates.';
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start < today) {
+        return 'Cannot book a date in the past.';
+    }
+    if (start > end) {
+        return 'Start date cannot be after end date.';
+    }
+    return null;
+};
+
+const calculateVenueAmount = ({ venue, startDate, endDate, startTime, endTime }) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    let totalAmount = 0;
+    if (venue.dailyRate) {
+        totalAmount = venue.dailyRate * diffDays;
+    } else if (venue.hourlyRate) {
+        const startT = String(startTime).split(':');
+        const endT = String(endTime).split(':');
+        const startHour = (parseInt(startT[0], 10) || 0) + ((parseInt(startT[1], 10) || 0) / 60);
+        const endHour = (parseInt(endT[0], 10) || 0) + ((parseInt(endT[1], 10) || 0) / 60);
+        const dailyHours = Math.max(endHour - startHour, 0);
+        totalAmount = venue.hourlyRate * dailyHours * diffDays;
+    }
+    return Number(totalAmount.toFixed(2));
+};
 
 exports.getVenues = async (req, res) => {
     try {
@@ -83,16 +165,24 @@ exports.searchVenues = async (req, res) => {
 
 exports.bookVenue = async (req, res) => {
     try {
-        const { venueId, startDate, endDate, startTime, endTime } = req.body;
+        const { venueId, startDate, endDate, startTime, endTime, phoneNumber } = req.body;
         const userId = req.user.userId;
+        const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
         const venue = await Venue.findById(venueId);
         if (!venue) return res.status(404).json({ success: false, message: "Venue not found" });
 
-        // Check if any date in the range is already booked
+        const dateValidationError = validateVenueDatesAndTimes({ startDate, endDate, startTime, endTime });
+        if (dateValidationError) {
+            return res.status(400).json({ success: false, message: dateValidationError });
+        }
+        if (!normalizedPhone || !VENUE_PHONE_REGEX.test(normalizedPhone)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid mobile number." });
+        }
+
         const existingBookings = await VenueBooking.find({
             venueId,
-            status: { $ne: 'cancelled' },
+            status: { $in: ['confirmed', 'pending'] },
             $or: [
                 { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } }
             ]
@@ -102,26 +192,16 @@ exports.bookVenue = async (req, res) => {
             return res.status(400).json({ success: false, message: "Venue is already booked for some dates in this range." });
         }
 
-        // Calculate days
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const diffTime = Math.abs(end - start);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-        // Calculate total amount based on daily or hourly rate
-        let totalAmount = 0;
-        if (venue.dailyRate) {
-            totalAmount = venue.dailyRate * diffDays;
-        } else if (venue.hourlyRate) {
-            // Simple hourly calculation: (endTime - startTime) * days * rate
-            const startT = startTime.split(':');
-            const endT = endTime.split(':');
-            const hours = (parseInt(endT[0]) + parseInt(endT[1])/60) - (parseInt(startT[0]) + parseInt(startT[1])/60);
-            const totalHours = Math.max(hours, 0) * diffDays;
-            totalAmount = venue.hourlyRate * totalHours;
+        const totalAmount = calculateVenueAmount({ venue, startDate, endDate, startTime, endTime });
+        if (totalAmount <= 0) {
+            return res.status(400).json({ success: false, message: "Venue amount must be greater than zero." });
         }
 
-        const referenceNumber = 'V-EMS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        const referenceNumber = 'V-EMS-' + Math.random().toString(36).slice(2, 11).toUpperCase();
+        const transactionUuid = `VESW-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+        const successUrl = `${req.protocol}://${req.get('host')}/venue/payments/esewa/success/${encodeURIComponent(transactionUuid)}`;
+        const failureUrl = `${req.protocol}://${req.get('host')}/venue/payments/esewa/success/${encodeURIComponent(transactionUuid)}`;
+        const totalEsewaAmount = toEsewaAmount(totalAmount);
 
         const newBooking = await VenueBooking.create({
             venueId,
@@ -130,15 +210,109 @@ exports.bookVenue = async (req, res) => {
             endDate,
             startTime,
             endTime,
+            phoneNumber: normalizedPhone,
             totalAmount,
-            status: 'confirmed',
-            paymentStatus: 'paid',
+            status: 'pending',
+            paymentStatus: 'unpaid',
             referenceNumber
         });
 
-        res.json({ success: true, message: "Venue booked successfully!", booking: newBooking });
+        const checkouts = getVenuePaymentCheckouts(req);
+        checkouts[transactionUuid] = {
+            transactionUuid,
+            venueBookingId: newBooking._id.toString(),
+            venueId: venue._id.toString(),
+            userId: userId.toString(),
+            totalAmount,
+            productCode: ESEWA_PRODUCT_CODE,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + VENUE_CHECKOUT_TTL_MS
+        };
+        req.session.venuePaymentCheckouts = checkouts;
+
+        const esewaPayload = buildEsewaPaymentPayload({
+            amount: totalEsewaAmount,
+            transactionUuid,
+            successUrl,
+            failureUrl
+        });
+
+        return req.session.save(() => res.json({
+            success: true,
+            paymentProvider: 'esewa',
+            payment_url: ESEWA_FORM_URL,
+            form_fields: esewaPayload,
+            transaction_uuid: transactionUuid
+        }));
     } catch (err) {
         console.error("Booking error:", err);
         res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+exports.handleVenueEsewaSuccess = async (req, res) => {
+    try {
+        const queryStatus = String(req.query.status || '').trim().toUpperCase();
+        const esewaData = decodeEsewaDataPayload(req.query.data);
+        const transactionUuid = String(
+            req.params.transactionUuid
+            || req.query.transaction_uuid
+            || (esewaData && (esewaData.transaction_uuid || esewaData.transaction_code))
+            || ''
+        ).trim();
+
+        if (!transactionUuid) {
+            return res.redirect('/payments/success?provider=esewa&status=failed&eventName=Venue%20Booking');
+        }
+
+        const checkouts = req.session.venuePaymentCheckouts || {};
+        const checkout = checkouts[transactionUuid];
+        if (!checkout) {
+            return res.redirect('/payments/success?provider=esewa&status=expired&eventName=Venue%20Booking');
+        }
+
+        const venueBooking = await VenueBooking.findById(checkout.venueBookingId);
+        if (!venueBooking) {
+            delete checkouts[transactionUuid];
+            req.session.venuePaymentCheckouts = checkouts;
+            return req.session.save(() => res.redirect('/payments/success?provider=esewa&status=failed&eventName=Venue%20Booking'));
+        }
+
+        let finalStatus = 'FAILED';
+        if (queryStatus !== 'CANCELLED' && queryStatus !== 'FAILED') {
+            try {
+                const lookupResponse = await lookupEsewaPayment({
+                    transactionUuid,
+                    totalAmount: checkout.totalAmount,
+                    productCode: checkout.productCode || ESEWA_PRODUCT_CODE
+                });
+                finalStatus = String(lookupResponse.status || 'FAILED').trim().toUpperCase();
+            } catch (err) {
+                finalStatus = 'FAILED';
+            }
+        }
+
+        if (finalStatus === 'COMPLETE' || finalStatus === 'COMPLETED') {
+            venueBooking.status = 'confirmed';
+            venueBooking.paymentStatus = 'paid';
+            await venueBooking.save();
+            const venue = await Venue.findById(venueBooking.venueId).select('name').lean();
+            delete checkouts[transactionUuid];
+            req.session.venuePaymentCheckouts = checkouts;
+            const venueName = encodeURIComponent((venue && venue.name) ? venue.name : 'Venue Booking');
+            return req.session.save(() => res.redirect(`/payments/success?provider=free&bookingType=venue&bookingId=${venueBooking._id}&eventName=${venueName}`));
+        }
+
+        venueBooking.status = 'cancelled';
+        venueBooking.paymentStatus = 'unpaid';
+        await venueBooking.save();
+        const venue = await Venue.findById(venueBooking.venueId).select('name').lean();
+        delete checkouts[transactionUuid];
+        req.session.venuePaymentCheckouts = checkouts;
+        const venueName = encodeURIComponent((venue && venue.name) ? venue.name : 'Venue Booking');
+        return req.session.save(() => res.redirect(`/payments/success?provider=esewa&status=cancelled&eventName=${venueName}`));
+    } catch (err) {
+        console.error('Venue eSewa callback error:', err);
+        return res.redirect('/payments/success?provider=esewa&status=failed&eventName=Venue%20Booking');
     }
 };

@@ -71,10 +71,11 @@ router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('av
 
 // --- FUNCTIONAL ROUTES ---
 router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
-router.post('/api/khalti/initiate', isLoggedIn, bookingController.initiateKhaltiPayment);
-router.post('/api/khalti/verify', isLoggedIn, bookingController.verifyKhaltiPayment);
+router.post('/api/esewa/initiate', isLoggedIn, bookingController.initiateEsewaPayment);
+router.post('/api/esewa/verify', isLoggedIn, bookingController.verifyEsewaPayment);
 router.get('/payments/success', isLoggedIn, bookingController.getPaymentSuccessPage);
 router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSuccessPage);
+router.get('/payments/esewa/success/:transactionUuid?', isLoggedIn, bookingController.getEsewaSuccessPage);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
 router.get('/events/search', userController.searchEvents);
