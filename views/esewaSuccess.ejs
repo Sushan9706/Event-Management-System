@@ -276,12 +276,12 @@
       </div>
 
       <section class="status-card">
-        <p class="eyebrow" id="providerLabel"><%= provider === 'free' ? 'EMS' : 'Khalti' %></p>
+        <p class="eyebrow" id="providerLabel"><%= provider === 'free' ? 'EMS' : 'eSewa' %></p>
         <div class="headline">
           <div class="icon" id="statusIcon">…</div>
           <div>
             <h1 id="statusTitle"><%= provider === 'free' ? 'Booking Successful' : 'Verifying payment...' %></h1>
-            <p class="copy" id="statusMessage"><%= provider === 'free' ? 'Your booking is confirmed and ready inside My Bookings.' : 'We are checking the Khalti payment status before confirming your booking.' %></p>
+            <p class="copy" id="statusMessage"><%= provider === 'free' ? 'Your booking is confirmed and ready inside My Bookings.' : 'We are checking the eSewa payment status before confirming your booking.' %></p>
           </div>
         </div>
 
@@ -301,7 +301,7 @@
 
         <div class="actions">
           <a class="btn btn-primary" id="primaryAction" href="/bookings">Go to My Bookings</a>
-          <a class="btn btn-secondary" href="/catalog">Browse Events</a>
+          <a class="btn btn-secondary" id="secondaryAction" href="/catalog">Browse Events</a>
         </div>
 
       </section>
@@ -315,12 +315,15 @@
       const statusMessage = document.getElementById("statusMessage");
       const paymentStatus = document.getElementById("paymentStatus");
       const primaryAction = document.getElementById("primaryAction");
+      const secondaryAction = document.getElementById("secondaryAction");
       const metaLabel = document.getElementById("metaLabel");
       const timerCard = document.getElementById("timerCard");
       const countdownValue = document.getElementById("countdownValue");
       const isFreeBooking = "<%= provider %>" === "free";
+      const bookingType = "<%= bookingType || '' %>";
+      const callbackStatus = "<%= callbackStatus || '' %>".toUpperCase();
       let celebrationPlayed = false;
-      const paymentDeadline = Number('<%- expiresAt || "" %>') || null;
+      const paymentDeadline = Number(<%- JSON.stringify(expiresAt || null) %>) || null;
       let countdownTimer = null;
 
       function runBalloonCelebration() {
@@ -452,55 +455,70 @@
         countdownTimer = window.setInterval(tick, 1000);
       }
 
-      async function verifyKhaltiPayment() {
+      async function verifyEsewaPayment() {
         if (!initialPidx) {
-          applyStatus("Failed", "The Khalti payment identifier is missing from the redirect URL.", "/bookings", "Back to My Bookings");
+          applyStatus("Failed", "The eSewa transaction identifier is missing from the redirect URL.", "/bookings", "Back to My Bookings");
           return;
         }
 
         try {
-          const response = await fetch("/api/khalti/verify", {
+          const response = await fetch("/api/esewa/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "same-origin",
-            body: JSON.stringify({ pidx: initialPidx }),
+            body: JSON.stringify({ transaction_uuid: initialPidx }),
           });
           const data = await response.json();
 
           if (!response.ok) {
-            applyStatus(data.status || "Failed", data.message || "Unable to verify Khalti sandbox payment.", "/bookings", "Back to My Bookings");
+            applyStatus(data.status || "Failed", data.message || "Unable to verify eSewa sandbox payment.", "/bookings", "Back to My Bookings");
             return;
           }
 
-          if (data.status === "Completed") {
+          if (data.status === "COMPLETE" || data.status === "COMPLETED") {
             applyStatus("Completed", "Your booking is confirmed and ready inside My Bookings.", data.redirectUrl || "/bookings", "View Booking");
             return;
           }
 
-          if (data.status === "Pending") {
-            applyStatus("Pending", data.message || "Khalti sandbox payment is still pending.", "/bookings", "Go to My Bookings");
+          if (data.status === "PENDING") {
+            applyStatus("Pending", data.message || "eSewa sandbox payment is still pending.", "/bookings", "Go to My Bookings");
             return;
           }
 
           applyStatus(data.status || "Failed", data.message || "Payment was not completed.", "/bookings", "Back to My Bookings");
         } catch (err) {
-          applyStatus("Failed", "We could not reach the Khalti verification endpoint. Please try again.", "/bookings", "Back to My Bookings");
+          applyStatus("Failed", "We could not reach the eSewa verification endpoint. Please try again.", "/bookings", "Back to My Bookings");
         }
       }
 
-      metaLabel.textContent = "<%= eventName ? 'EVENT' : 'PIDX' %>";
+      metaLabel.textContent = bookingType === "venue" ? "VENUE" : ( "<%= eventName ? 'EVENT' : 'PIDX' %>" );
+      if (secondaryAction && bookingType === "venue") {
+        secondaryAction.href = "/venue";
+        secondaryAction.textContent = "Browse Venues";
+      }
 
       if (isFreeBooking) {
         const freeBookingId = "<%= bookingId %>";
         applyStatus(
           "Completed",
           "Your booking is confirmed and ready inside My Bookings.",
-          freeBookingId ? `/bookings/manage/${freeBookingId}` : "/bookings",
-          freeBookingId ? "View Booking" : "Go to My Bookings"
+          (bookingType === "venue") ? "/bookings" : (freeBookingId ? `/bookings/manage/${freeBookingId}` : "/bookings"),
+          (bookingType === "venue") ? "Go to My Bookings" : (freeBookingId ? "View Booking" : "Go to My Bookings")
         );
       } else {
-        startCountdown();
-        verifyKhaltiPayment();
+        if (!initialPidx && callbackStatus) {
+          const normalized = callbackStatus === "EXPIRED"
+            ? "Expired"
+            : (callbackStatus === "CANCELLED" ? "Cancelled" : "Failed");
+          const message = normalized === "Expired"
+            ? "The payment session expired before completion."
+            : (normalized === "Cancelled" ? "Payment was cancelled." : "Payment failed.");
+          applyStatus(normalized, message, "/bookings", "Back to My Bookings");
+          stopCountdown();
+        } else {
+          startCountdown();
+          verifyEsewaPayment();
+        }
       }
     </script>
   </body>
