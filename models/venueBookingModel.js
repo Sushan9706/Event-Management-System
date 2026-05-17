@@ -28,6 +28,11 @@ const venueBookingSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        phoneNumber: {
+            type: String,
+            trim: true,
+            default: ''
+        },
         totalAmount: {
             type: Number,
             required: true

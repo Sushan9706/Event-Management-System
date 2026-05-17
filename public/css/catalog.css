@@ -39,14 +39,14 @@ button {
 }
 
 .catalog-shell {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 40px 32px;
   flex: 1;
 }
 
 .hero {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 48px 32px 32px;
   display: flex;
@@ -114,14 +114,125 @@ button {
 
 /* Find button removed - using real-time Ajax instead */
 
-.filters {
-  max-width: 1200px;
+.advanced-filters {
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 40px;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filter-top-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
   flex-wrap: wrap;
-  justify-content: center;
+}
+
+.filter-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.category-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.location-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 8px 16px;
+  height: 38px;
+  width: 250px;
+}
+
+.location-input-wrap svg {
+  color: var(--muted);
+}
+
+.location-input-wrap input {
+  border: none;
+  outline: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--dark);
+  background: transparent;
+  width: 100%;
+}
+
+.location-input-wrap input::placeholder {
+  color: #bbb;
+}
+
+.date-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  height: 38px;
+}
+
+.date-range-wrap input[type="date"] {
+  border: none;
+  outline: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--dark);
+  background: transparent;
+  cursor: pointer;
+}
+
+.date-range-wrap span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btn-clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 2px;
+  transition: opacity 0.2s;
+}
+
+.btn-clear-filters:hover {
+  opacity: 0.7;
 }
 
 .filter-tag {
@@ -148,7 +259,7 @@ button {
 }
 
 .events-section {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 32px 64px;
 }
@@ -243,6 +354,10 @@ button {
 
 .tag-other {
   background: #6b7280;
+}
+
+.tag-venue {
+  background: #374151;
 }
 
 .card-body {

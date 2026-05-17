@@ -10,6 +10,7 @@ const {
   syncBookingExpiry,
   syncBookingsExpiry,
 } = require("../utils/bookingStatus");
+const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || "ems_token";
 
 exports.getRegister = (req, res) => {
   res.render("register");
@@ -84,7 +85,8 @@ exports.postRegister = async (req, res) => {
       { email: user.email, userId: user._id, role: user.role },
       "shhhhhhhhh"
     );
-    res.cookie("token", token);
+    res.cookie(AUTH_COOKIE_NAME, token, { httpOnly: true, sameSite: "lax", path: "/" });
+    res.clearCookie("token");
 
     req.flash("success", "Registration successful!");
     res.redirect("/login");
@@ -150,7 +152,8 @@ exports.postLogin = async (req, res) => {
                 { email: user.email, userId: user._id, role: user.role },
                 "shhhhhhhhh"
             );
-            res.cookie("token", token);
+            res.cookie(AUTH_COOKIE_NAME, token, { httpOnly: true, sameSite: "lax", path: "/" });
+            res.clearCookie("token");
 
             if (user.role === 'admin') {
                 return res.redirect('/admin/dashboard');
@@ -612,7 +615,7 @@ exports.getCatalog = async (req, res) => {
     // Fetch the full user document if logged in; otherwise allow guest view
     let fullUser = null;
     if (!req.user) {
-      const token = req.cookies && req.cookies.token;
+      const token = req.cookies && (req.cookies[AUTH_COOKIE_NAME] || req.cookies.token);
       if (token) {
         try {
           const jwt = require("jsonwebtoken");
@@ -836,7 +839,8 @@ exports.updateProfileInfo = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie("token", "");
+  res.clearCookie(AUTH_COOKIE_NAME);
+  res.clearCookie("token");
   res.redirect("/login");
 };
 
@@ -1000,5 +1004,27 @@ exports.postCreatePassword = async (req, res) => {
         console.error('Create Password Error:', err);
         req.flash('error', 'Failed to update password. Please try again.');
         res.redirect('/create-password');
+    }
+};
+
+exports.markNotificationsRead = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.userId);
+        if (user && Array.isArray(user.notifications)) {
+            let modified = false;
+            user.notifications.forEach(n => {
+                if (!n.isRead) {
+                    n.isRead = true;
+                    modified = true;
+                }
+            });
+            if (modified) {
+                await user.save();
+            }
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Mark notifications read error:", error);
+        res.status(500).json({ success: false });
     }
 };

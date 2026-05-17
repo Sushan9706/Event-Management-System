@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const noResults = document.getElementById("noResults");
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   const filterSection = document.getElementById("filters");
+  const locationFilter = document.getElementById("locationFilter");
+  const dateStartFilter = document.getElementById("dateStartFilter");
+  const dateEndFilter = document.getElementById("dateEndFilter");
+  const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
   let currentCategory = "all";
   let searchText = "";
@@ -27,11 +31,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = card.querySelector(".card-name").textContent.toLowerCase();
       const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
       const category = (card.dataset.category || "").toLowerCase().trim().replace(/\s+/g, '-');
+      const eventDate = card.dataset.date;
+
+      const filterLoc = locationFilter ? locationFilter.value.trim().toLowerCase() : "";
+      const filterStart = dateStartFilter && dateStartFilter.value ? new Date(dateStartFilter.value) : null;
+      const filterEnd = dateEndFilter && dateEndFilter.value ? new Date(dateEndFilter.value) : null;
+      const cardDate = eventDate ? new Date(eventDate) : null;
 
       const matchesText = !searchText || name.includes(searchText) || location.includes(searchText) || category.replace(/-/g, ' ').includes(searchText);
       const matchesCategory = currentCategory === "all" || category === currentCategory;
+      const matchesLocation = !filterLoc || location.includes(filterLoc);
 
-      if (matchesText && matchesCategory) {
+      let matchesDate = true;
+      if (cardDate) {
+        if (filterStart && cardDate < filterStart) matchesDate = false;
+        // Check end date using start of the day after filterEnd to be inclusive
+        if (filterEnd) {
+           const inclusiveEnd = new Date(filterEnd);
+           inclusiveEnd.setDate(inclusiveEnd.getDate() + 1);
+           if (cardDate >= inclusiveEnd) matchesDate = false;
+        }
+      } else if (filterStart || filterEnd) {
+         matchesDate = false; 
+      }
+
+      if (matchesText && matchesCategory && matchesLocation && matchesDate) {
         matchingCount++;
         // Check if we should show this item based on the limit
         if (showAllMatching || matchingCount <= INITIAL_LIMIT) {
@@ -80,6 +104,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentCategory = e.target.dataset.filter.toLowerCase().trim().replace(/\s+/g, '-');
     showAllMatching = false; // Reset on new category
+    applyFilters();
+  });
+
+  locationFilter?.addEventListener("input", () => {
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  dateStartFilter?.addEventListener("change", () => {
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  dateEndFilter?.addEventListener("change", () => {
+    showAllMatching = false;
+    applyFilters();
+  });
+
+  clearFiltersBtn?.addEventListener("click", () => {
+    if (heroSearch) heroSearch.value = "";
+    searchText = "";
+    if (locationFilter) locationFilter.value = "";
+    if (dateStartFilter) dateStartFilter.value = "";
+    if (dateEndFilter) dateEndFilter.value = "";
+    
+    currentCategory = "all";
+    document.querySelectorAll(".filter-tag").forEach((t) => {
+        t.classList.remove("active");
+        if (t.dataset.filter === "all") t.classList.add("active");
+    });
+    
+    showAllMatching = false;
     applyFilters();
   });
 

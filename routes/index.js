@@ -71,18 +71,40 @@ router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('av
 
 // --- FUNCTIONAL ROUTES ---
 router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
-router.post('/api/khalti/initiate', isLoggedIn, bookingController.initiateKhaltiPayment);
-router.post('/api/khalti/verify', isLoggedIn, bookingController.verifyKhaltiPayment);
+router.post('/api/esewa/initiate', isLoggedIn, bookingController.initiateEsewaPayment);
+router.post('/api/esewa/verify', isLoggedIn, bookingController.verifyEsewaPayment);
 router.get('/payments/success', isLoggedIn, bookingController.getPaymentSuccessPage);
 router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSuccessPage);
+router.get('/payments/esewa/success/:transactionUuid?', isLoggedIn, bookingController.getEsewaSuccessPage);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
 router.get('/events/search', userController.searchEvents);
+router.post('/api/notifications/read', isLoggedIn, userController.markNotificationsRead);
 
 
 
 router.get("/eventcreat", (req, res) => {
     res.send("this is the file yet to be created.");
+});
+
+// --- POLICY & CONTACT ROUTES ---
+router.get("/terms", (req, res) => {
+    res.render("terms");
+});
+
+router.get("/privacy", (req, res) => {
+    res.render("privacy");
+});
+
+router.get("/contact", (req, res) => {
+    res.render("contact");
+});
+
+router.post("/contact", (req, res) => {
+    // Basic form handling: in a real app, this would send an email or save to DB.
+    // For now, we'll just show a success flash message and redirect back to the form.
+    req.flash("success", "Thank you for your message. We will get back to you shortly.");
+    res.redirect("/contact");
 });
 
 module.exports = router;
