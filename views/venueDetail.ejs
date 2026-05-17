@@ -145,8 +145,12 @@
                                 <label>END TIME</label>
                                 <input type="time" id="endTime">
                             </div>
+                            <div class="input-group" style="grid-column: 1 / -1;">
+                                <label>PHONE NUMBER</label>
+                                <input type="tel" id="phoneNumber" placeholder="98XXXXXXXX" inputmode="numeric">
+                            </div>
                         </div>
-                        <button class="book-btn" id="confirmBookingBtn">Confirm Booking</button>
+                        <button class="book-btn" id="confirmBookingBtn">Continue Booking</button>
                     <% } else if (!user) { %>
                         <a href="/login" class="book-btn" style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
                     <% } else { %>
@@ -258,6 +262,7 @@
                             const endDate = document.getElementById('endDate').value;
                             const startTime = document.getElementById('startTime').value;
                             const endTime = document.getElementById('endTime').value;
+                            const phoneNumber = document.getElementById('phoneNumber').value.trim();
 
                             if (!startDate || !endDate || !startTime || !endTime) {
                                 showNotification('Please select both start and end dates and times.');
@@ -273,6 +278,16 @@
                                 showNotification('Start date cannot be after end date.');
                                 return;
                             }
+                            if (!phoneNumber) {
+                                showNotification('Please enter your phone number.');
+                                return;
+                            }
+                            const normalizedPhone = phoneNumber.replace(/[^\d]/g, '');
+                            const validPhone = /^(?:977)?98\d{8}$/.test(normalizedPhone);
+                            if (!validPhone) {
+                                showNotification('Please enter a valid mobile number.');
+                                return;
+                            }
 
                             try {
                                 const response = await fetch('/venue/book', {
@@ -283,16 +298,30 @@
                                         startDate,
                                         endDate,
                                         startTime,
-                                        endTime
+                                        endTime,
+                                        phoneNumber
                                     })
                                 });
 
                                 const data = await response.json();
                                 if (data.success) {
-                                    showNotification('Venue booked successfully!', 'success');
-                                    setTimeout(() => {
-                                        window.location.href = '/bookings';
-                                    }, 1500);
+                                    if (!data.payment_url || !data.form_fields) {
+                                        showNotification('Unable to start eSewa payment.');
+                                        return;
+                                    }
+                                    const form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = data.payment_url;
+                                    form.style.display = 'none';
+                                    Object.entries(data.form_fields).forEach(([key, value]) => {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = key;
+                                        input.value = String(value ?? '');
+                                        form.appendChild(input);
+                                    });
+                                    document.body.appendChild(form);
+                                    form.submit();
                                 } else {
                                     showNotification(data.message || 'Booking failed.');
                                 }

@@ -6,13 +6,15 @@ const mongoose = require('mongoose');
 const os = require('os');
 const { isEventDatePassed, syncBookingExpiry, syncBookingsExpiry } = require('../utils/bookingStatus');
 const {
-    initiateKhaltiPayment: postKhaltiPayment,
-    lookupKhaltiPayment: lookupKhaltiPayment,
-    toKhaltiPaisa
-} = require('../config/khalti');
+    ESEWA_PRODUCT_CODE,
+    ESEWA_FORM_URL,
+    buildEsewaPaymentPayload,
+    lookupEsewaPayment,
+    toEsewaAmount
+} = require('../config/esewa');
 
 const MAX_TICKETS_PER_BOOKING = 5;
-const KHALTI_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const PAYMENT_CHECKOUT_TTL_MS = 30 * 60 * 1000;
 const createHttpError = (status, message, payload) => {
     const error = new Error(message);
     error.status = status;
@@ -26,6 +28,21 @@ const pickEventName = (event, fallback = 'Event') => {
     if (!event) return fallback;
     return event.eventName || event.title || event.name || event.eventTitle || fallback;
 };
+
+const isValidEsewaPaymentUrl = (value) => {
+    if (!value) return false;
+    try {
+        const parsed = new URL(String(value).trim());
+        const host = parsed.hostname.toLowerCase();
+        return (
+            (host === 'rc-epay.esewa.com.np' || host === 'epay.esewa.com.np') &&
+            (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+        );
+    } catch (err) {
+        return false;
+    }
+};
+
 
 const isLocalHost = (host = '') => {
     const hostname = host.replace(/^https?:\/\//, '').split(':')[0].toLowerCase();
@@ -81,14 +98,34 @@ const getRequestBaseUrl = (req) => {
     return `${req.protocol}://${req.get('host') || 'localhost:3000'}`;
 };
 
+const resolveConfiguredLocalBaseUrl = (configuredUrl, req) => {
+    if (!configuredUrl) return '';
+    try {
+        const parsed = new URL(configuredUrl);
+        const requestHost = req.get('host') || '';
+        const configuredHost = parsed.host.toLowerCase();
+        const requestHostLower = requestHost.toLowerCase();
+        if (
+            (configuredHost.startsWith('localhost') || configuredHost.startsWith('127.0.0.1') || configuredHost.startsWith('[::1]')) &&
+            requestHostLower &&
+            configuredHost !== requestHostLower
+        ) {
+            return `${parsed.protocol}//${requestHost}`;
+        }
+        return configuredUrl;
+    } catch (err) {
+        return configuredUrl;
+    }
+};
+
 const getFrontendBaseUrl = (req) => {
     const configured = (process.env.FRONTEND_URL || '').trim().replace(/\/+$/, '');
-    return configured || getRequestBaseUrl(req);
+    return resolveConfiguredLocalBaseUrl(configured, req) || getRequestBaseUrl(req);
 };
 
 const getBackendBaseUrl = (req) => {
     const configured = (process.env.BACKEND_URL || '').trim().replace(/\/+$/, '');
-    return configured || getRequestBaseUrl(req);
+    return resolveConfiguredLocalBaseUrl(configured, req) || getRequestBaseUrl(req);
 };
 
 const getAlreadyBookedCount = async (eventId, userEmail) => {
@@ -237,11 +274,27 @@ const prepareBookingCheckout = async ({ userId, eventId, email, ticketCountRaw, 
     };
 };
 
-const getKhaltiCheckouts = (req) => {
-    if (!req.session.khaltiCheckouts) {
-        req.session.khaltiCheckouts = {};
+const getPaymentCheckouts = (req) => {
+    if (!req.session.paymentCheckouts) {
+        req.session.paymentCheckouts = {};
     }
-    return req.session.khaltiCheckouts;
+    return req.session.paymentCheckouts;
+};
+
+const decodeEsewaDataPayload = (encoded) => {
+    const raw = String(encoded || '').trim();
+    if (!raw) return null;
+
+    try {
+        // eSewa may send URL-safe base64 without padding.
+        const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+        const decoded = Buffer.from(padded, 'base64').toString('utf8');
+        const parsed = JSON.parse(decoded);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (err) {
+        return null;
+    }
 };
 
 exports.createBooking = async (req, res) => {
@@ -264,7 +317,7 @@ exports.createBooking = async (req, res) => {
         if (totalAmount > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Use the Khalti payment button to complete paid bookings.'
+                message: 'Use the eSewa payment button to complete paid bookings.'
             });
         }
 
@@ -310,7 +363,7 @@ exports.createBooking = async (req, res) => {
     }
 };
 
-exports.initiateKhaltiPayment = async (req, res) => {
+exports.initiateEsewaPayment = async (req, res) => {
     try {
         const checkout = await prepareBookingCheckout({
             userId: req.user.userId,
@@ -323,47 +376,35 @@ exports.initiateKhaltiPayment = async (req, res) => {
         if (checkout.totalAmount <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Khalti can only be used for paid bookings.'
+                message: 'eSewa can only be used for paid bookings.'
             });
         }
 
-        const purchaseOrderId = String(req.body.orderId || `KHL-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`).trim();
+        const purchaseOrderId = String(req.body.orderId || `ESW-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`).trim();
         const purchaseOrderName = String(req.body.orderName || pickEventName(checkout.event)).trim() || 'EMS Event Booking';
-        const customerName = String(req.body.customerName || checkout.attendeeNames[0] || req.user.username || 'EMS User').trim();
-        const returnUrl = `${getFrontendBaseUrl(req)}/payments/khalti/success`;
-        const websiteUrl = getFrontendBaseUrl(req);
-        const amountPaisa = toKhaltiPaisa(checkout.totalAmount);
+        const transactionUuid = purchaseOrderId;
+        const successUrl = `${getFrontendBaseUrl(req)}/payments/esewa/success/${encodeURIComponent(transactionUuid)}`;
+        const failureUrl = `${getFrontendBaseUrl(req)}/payments/esewa/success/${encodeURIComponent(transactionUuid)}`;
+        const totalAmount = toEsewaAmount(checkout.totalAmount);
 
-        const khaltiResponse = await postKhaltiPayment({
-            return_url: returnUrl,
-            website_url: websiteUrl,
-            amount: String(amountPaisa),
-            purchase_order_id: purchaseOrderId,
-            purchase_order_name: purchaseOrderName,
-            customer_info: {
-                name: customerName,
-                email: checkout.attendeeEmail
-            }
+        const esewaPayload = buildEsewaPaymentPayload({
+            amount: totalAmount,
+            transactionUuid,
+            successUrl,
+            failureUrl
         });
-
-        const pidx = String(khaltiResponse && khaltiResponse.pidx ? khaltiResponse.pidx : '').trim();
-        const paymentUrl = String(khaltiResponse && khaltiResponse.payment_url ? khaltiResponse.payment_url : '').trim();
-
-        if (!pidx || !paymentUrl) {
+        const paymentUrl = ESEWA_FORM_URL;
+        if (!isValidEsewaPaymentUrl(paymentUrl)) {
             return res.status(500).json({
                 success: false,
-                message: 'Khalti did not return a payment URL.'
+                message: 'eSewa returned an invalid payment URL.'
             });
         }
+        const expiresAt = Date.now() + PAYMENT_CHECKOUT_TTL_MS;
 
-        const expiresAtFromApi = khaltiResponse.expires_at ? Date.parse(khaltiResponse.expires_at) : NaN;
-        const expiresAt = Number.isFinite(expiresAtFromApi)
-            ? expiresAtFromApi
-            : Date.now() + KHALTI_CHECKOUT_TTL_MS;
-
-        const checkouts = getKhaltiCheckouts(req);
-        checkouts[pidx] = {
-            pidx,
+        const checkouts = getPaymentCheckouts(req);
+        checkouts[transactionUuid] = {
+            transactionUuid,
             purchaseOrderId,
             purchaseOrderName,
             eventId: checkout.event._id.toString(),
@@ -373,45 +414,58 @@ exports.initiateKhaltiPayment = async (req, res) => {
             ticketCount: checkout.ticketCount,
             unitPrice: checkout.unitPrice,
             totalAmount: checkout.totalAmount,
-            amountPaisa,
-            customerName,
+            amountPaisa: Math.round(totalAmount * 100),
             status: 'Initiated',
             paymentUrl,
+            productCode: ESEWA_PRODUCT_CODE,
             createdAt: Date.now(),
             expiresAt
         };
-        req.session.khaltiCheckouts = checkouts;
+        req.session.paymentCheckouts = checkouts;
 
         return req.session.save(() => res.json({
             success: true,
-            paymentProvider: 'khalti',
+            paymentProvider: 'esewa',
             payment_url: paymentUrl,
-            pidx,
+            form_fields: esewaPayload,
+            transaction_uuid: transactionUuid,
             expires_at: new Date(expiresAt).toISOString(),
             expires_in: Math.max(Math.ceil((expiresAt - Date.now()) / 1000), 1)
         }));
     } catch (err) {
-        console.error('Khalti Initiate Error:', err);
-        return res.status(err.status || 500).json({
+        console.error('eSewa Initiate Error:', err);
+        const statusCode = err.status || 500;
+        const message = err.message || 'Unable to start eSewa checkout.';
+
+        return res.status(statusCode).json({
             success: false,
-            message: err.message || 'Unable to start Khalti checkout.',
+            message,
             details: err.payload || undefined
         });
     }
 };
 
 exports.getPaymentSuccessPage = (req, res) => {
-    const provider = String(req.query.provider || 'khalti').trim().toLowerCase();
-    const pidx = String(req.query.pidx || '').trim();
-    const checkouts = req.session.khaltiCheckouts || {};
-    const checkout = provider === 'khalti' && pidx ? checkouts[pidx] : null;
-    return res.render('khaltiSuccess', {
+    const provider = String(req.query.provider || 'esewa').trim().toLowerCase() === 'free' ? 'free' : 'esewa';
+    const esewaData = decodeEsewaDataPayload(req.query.data);
+    const transactionUuid = String(
+        req.params.transactionUuid
+        || req.query.transaction_uuid
+        || req.query.pidx
+        || (esewaData && (esewaData.transaction_uuid || esewaData.transaction_code))
+        || ''
+    ).trim();
+    const checkouts = req.session.paymentCheckouts || {};
+    const checkout = provider === 'esewa' && transactionUuid ? checkouts[transactionUuid] : null;
+    return res.render('esewaSuccess', {
         provider,
-        pidx,
+        pidx: transactionUuid,
         bookingId: String(req.query.bookingId || (checkout && checkout.bookingId) || '').trim(),
+        bookingType: String(req.query.bookingType || 'event').trim().toLowerCase(),
         eventName: checkout && checkout.purchaseOrderName
             ? String(checkout.purchaseOrderName)
             : String(req.query.eventName || '').trim(),
+        callbackStatus: String(req.query.status || '').trim(),
         expiresAt: checkout && checkout.expiresAt ? checkout.expiresAt : null,
         frontendBaseUrl: getFrontendBaseUrl(req),
         backendBaseUrl: getBackendBaseUrl(req)
@@ -419,29 +473,30 @@ exports.getPaymentSuccessPage = (req, res) => {
 };
 
 exports.getKhaltiSuccessPage = exports.getPaymentSuccessPage;
+exports.getEsewaSuccessPage = exports.getPaymentSuccessPage;
 
-exports.verifyKhaltiPayment = async (req, res) => {
+exports.verifyEsewaPayment = async (req, res) => {
     try {
-        const pidx = String(req.body.pidx || '').trim();
-        if (!pidx) {
+        const transactionUuid = String(req.body.transaction_uuid || req.body.pidx || '').trim();
+        if (!transactionUuid) {
             return res.status(400).json({
                 success: false,
-                message: 'Missing Khalti payment identifier.'
+                message: 'Missing eSewa transaction identifier.'
             });
         }
 
-        const checkouts = req.session.khaltiCheckouts || {};
-        const checkout = checkouts[pidx];
+        const checkouts = req.session.paymentCheckouts || {};
+        const checkout = checkouts[transactionUuid];
         if (!checkout) {
             return res.status(404).json({
                 success: false,
-                message: 'Khalti payment session expired. Please try booking again.'
+                message: 'eSewa payment session expired. Please try booking again.'
             });
         }
 
         if (checkout.expiresAt && Date.now() > checkout.expiresAt) {
-            delete checkouts[pidx];
-            req.session.khaltiCheckouts = checkouts;
+            delete checkouts[transactionUuid];
+            req.session.paymentCheckouts = checkouts;
             return req.session.save(() => res.status(410).json({
                 success: false,
                 status: 'Expired',
@@ -450,25 +505,19 @@ exports.verifyKhaltiPayment = async (req, res) => {
             }));
         }
 
-        const lookupResponse = await lookupKhaltiPayment({ pidx });
-        const status = String(lookupResponse.status || 'Pending').trim();
-        const lookupOrderId = String(lookupResponse.purchase_order_id || '').trim();
-        const lookupAmount = Number(lookupResponse.total_amount ?? lookupResponse.amount ?? NaN);
-        const expectedAmount = Number(checkout.amountPaisa || toKhaltiPaisa(checkout.totalAmount));
+        const lookupResponse = await lookupEsewaPayment({
+            transactionUuid,
+            totalAmount: checkout.totalAmount,
+            productCode: checkout.productCode || ESEWA_PRODUCT_CODE
+        });
+        const status = String(lookupResponse.status || 'PENDING').trim().toUpperCase();
 
-        if (lookupOrderId && lookupOrderId !== checkout.purchaseOrderId) {
-            throw createHttpError(400, 'Khalti payment did not match the original order.');
-        }
-        if (Number.isFinite(lookupAmount) && lookupAmount !== expectedAmount) {
-            throw createHttpError(400, 'Khalti payment amount did not match the booking total.');
-        }
-
-        if (status === 'Completed') {
+        if (status === 'COMPLETE' || status === 'COMPLETED') {
             if (checkout.bookingId) {
                 checkout.status = status;
                 checkout.lookup = lookupResponse;
                 checkout.verifiedAt = Date.now();
-                req.session.khaltiCheckouts = checkouts;
+                req.session.paymentCheckouts = checkouts;
                 return req.session.save(() => res.json({
                     success: true,
                     status,
@@ -484,7 +533,7 @@ exports.verifyKhaltiPayment = async (req, res) => {
             ]);
 
             if (!event || !user) {
-                throw createHttpError(404, 'Booking details were not found after Khalti payment.');
+                throw createHttpError(404, 'Booking details were not found after eSewa payment.');
             }
             if (isEventDatePassed(event)) {
                 throw createHttpError(400, 'Booking closed. This event date has passed.');
@@ -507,7 +556,7 @@ exports.verifyKhaltiPayment = async (req, res) => {
             checkout.status = status;
             checkout.lookup = lookupResponse;
             checkout.verifiedAt = Date.now();
-            req.session.khaltiCheckouts = checkouts;
+            req.session.paymentCheckouts = checkouts;
 
             return req.session.save(() => res.json({
                 success: true,
@@ -520,23 +569,23 @@ exports.verifyKhaltiPayment = async (req, res) => {
 
         checkout.status = status;
         checkout.lookup = lookupResponse;
-        req.session.khaltiCheckouts = checkouts;
+        req.session.paymentCheckouts = checkouts;
 
         return req.session.save(() => res.json({
-            success: status === 'Pending',
+            success: status === 'PENDING',
             status,
             bookingId: checkout.bookingId || null,
             expiresAt: checkout.expiresAt,
             redirectUrl: checkout.bookingId ? `/bookings/manage/${checkout.bookingId}` : null,
-            message: status === 'Pending'
-                ? 'Khalti payment is still pending.'
-                : 'Khalti payment was not completed.'
+            message: status === 'PENDING'
+                ? 'eSewa payment is still pending.'
+                : 'eSewa payment was not completed.'
         }));
     } catch (err) {
-        console.error('Khalti Verify Error:', err);
+        console.error('eSewa Verify Error:', err);
         return res.status(err.status || 500).json({
             success: false,
-            message: err.message || 'Unable to verify Khalti payment.',
+            message: err.message || 'Unable to verify eSewa payment.',
             status: err.payload && err.payload.status ? err.payload.status : undefined,
             details: err.payload || undefined
         });
