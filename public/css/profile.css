@@ -27,7 +27,7 @@
 }
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -58,7 +58,7 @@ main {
 .page-title {
   margin-bottom: 34px;
   line-height: 1.05;
-  font-family: "Sora", sans-serif;
+  font-family: 'DM Sans', sans-serif;
 }
 .page-title .t1 {
   display: block;
@@ -137,7 +137,7 @@ main {
 }
 
 .profile-name {
-  font-family: "Sora", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.08rem;
   font-weight: 700;
   color: var(--navy);
@@ -161,7 +161,7 @@ main {
   border: none;
   border-radius: 8px;
   padding: 11px 0;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -179,7 +179,7 @@ main {
   background: none;
   border: none;
   color: var(--muted);
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
   transition: color 0.15s;
@@ -288,7 +288,7 @@ input[type="password"] {
   border: 1.5px solid transparent;
   border-radius: 8px;
   padding: 11px 13px;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.9rem;
   color: var(--text);
   outline: none;
@@ -330,7 +330,7 @@ input:focus {
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
@@ -359,7 +359,7 @@ input:focus {
   background: none;
   border: none;
   color: var(--muted);
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.83rem;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -378,7 +378,7 @@ input:focus {
   border: none;
   border-radius: 8px;
   padding: 13px 30px;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.83rem;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -470,7 +470,7 @@ footer {
   box-shadow: 0 10px 48px rgba(20, 30, 46, 0.22);
 }
 .modal h3 {
-  font-family: "Sora", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.08rem;
   font-weight: 700;
   color: var(--navy);
@@ -492,7 +492,7 @@ footer {
   border-radius: 8px;
   font-size: 0.87rem;
   font-weight: 600;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   border: none;
   cursor: pointer;
   transition: background 0.15s;
@@ -542,7 +542,7 @@ footer {
   border: none;
   border-bottom: 1px solid #d4d8e0;
   font-size: 0.87rem;
-  font-family: "Inter", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 500;
   color: #1a2332;
   cursor: pointer;
