@@ -6,7 +6,9 @@
     <title><%= venue.name %> - EMS Venues</title>
     <link rel="stylesheet" href="/css/venueDetail.css">
     <link rel="stylesheet" href="/css/common-nav.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
 </head>
 <body>
     <div id="notificationToast" class="notification-toast">
@@ -125,7 +127,7 @@
                         <span class="price-per">starting per <%= venue.dailyRate ? 'day' : 'hour' %></span>
                     </div>
 
-                    <% if (venue.status === 'available' && user) { %>
+                    <% if (venue.status === 'available' && locals.user) { %>
                         <div class="booking-inputs-grid">
                             <div class="input-group">
                                 <label>START DATE</label>
@@ -152,7 +154,7 @@
                     <% } %>
 
                     <script>
-                        const bookedDates = <%- bookedDates %>;
+                        const bookedDates = JSON.parse('<%- locals.bookedDates || "[]" %>');
                         const calendarGrid = document.getElementById('calendarGrid');
                         const monthYearLabel = document.getElementById('currentMonthYear');
                         const prevBtn = document.getElementById('prevMonth');
@@ -204,13 +206,10 @@
                                 calendarGrid.appendChild(el);
                             }
 
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-
                             for (let day = 1; day <= daysInMonth; day++) {
                                 const date = new Date(year, month, day);
                                 const dateStr = getYYYYMMDD(date);
-                                const isPast = date < today;
+                                const isPast = dateStr < todayStr;
                                 const isBooked = bookedDates.includes(dateStr);
                                 
                                 const el = document.createElement('div');
@@ -265,14 +264,12 @@
                                 return;
                             }
 
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            if (new Date(startDate) < today) {
+                            if (startDate < todayStr) {
                                 showNotification('Cannot book a date in the past.');
                                 return;
                             }
 
-                            if (new Date(startDate) > new Date(endDate)) {
+                            if (startDate > endDate) {
                                 showNotification('Start date cannot be after end date.');
                                 return;
                             }

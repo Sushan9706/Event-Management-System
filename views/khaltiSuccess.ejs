@@ -320,7 +320,7 @@
       const countdownValue = document.getElementById("countdownValue");
       const isFreeBooking = "<%= provider %>" === "free";
       let celebrationPlayed = false;
-      const paymentDeadline = Number(<%- JSON.stringify(expiresAt || null) %>) || null;
+      const paymentDeadline = Number('<%- expiresAt || "" %>') || null;
       let countdownTimer = null;
 
       function runBalloonCelebration() {
