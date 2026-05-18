@@ -28,10 +28,12 @@ body {
 }
 
 .logo {
+    font-family: 'DM Sans', -apple-system, sans-serif !important;
     font-weight: 800 !important;
     font-size: 1.25rem !important;
+    color: #1e293b !important;
+    text-decoration: none !important;
     letter-spacing: normal !important;
-    color: #1a1a1a !important;
 }
 
 .nav-links {

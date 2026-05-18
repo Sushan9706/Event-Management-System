@@ -62,10 +62,12 @@ body {
 }
 
 .logo {
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: 0.05em;
-    color: var(--text-primary);
+    font-family: 'DM Sans', -apple-system, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    color: #1e293b !important;
+    text-decoration: none !important;
+    letter-spacing: normal !important;
 }
 
 .nav-links {

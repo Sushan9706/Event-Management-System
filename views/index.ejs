@@ -14,7 +14,8 @@
 <body>
   <header class="navbar">
     <div class="nav-inner">
-      <a href="/" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
+      <a href="/" class="logo"
+        style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
       <nav class="nav-links">
         <a href="/register" class="nav-link">Register</a>
         <a href="/login" class="btn-get-started">Get Started</a>
@@ -148,7 +149,7 @@
         </div>
 
         <div class="browse-wrap">
-          <a href="/events" class="btn-browse">Browse All Events
+          <a href="/catalog" class="btn-browse">Browse All Events
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -157,29 +158,48 @@
       </div>
   </section>
 
-  <section class="cta-section">
-    <div class="cta-inner">
-      <div class="cta-text">
-        <h2 class="cta-heading">Never miss a curated<br />moment.</h2>
-        <p class="cta-sub">
-          Sign up for early access to tickets and exclusive announcements
-          for<br />the 2026 season.
-        </p>
-        <div class="cta-form">
-          <input type="email" placeholder="Email address" class="cta-input" />
-          <button class="btn-subscribe">Subscribe</button>
+  <section class="events-section venues-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div>
+          <p class="section-label">SPACES 2026</p>
+          <h2 class="section-title">Featured Venues</h2>
         </div>
       </div>
-      <div class="cta-ticket-icon">
-        <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" fill="none">
-          <rect x="8" y="18" width="104" height="44" rx="6" fill="#c8cfe8" opacity="0.5" />
-          <circle cx="8" cy="40" r="8" fill="#dde4f4" />
-          <circle cx="112" cy="40" r="8" fill="#dde4f4" />
-          <line x1="8" y1="40" x2="112" y2="40" stroke="#b0bcd8" stroke-width="1" stroke-dasharray="4 4" />
-          <circle cx="40" cy="28" r="3" fill="#b0bcd8" />
-          <circle cx="40" cy="52" r="3" fill="#b0bcd8" />
-          <circle cx="40" cy="40" r="3" fill="#b0bcd8" />
-        </svg>
+
+      <div class="events-grid">
+        <% if (typeof venues !=='undefined' && venues && venues.length> 0) { %>
+          <% venues.forEach(venue=> { %>
+            <div class="event-card" onclick="window.location.href='/venue/<%= venue._id %>'"
+              style="cursor:pointer; width:100%;">
+              <div class="card-img-wrap">
+                <img src="<%= venue.imagePath || '/images/default-venue.png' %>" alt="<%= venue.name %>" />
+                <span class="card-tag">
+                  <%= venue.category %>
+                </span>
+              </div>
+              <div class="card-body">
+                <p class="card-date">
+                  <%= venue.location %>
+                </p>
+                <h3 class="card-title">
+                  <%= venue.name %>
+                </h3>
+                <p class="card-location">Capacity: <%= venue.capacity %> guests</p>
+              </div>
+            </div>
+            <% }); %>
+              <% } else { %>
+                <p style="color:#999; font-size:14px;">No venues available at the moment.</p>
+                <% } %>
+      </div>
+
+      <div class="browse-wrap">
+        <a href="/venue" class="btn-browse">Browse All Venues
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
       </div>
     </div>
   </section>
@@ -187,9 +207,9 @@
   <footer class="footer">
     <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
     <div class="footer-links">
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/terms">Terms of Service</a>
-      <a href="/contact">Contact</a>
+      <a href="/privacy">PRIVACY POLICY</a>
+      <a href="/terms">TERMS OF SERVICE</a>
+      <a href="/contact">CONTACT</a>
     </div>
   </footer>
 </body>
