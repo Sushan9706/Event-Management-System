@@ -28,7 +28,7 @@
         ? `${event.startTime || "TBA"}${event.endTime ? " - " + event.endTime : ""}`
         : (event && event.time ? event.time : "TBA");
       const printBaseUrl = (typeof publicBaseUrl === "string" && publicBaseUrl)
-        ? publicBaseUrl.replace(/\/+NPR. /, "")
+        ? publicBaseUrl.replace(/\/+$/, "")
         : "";
       const eventLocation = event && event.location ? event.location : "TBA";
       const eventImage = (event && (event.image || event.imagePath))
@@ -38,7 +38,7 @@
       const bookingStatus = normalizedStatus.toUpperCase();
       const isCancelled = normalizedStatus === "cancelled";
       const isExpired = normalizedStatus === "expired";
-      const isInactive = isCancelled || isExpired;
+      const isInactive = isCancelled || isExpired || !!forceViewOnly;
       const backLabel = isCancelled
         ? "← Back to Cancelled Bookings"
         : (isExpired ? "← Back to Expired Bookings" : "← Back to My Bookings");
@@ -260,6 +260,8 @@
               class="cancel-btn"
               id="cancelBookingBtn"
               data-event="<%= event && event._id ? event._id : '' %>"
+              data-event-id="<%= booking.groupedEventId || (event && event._id ? event._id : '') %>"
+              data-grouped="<%= booking.isGroupedBooking ? 'true' : 'false' %>"
               data-booking="<%= booking && booking._id ? booking._id.toString() : '' %>"
               data-count="<%= ticketCount %>"
               <%= isInactive ? 'disabled' : '' %>
@@ -269,7 +271,7 @@
             <p class="side-note">
               <%= isExpired
                 ? 'This booking has expired because the event date has already passed.'
-                : 'Cancellations are subject to the event terms and conditions. A 10% processing fee may apply.' %>
+                : 'Cancellations are final. No refunds are provided for event bookings.' %>
             </p>
           </div>
 
@@ -417,9 +419,10 @@
               class="confirm-input"
               type="text"
               inputmode="numeric"
+              autocomplete="off"
               maxlength="3"
               value=""
-              placeholder="1"
+              placeholder=""
             />
           </div>
         </div>
@@ -481,16 +484,27 @@
       const cancelWarning = document.getElementById('cancelWarning');
       const cancelBtn = document.getElementById('cancelBookingBtn');
       let cancelConfirmArmed = false;
+      const getTotalTickets = () => {
+        if (cancelBtn) {
+          const fromDataset = Number.parseInt(cancelBtn.dataset.count || '', 10);
+          if (Number.isInteger(fromDataset) && fromDataset > 0) return fromDataset;
+        }
+        if (cancelTotalTickets) {
+          const fromLabel = Number.parseInt(cancelTotalTickets.textContent || '', 10);
+          if (Number.isInteger(fromLabel) && fromLabel > 0) return fromLabel;
+        }
+        return 0;
+      };
       const getCancelCount = () => {
         if (!cancelTicketCountInput || !cancelBtn) return null;
-        const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+        const totalTickets = getTotalTickets();
         const rawValue = cancelTicketCountInput.value.trim();
-        if (!/^[1-9]\d*NPR. /.test(rawValue)) return null;
+        if (!/^[1-9]\d*$/.test(rawValue)) return null;
         return Math.min(parseInt(rawValue, 10), totalTickets);
       };
       const updateCancelButtonLabel = () => {
         if (!cancelModalYes || !cancelBtn) return;
-        const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+        const totalTickets = getTotalTickets();
         const value = getCancelCount();
         if (!value) {
           cancelModalYes.textContent = 'Cancel Ticket';
@@ -503,15 +517,17 @@
         if (!cancelModal) return;
         cancelConfirmArmed = false;
         if (cancelWarning) cancelWarning.style.display = 'none';
-        if (cancelBtn) {
-          const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
-          if (cancelTotalTickets) cancelTotalTickets.textContent = totalTickets;
-          if (cancelTicketCountInput) {
-            cancelTicketCountInput.value = '';
-            cancelTicketCountInput.placeholder = String(Math.min(1, totalTickets));
+        if (cancelModalYes) cancelModalYes.textContent = 'Cancel Ticket';
+          if (cancelBtn) {
+            const totalTickets = getTotalTickets();
+            if (cancelTotalTickets) cancelTotalTickets.textContent = totalTickets;
+            if (cancelTicketCountInput) {
+              cancelTicketCountInput.value = '';
+              cancelTicketCountInput.setAttribute('value', '');
+              cancelTicketCountInput.placeholder = '';
+            }
+            updateCancelButtonLabel();
           }
-          updateCancelButtonLabel();
-        }
         cancelModal.classList.add('open');
         cancelModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
@@ -536,7 +552,7 @@
         cancelTicketCountInput.addEventListener('input', () => {
           cancelConfirmArmed = false;
           if (cancelWarning) cancelWarning.style.display = 'none';
-          const totalTickets = parseInt(cancelBtn.dataset.count, 10) || 1;
+          const totalTickets = getTotalTickets();
           const digitsOnly = cancelTicketCountInput.value.replace(/\D/g, '');
           if (digitsOnly !== cancelTicketCountInput.value) {
             cancelTicketCountInput.value = digitsOnly;
@@ -611,7 +627,11 @@
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
               credentials: 'same-origin',
-              body: JSON.stringify({ cancelCount })
+              body: JSON.stringify({
+                cancelCount,
+                grouped: cancelBtn.dataset.grouped === 'true',
+                eventId: cancelBtn.dataset.eventId || ''
+              })
             });
             if (response.redirected && response.url && response.url.includes('/login')) {
               window.location.href = '/login';

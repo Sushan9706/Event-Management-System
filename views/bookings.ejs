@@ -153,12 +153,17 @@
               const isDaily = venue.dailyRate;
               const durationLabel = isDaily ? `${daysCount} Day${daysCount > 1 ? 's' : ''}` : `${booking.startTime || 'TBA'} - ${booking.endTime || 'TBA'}`;
               countLabel = `${durationLabel} · ${totalDisp}`;
-              manageUrl = `/venue/${venue._id || ''}`;
+              manageUrl = `/bookings/manage/${booking._id}`;
               typeLabel = 'VENUE NAME';
             }
 
             const statusGroup = normalizeStatus(booking.status);
             actionLabel = statusGroup === 'confirmed' ? 'Manage' : 'View';
+            if (isEvent && statusGroup === 'confirmed') {
+              manageUrl = `/bookings/manage/${booking._id}?grouped=1&eventId=${(booking.eventId && booking.eventId._id) ? booking.eventId._id : ''}`;
+            } else if (statusGroup !== 'confirmed') {
+              manageUrl = `/bookings/manage/${booking._id}?viewOnly=1`;
+            }
         %>
           <article class="booking-card" data-status="<%= statusGroup %>" data-type="<%= isEvent ? 'event' : 'venue' %>">
             <img class="booking-image" src="<%= image %>" alt="<%= title %>" onerror="this.src='/images/default-event.png'" />
