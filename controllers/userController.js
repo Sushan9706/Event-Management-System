@@ -927,6 +927,10 @@ exports.updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
+    if (/\s/.test(newPassword)) {
+      return res.status(400).json({ message: "Spaces are not allowed in the password" });
+    }
+
     if (newPassword !== confirmNewPassword) {
       return res.status(400).json({ message: "New passwords do not match." });
     }

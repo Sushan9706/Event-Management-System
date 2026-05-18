@@ -141,6 +141,11 @@ async function updatePassword() {
     }
 
     // Password Validation
+    if (/\s/.test(newPassword)) {
+        showToast("Spaces are not allowed in the password", "error");
+        return;
+    }
+
     if (newPassword.length < 8) {
         showToast("Password must be at least 8 characters long", "error");
         return;
@@ -204,5 +209,17 @@ function showToast(message, type = "success") {
 // Notification Toggle
 function toggleNotif() {
     const panel = document.getElementById('notifPanel');
-    panel.classList.toggle('open');
+    if(panel) panel.classList.toggle('open');
+}
+
+// Password Visibility Toggle
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.classList.add('active');
+    } else {
+        input.type = 'password';
+        btn.classList.remove('active');
+    }
 }
