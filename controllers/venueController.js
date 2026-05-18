@@ -11,6 +11,24 @@ const {
 
 const VENUE_CHECKOUT_TTL_MS = 30 * 60 * 1000;
 const VENUE_PHONE_REGEX = /^(?:\+?977[-\s]?)?(98\d{8})$/;
+const getVenuePendingCutoff = () => new Date(Date.now() - VENUE_CHECKOUT_TTL_MS);
+
+const clearExpiredPendingVenueBookings = async (venueId = null) => {
+    const query = {
+        status: 'pending',
+        paymentStatus: { $ne: 'paid' },
+        createdAt: { $lt: getVenuePendingCutoff() }
+    };
+    if (venueId) {
+        query.venueId = venueId;
+    }
+    await VenueBooking.updateMany(query, {
+        $set: {
+            status: 'cancelled',
+            paymentStatus: 'unpaid'
+        }
+    });
+};
 
 const getVenuePaymentCheckouts = (req) => {
     if (!req.session.venuePaymentCheckouts) {
@@ -106,13 +124,17 @@ exports.getVenues = async (req, res) => {
 
 exports.getVenueById = async (req, res) => {
     try {
+        await clearExpiredPendingVenueBookings(req.params.id);
         const venue = await Venue.findById(req.params.id).lean();
         if (!venue) return res.status(404).render('404', { title: '404 - Not Found' });
 
         // Fetch existing bookings to show availability
         const bookings = await VenueBooking.find({ 
             venueId: req.params.id,
-            status: { $ne: 'cancelled' }
+            $or: [
+                { status: 'confirmed' },
+                { status: 'pending', createdAt: { $gte: getVenuePendingCutoff() } }
+            ]
         }).select('startDate endDate').lean();
 
         // Expand ranges into individual days for the calendar
@@ -180,11 +202,21 @@ exports.bookVenue = async (req, res) => {
             return res.status(400).json({ success: false, message: "Please enter a valid mobile number." });
         }
 
+        await clearExpiredPendingVenueBookings(venueId);
         const existingBookings = await VenueBooking.find({
             venueId,
-            status: { $in: ['confirmed', 'pending'] },
-            $or: [
-                { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } }
+            $and: [
+                {
+                    $or: [
+                        { status: 'confirmed' },
+                        { status: 'pending', createdAt: { $gte: getVenuePendingCutoff() } }
+                    ]
+                },
+                {
+                    $or: [
+                        { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } }
+                    ]
+                }
             ]
         });
 
