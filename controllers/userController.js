@@ -758,12 +758,12 @@ exports.getGuestDashboard = async (req, res) => {
         let events = await eventModel.find({ 
             endDate: { $gte: today },
             status: { $ne: 'cancelled' }
-        }).populate('categoryId').lean();
+        }).sort({ createdAt: -1 }).populate('categoryId').lean();
 
-        events = events.filter(event => !hasEventEnded(event));
+        events = events.filter(event => !hasEventEnded(event)).slice(0, 6);
 
         // Fetch active venues
-        const venues = await Venue.find({ status: 'available' }).lean();
+        const venues = await Venue.find({ status: 'available' }).sort({ createdAt: -1 }).limit(6).lean();
 
         res.render("index", { events, venues, user: null });
     } catch (err) {
