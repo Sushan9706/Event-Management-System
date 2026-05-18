@@ -66,8 +66,8 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
         return 'Please select both start and end dates and times.';
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return 'Please select valid start and end dates.';
     }
@@ -79,6 +79,13 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
     if (start > end) {
         return 'Start date cannot be after end date.';
     }
+    
+    const timeDiffMs = end.getTime() - start.getTime();
+    const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+    if (hoursDiff < 2) {
+        return 'Minimum booking duration is 2 hours.';
+    }
+
     return null;
 };
 

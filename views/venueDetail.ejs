@@ -278,6 +278,17 @@
                                 showNotification('Start date cannot be after end date.');
                                 return;
                             }
+
+                            const startDateTime = new Date(`${startDate}T${startTime}`);
+                            const endDateTime = new Date(`${endDate}T${endTime}`);
+                            const timeDiffMs = endDateTime.getTime() - startDateTime.getTime();
+                            const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+                            
+                            if (hoursDiff < 2) {
+                                showNotification('Minimum booking duration is 2 hours.');
+                                return;
+                            }
+
                             if (!phoneNumber) {
                                 showNotification('Please enter your phone number.');
                                 return;
