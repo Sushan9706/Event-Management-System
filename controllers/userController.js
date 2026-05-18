@@ -81,14 +81,10 @@ exports.postRegister = async (req, res) => {
       role: assignedRole,
     });
 
-    let token = jwt.sign(
-      { email: user.email, userId: user._id, role: user.role },
-      "shhhhhhhhh"
-    );
-    res.cookie(AUTH_COOKIE_NAME, token, { httpOnly: true, sameSite: "lax", path: "/" });
+    res.clearCookie(AUTH_COOKIE_NAME);
     res.clearCookie("token");
 
-    req.flash("success", "Registration successful!");
+    req.flash("success", "Registration successful! Please log in.");
     res.redirect("/login");
   } catch (err) {
     console.error("Registration Error:", err);
