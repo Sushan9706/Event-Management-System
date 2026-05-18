@@ -64,9 +64,11 @@ svg {
 }
 
 .nav-logo {
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.1em;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  color: var(--dark, #111) !important;
+  text-decoration: none !important;
+  letter-spacing: normal !important;
   flex: 1; /* Pushes center to true middle */
 }
 

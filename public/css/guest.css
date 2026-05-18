@@ -52,11 +52,12 @@ body {
 }
 
 .logo {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.05em;
-  color: var(--text-primary);
+  font-family: var(--font-sans) !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
+  letter-spacing: normal !important;
 }
 
 .nav-links .nav-link {
