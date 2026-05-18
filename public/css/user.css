@@ -49,7 +49,7 @@ svg {
   background: var(--white);
   border-bottom: 1px solid var(--border);
   height: 60px;
-  padding: 0 32px;
+  padding: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -64,9 +64,10 @@ svg {
 }
 
 .nav-logo {
+  font-family: 'DM Sans', -apple-system, sans-serif !important;
   font-weight: 800 !important;
   font-size: 1.25rem !important;
-  color: var(--dark, #111) !important;
+  color: #1e293b !important;
   text-decoration: none !important;
   letter-spacing: normal !important;
   flex: 1; /* Pushes center to true middle */

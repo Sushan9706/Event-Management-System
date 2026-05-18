@@ -26,8 +26,11 @@ body {
 }
 
 .logo {
+    font-family: 'DM Sans', -apple-system, sans-serif !important;
     font-weight: 800 !important;
     font-size: 1.25rem !important;
+    color: #1e293b !important;
+    text-decoration: none !important;
     letter-spacing: normal !important;
 }
 
@@ -157,15 +160,27 @@ input::placeholder {
     display: flex;
     justify-content: space-between;
     padding: 30px 50px;
-    font-size: 0.7rem;
+    font-size: 10px;
     color: #bbb;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
-.footer-right a {
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-links a {
     text-decoration: none;
     color: #bbb;
-    margin-left: 20px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #333;
 }
 
 /* Container for input and button */

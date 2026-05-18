@@ -52,10 +52,10 @@ body {
 }
 
 .logo {
-  font-family: var(--font-sans) !important;
+  font-family: 'DM Sans', -apple-system, sans-serif !important;
   font-weight: 800 !important;
   font-size: 1.25rem !important;
-  color: var(--text-primary) !important;
+  color: #1e293b !important;
   text-decoration: none !important;
   letter-spacing: normal !important;
 }
@@ -369,18 +369,23 @@ body {
 .tag-festival {
   background: #e040fb;
 }
+
 .tag-tech {
   background: #29b6f6;
 }
+
 .tag-arts {
   background: #66bb6a;
 }
+
 .tag-gala {
   background: #ffa726;
 }
+
 .tag-workshop {
   background: #26c6da;
 }
+
 .tag-sports {
   background: #ef5350;
 }
@@ -437,98 +442,19 @@ body {
   background: #f5f5f5;
 }
 
-.cta-section {
-  background: linear-gradient(135deg, #c8d2e8, #e2e8f5);
-  padding: 0;
-  margin: 0 24px 48px;
-  max-width: 912px;
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 16px;
-  overflow: hidden;
+/* Venues section — same layout as events-section, just top border separator */
+.venues-section {
+  border-top: 1px solid var(--border);
+  padding-top: 48px;
 }
 
-.cta-inner {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
+/* Default card-tag colour for venues (no category-specific colour needed) */
+.card-tag {
+  background: #475569;
 }
 
-.cta-heading {
-  font-family: var(--font-sans);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--text-primary);
-  line-height: 1.15;
-  margin-bottom: 12px;
-}
 
-.cta-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin-bottom: 24px;
-}
 
-.cta-form {
-  display: flex;
-  gap: 8px;
-  max-width: 380px;
-}
-
-.cta-input {
-  flex: 1;
-  border: 1.5px solid #c5cfe8;
-  border-radius: 6px;
-  padding: 9px 14px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--text-primary);
-  background: #fff;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.cta-input::placeholder {
-  color: #aaa;
-}
-.cta-input:focus {
-  border-color: var(--accent-blue);
-}
-
-.btn-subscribe {
-  background: var(--accent-dark);
-  color: #fff;
-  border: none;
-  padding: 9px 20px;
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-
-.btn-subscribe:hover {
-  background: #2d2d40;
-}
-
-.cta-ticket-icon {
-  flex-shrink: 0;
-  width: 140px;
-  opacity: 0.7;
-}
-
-.cta-ticket-icon svg {
-  width: 100%;
-  height: auto;
-}
 
 .footer {
   max-width: 1500px;
@@ -568,19 +494,24 @@ body {
     flex-direction: column;
     padding: 32px 16px 32px;
   }
+
   .hero-image-wrap {
     width: 100%;
   }
+
   .hero-heading {
     font-size: 34px;
   }
+
   .events-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .cta-inner {
     flex-direction: column;
     padding: 36px 28px;
   }
+
   .cta-ticket-icon {
     display: none;
   }
@@ -593,6 +524,7 @@ body {
     gap: 20px;
   }
 }
+
 .floating-card {
   position: absolute;
   bottom: -25px;
@@ -611,6 +543,7 @@ body {
   transform: rotate(-6deg);
   z-index: 2;
 }
+
 .event-card {
   border-radius: var(--card-radius);
   overflow: hidden;
