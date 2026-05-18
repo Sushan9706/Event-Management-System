@@ -14,7 +14,8 @@
 <body>
   <header class="navbar">
     <div class="nav-inner">
-      <a href="/" class="logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+      <a href="/" class="logo"
+        style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
       <nav class="nav-links">
         <a href="/catalog" class="nav-link">Events</a>
         <a href="/venue" class="nav-link">Venues</a>
@@ -169,23 +170,30 @@
       </div>
 
       <div class="events-grid">
-        <% if (typeof venues !== 'undefined' && venues && venues.length > 0) { %>
-          <% venues.forEach(venue => { %>
-            <div class="event-card" onclick="window.location.href='/venue/<%= venue._id %>'" style="cursor:pointer; width:100%;">
+        <% if (typeof venues !=='undefined' && venues && venues.length> 0) { %>
+          <% venues.forEach(venue=> { %>
+            <div class="event-card" onclick="window.location.href='/venue/<%= venue._id %>'"
+              style="cursor:pointer; width:100%;">
               <div class="card-img-wrap">
                 <img src="<%= venue.imagePath || '/images/default-venue.png' %>" alt="<%= venue.name %>" />
-                <span class="card-tag"><%= venue.category %></span>
+                <span class="card-tag">
+                  <%= venue.category %>
+                </span>
               </div>
               <div class="card-body">
-                <p class="card-date"><%= venue.location %></p>
-                <h3 class="card-title"><%= venue.name %></h3>
+                <p class="card-date">
+                  <%= venue.location %>
+                </p>
+                <h3 class="card-title">
+                  <%= venue.name %>
+                </h3>
                 <p class="card-location">Capacity: <%= venue.capacity %> guests</p>
               </div>
             </div>
-          <% }); %>
-        <% } else { %>
-          <p style="color:#999; font-size:14px;">No venues available at the moment.</p>
-        <% } %>
+            <% }); %>
+              <% } else { %>
+                <p style="color:#999; font-size:14px;">No venues available at the moment.</p>
+                <% } %>
       </div>
 
       <div class="browse-wrap">

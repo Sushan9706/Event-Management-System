@@ -369,18 +369,23 @@ body {
 .tag-festival {
   background: #e040fb;
 }
+
 .tag-tech {
   background: #29b6f6;
 }
+
 .tag-arts {
   background: #66bb6a;
 }
+
 .tag-gala {
   background: #ffa726;
 }
+
 .tag-workshop {
   background: #26c6da;
 }
+
 .tag-sports {
   background: #ef5350;
 }
@@ -489,19 +494,24 @@ body {
     flex-direction: column;
     padding: 32px 16px 32px;
   }
+
   .hero-image-wrap {
     width: 100%;
   }
+
   .hero-heading {
     font-size: 34px;
   }
+
   .events-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .cta-inner {
     flex-direction: column;
     padding: 36px 28px;
   }
+
   .cta-ticket-icon {
     display: none;
   }
@@ -514,6 +524,7 @@ body {
     gap: 20px;
   }
 }
+
 .floating-card {
   position: absolute;
   bottom: -25px;
@@ -532,6 +543,7 @@ body {
   transform: rotate(-6deg);
   z-index: 2;
 }
+
 .event-card {
   border-radius: var(--card-radius);
   overflow: hidden;
