@@ -150,7 +150,7 @@
                 <div class="td"><span class="pill pill--ok" <%= (booking.status === 'cancelled') ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status === 'expired') ? 'style="background: #f0f0f0; color: #666;"' : '') %>><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
                 <div class="td"><%= new Date(booking.date).toLocaleDateString() %></div>
                 <div class="td">
-                   <% const actionHref = booking.type === 'event' ? '/bookings/manage/' + booking.targetId : '/venue/' + booking.targetId; %>
+                   <% const actionHref = '/bookings/manage/' + booking.targetId; %>
                    <a href="<%= actionHref %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                    </a>
@@ -186,7 +186,7 @@
             data.bookings.forEach(b => {
               const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
               const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
-              const actionHref = b.type === 'event' ? `/bookings/manage/${b.targetId}` : `/venue/${b.targetId}`;
+              const actionHref = `/bookings/manage/${b.targetId}`;
               const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                                   </a>`;
