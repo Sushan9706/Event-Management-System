@@ -25,11 +25,11 @@ body {
 }
 
 .logo {
-    font-weight: 800;
-    font-size: 1.5rem;
-    letter-spacing: -1px;
-    text-decoration: none;
-    color: inherit;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    letter-spacing: normal !important;
+    text-decoration: none !important;
+    color: inherit !important;
 }
 
 .navbar nav a {

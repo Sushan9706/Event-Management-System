@@ -28,10 +28,10 @@ body {
 }
 
 .logo {
-    font-weight: 800;
-    font-size: 1.1rem;
-    letter-spacing: 1px;
-    color: #1a1a1a;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    letter-spacing: normal !important;
+    color: #1a1a1a !important;
 }
 
 .nav-links {

@@ -76,10 +76,11 @@
 }
 
 .nav-logo {
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: var(--dark);
-  text-decoration: none;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  color: var(--dark) !important;
+  text-decoration: none !important;
+  letter-spacing: normal !important;
   flex: 1;
 }
 

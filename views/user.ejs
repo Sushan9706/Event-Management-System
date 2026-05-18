@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EMS – User Dashboard</title>
-  <link rel="stylesheet" href="/css/user.css" />
-  <link rel="stylesheet" href="/css/common-nav.css" />
+  <link rel="stylesheet" href="/css/user.css?v=3" />
+  <link rel="stylesheet" href="/css/common-nav.css?v=3" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
@@ -15,7 +15,7 @@
 <body>
   <header class="navbar">
     <div class="nav-inner">
-      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important;">EMS</a>
       
       <nav class="nav-center">
         <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
