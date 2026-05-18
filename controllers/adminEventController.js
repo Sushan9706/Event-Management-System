@@ -3,6 +3,7 @@ const Category = require('../models/categoryModel');
 const Booking = require('../models/bookingModel');
 const VenueBooking = require('../models/venueBookingModel');
 const User = require('../models/user');
+const Contact = require('../models/contactModel');
 const path = require('path');
 const fs = require('fs');
 
@@ -456,5 +457,59 @@ exports.getNotifications = async (req, res) => {
     } catch (err) {
         console.error('Error fetching notifications:', err);
         res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+};
+
+// ─── CONTACT MESSAGES ─────────────────────────────────────────
+exports.getMessages = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const statusFilter = req.query.status || 'all';
+
+        const query = {};
+        if (statusFilter !== 'all') query.status = statusFilter;
+
+        const totalItems = await Contact.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const messages = await Contact.find(query)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.render('admin/messages', {
+            messages,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems
+            },
+            filters: {
+                status: statusFilter
+            }
+        });
+    } catch (err) {
+        console.error('Error loading admin messages:', err);
+        req.flash('error', 'Failed to load messages');
+        res.redirect('/admin/dashboard');
+    }
+};
+
+exports.resolveMessage = async (req, res) => {
+    try {
+        const message = await Contact.findById(req.params.id);
+        if (!message) {
+            req.flash('error', 'Message not found');
+            return res.redirect('/admin/messages');
+        }
+        message.status = message.status === 'pending' ? 'resolved' : 'pending';
+        await message.save();
+        req.flash('success', `Message status updated to ${message.status}`);
+        res.redirect('/admin/messages');
+    } catch (err) {
+        console.error('Error resolving message:', err);
+        req.flash('error', 'Failed to update message');
+        res.redirect('/admin/messages');
     }
 };

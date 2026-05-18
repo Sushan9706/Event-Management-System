@@ -52,4 +52,8 @@ router.post('/venues/delete/:id', adminVenueController.deleteVenue);
 router.get('/venues/:id/bookings', adminVenueController.getVenueBookings);
 router.get('/venues/export-csv/:id', adminVenueController.exportVenueBookingsCsv);
 
+// ─── CONTACT MESSAGES ─────────────────────────────────────────
+router.get('/messages', adminEventController.getMessages);
+router.post('/messages/resolve/:id', adminEventController.resolveMessage);
+
 module.exports = router;

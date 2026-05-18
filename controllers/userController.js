@@ -245,6 +245,12 @@ exports.getUserDashboard = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(3);
   
+      const Venue = require("../models/venueModel");
+      const latestVenues = await Venue
+        .find({ status: "available" })
+        .sort({ createdAt: -1 })
+        .limit(3);
+  
       console.log("latestEvents found:", latestEvents.length, latestEvents.map(e => e.eventName));
   
       const notifications = Array.isArray(user.notifications) ? user.notifications : [];
@@ -256,6 +262,7 @@ exports.getUserDashboard = async (req, res) => {
         totalBookings,
         upcomingEvents,
         latestEvents,
+        latestVenues,
         notifications,
       });
     } catch (err) {
@@ -993,8 +1000,8 @@ exports.updateProfileInfo = async (req, res) => {
 
     // 1. Handle Image logic
     if (removeProfileImage === "true") {
-      // Set back to your DB default or an empty string
-      updateData.profileImage = "https://tinyurl.com/3jjyxzj6";
+      // Set back to empty string to fallback to default initials avatar
+      updateData.profileImage = "";
     } else if (req.file) {
       // req.file is populated by upload.single('avatar')
       updateData.profileImage = `/images/uploads/${req.file.filename}`;

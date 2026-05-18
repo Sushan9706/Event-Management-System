@@ -5,6 +5,7 @@ const { isLoggedIn, isAdmin, redirectIfLoggedIn } = require('../middlewares/auth
 const upload = require('../middlewares/upload');
 const bookingController = require('../controllers/bookingController');
 const eventModel = require('../models/event');
+const contactModel = require('../models/contactModel');
 const mongoose = require('mongoose');
 
 // --- PUBLIC / GUEST ROUTES ---
@@ -101,10 +102,18 @@ router.get("/contact", (req, res) => {
     res.render("contact");
 });
 
-router.post("/contact", (req, res) => {
-    // Basic form handling: in a real app, this would send an email or save to DB.
-    // For now, we'll just show a success flash message and redirect back to the form.
-    req.flash("success", "Thank you for your message. We will get back to you shortly.");
+router.post("/contact", async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        if (!name || !email || !subject || !message) {
+            req.flash("error", "All fields are required.");
+            return res.redirect("/contact");
+        }
+        await contactModel.create({ name, email, subject, message });
+        req.flash("success", "Thank you for your message. We will get back to you shortly.");
+    } catch (err) {
+        req.flash("error", "Something went wrong. Please try again.");
+    }
     res.redirect("/contact");
 });
 

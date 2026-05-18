@@ -225,6 +225,7 @@ body {
     background: rgba(0, 0, 0, 0.1);
     z-index: 1050;
 }
+
 .sidebar-overlay.open {
     display: block;
 }
@@ -313,7 +314,7 @@ body {
 .hero-overlay {
     width: 100%;
     height: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 100%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.3) 100%);
     display: flex;
     align-items: flex-end;
     padding: 40px 60px;
@@ -328,7 +329,7 @@ body {
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     padding: 4px 10px;
     border-radius: 3px;
     display: inline-block;
@@ -426,8 +427,14 @@ body {
     border-radius: 50%;
 }
 
-.dot.available { background: #f9f9f9; border: 1px solid #ddd; }
-.dot.booked { background: #c0392b; }
+.dot.available {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+}
+
+.dot.booked {
+    background: #c0392b;
+}
 
 /* Booking Card Grid */
 .booking-inputs-grid {
@@ -506,7 +513,7 @@ body {
     background: #fff;
     padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     text-align: center;
     position: sticky;
     top: 100px;
@@ -715,7 +722,7 @@ body {
     padding: 15px 25px;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 12px;
