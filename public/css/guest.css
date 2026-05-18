@@ -126,7 +126,7 @@ body {
   position: relative;
   max-width: 1550px;
   margin: 0 auto;
-  padding: 80px 40px;
+  padding: 80px 40px 0px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -770,4 +770,103 @@ body {
   transition: box-shadow 0.2s, transform 0.2s;
   cursor: pointer;
   width: 100%;
+}
+
+/* Infinite Ticker / Marquee Section */
+.ticker-section {
+  width: 100%;
+  overflow: hidden;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  z-index: 10;
+}
+
+.ticker-wrapper {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  user-select: none;
+}
+
+.ticker-track {
+  display: flex;
+  white-space: nowrap;
+  width: max-content;
+  gap: 16px;
+}
+
+/* Row animations */
+.ticker-left .ticker-track {
+  animation: scrollLeft 30s linear infinite;
+}
+
+.ticker-right .ticker-track {
+  animation: scrollRight 30s linear infinite;
+}
+
+/* Beautiful Tag Badge */
+.ticker-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Row 1 Tags (Blue/Indigo) */
+.ticker-left .ticker-tag {
+  background: #ebf0ff; /* Light indigo/blue background from second screenshot */
+  color: #3b2eb5;      /* Dark blue text/icons from second screenshot */
+  border: 1px solid #d5deff; /* Soft border */
+}
+
+.ticker-left .ticker-tag:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  color: #4f46e5;
+  border-color: #4f46e5;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.15);
+}
+
+/* Row 2 Tags (Rose/Pink) */
+.ticker-right .ticker-tag {
+  background: #fff1f2; /* Light rose/pink background from second screenshot */
+  color: #9f1239;      /* Burgundy/rose text/icons from second screenshot */
+  border: 1px solid #fecdd3; /* Soft border */
+}
+
+.ticker-right .ticker-tag:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  color: #be123c;
+  border-color: #be123c;
+  box-shadow: 0 6px 14px rgba(190, 18, 60, 0.15);
+}
+
+/* Animation Keyframes */
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scrollRight {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
