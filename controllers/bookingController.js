@@ -699,36 +699,98 @@ exports.getBookingsPage = async (req, res) => {
 
 exports.getManageBooking = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.bookingId).populate('eventId');
-        if (!booking || !booking.eventId) {
-            return res.status(404).render("404", { title: "404 - Page Not Found" });
-        }
-
-        await syncBookingExpiry(booking);
-
         const user = await User.findById(req.user.userId);
-        if (!user || booking.userEmail !== user.email) {
+        if (!user) {
             return res.redirect('/bookings');
         }
 
-        const ticketCount = booking.ticketCount || 1;
-        const existingCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
-        if (existingCodes.length < ticketCount) {
-            const ref_num = booking.referenceNumber || `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-            const codes = [...existingCodes];
-            for (let i = codes.length; i < ticketCount; i += 1) {
-                const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-                codes.push(`${ref_num}-${String(i + 1).padStart(2, '0')}-${suffix}`);
+        const forceViewOnly = String(req.query.viewOnly || '').trim() === '1';
+        const groupedRequested = String(req.query.grouped || '').trim() === '1';
+        const groupedEventId = String(req.query.eventId || '').trim();
+
+        const booking = await Booking.findById(req.params.bookingId).populate('eventId');
+        if (booking && booking.eventId) {
+            await syncBookingExpiry(booking);
+
+            if (booking.userEmail !== user.email) {
+                return res.redirect('/bookings');
             }
-            booking.referenceNumber = ref_num;
-            booking.ticketCodes = codes;
-            await booking.save();
+
+            if (groupedRequested && mongoose.Types.ObjectId.isValid(groupedEventId)) {
+                let groupedBookings = await Booking.find({
+                    eventId: groupedEventId,
+                    userEmail: user.email,
+                    status: { $nin: ['cancelled', 'expired'] }
+                }).populate('eventId').sort({ createdAt: -1 });
+
+                await syncBookingsExpiry(groupedBookings);
+                groupedBookings = groupedBookings.filter((item) => {
+                    const status = String(item.status || '').toLowerCase();
+                    return status !== 'cancelled' && status !== 'expired' && item.eventId;
+                });
+
+                if (groupedBookings.length > 0) {
+                    const primary = groupedBookings[0];
+                    const primaryObj = primary.toObject ? primary.toObject() : { ...primary };
+                    const totalTickets = groupedBookings.reduce((sum, item) => sum + Math.max(item.ticketCount || 1, 1), 0);
+                    const totalAmount = groupedBookings.reduce((sum, item) => {
+                        const count = Math.max(item.ticketCount || 1, 1);
+                        const unitPrice = typeof item.unitPrice === 'number'
+                            ? item.unitPrice
+                            : (item.eventId && typeof item.eventId.ticketPrice === 'number' ? item.eventId.ticketPrice : 0);
+                        return sum + (typeof item.totalAmount === 'number' ? item.totalAmount : unitPrice * count);
+                    }, 0);
+
+                    primaryObj.ticketCount = totalTickets;
+                    primaryObj.totalAmount = totalAmount;
+                    primaryObj.isGroupedBooking = true;
+                    primaryObj.groupedEventId = groupedEventId;
+
+                    return res.render("manageBooking", {
+                        booking: primaryObj,
+                        user,
+                        publicBaseUrl: getPublicBaseUrl(req),
+                        forceViewOnly
+                    });
+                }
+            }
+
+            const ticketCount = booking.ticketCount || 1;
+            const existingCodes = Array.isArray(booking.ticketCodes) ? booking.ticketCodes : [];
+            if (existingCodes.length < ticketCount) {
+                const ref_num = booking.referenceNumber || `EMS-${Date.now().toString(36).slice(-4).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+                const codes = [...existingCodes];
+                for (let i = codes.length; i < ticketCount; i += 1) {
+                    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+                    codes.push(`${ref_num}-${String(i + 1).padStart(2, '0')}-${suffix}`);
+                }
+                booking.referenceNumber = ref_num;
+                booking.ticketCodes = codes;
+                await booking.save();
+            }
+
+            return res.render("manageBooking", {
+                booking,
+                user,
+                publicBaseUrl: getPublicBaseUrl(req),
+                forceViewOnly
+            });
         }
 
-        return res.render("manageBooking", {
-            booking,
+        const venueBooking = await VenueBooking.findById(req.params.bookingId).populate('venueId');
+        if (!venueBooking || !venueBooking.venueId) {
+            return res.status(404).render("404", { title: "404 - Page Not Found" });
+        }
+        if (String(venueBooking.userId) !== String(user._id)) {
+            return res.redirect('/bookings');
+        }
+
+        return res.render("manageVenueBooking", {
+            booking: venueBooking,
+            venue: venueBooking.venueId,
             user,
-            publicBaseUrl: getPublicBaseUrl(req)
+            publicBaseUrl: getPublicBaseUrl(req),
+            forceViewOnly
         });
     } catch (err) {
         console.error("Get Manage Booking Error:", err);
@@ -789,6 +851,54 @@ exports.getTicketDetails = async (req, res) => {
         return res.render("ticketDetails", { ticket });
     } catch (err) {
         console.error("Get Ticket Details Error:", err);
+        return res.status(500).render("404", { title: "Ticket Not Found" });
+    }
+};
+
+exports.getVenueTicketDetails = async (req, res) => {
+    try {
+        const referenceNumber = decodeURIComponent(req.params.referenceNumber || '').trim();
+        if (!referenceNumber) {
+            return res.status(404).render("404", { title: "Ticket Not Found" });
+        }
+
+        const booking = await VenueBooking.findOne({ referenceNumber }).populate('venueId').lean();
+        if (!booking || !booking.venueId) {
+            return res.status(404).render("404", { title: "Ticket Not Found" });
+        }
+
+        const venue = booking.venueId;
+        const formatDateLabel = (value) => {
+            if (!value) return "TBA";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "TBA";
+            return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+        };
+
+        const startDate = formatDateLabel(booking.startDate);
+        const endDate = formatDateLabel(booking.endDate);
+        const bookingDate = startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+        const bookingTime = `${booking.startTime || "TBA"} - ${booking.endTime || "TBA"}`;
+        const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : 0;
+        const totalDisplay = totalAmount === 0 ? "Free" : `NPR. ${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
+
+        const ticket = {
+            venueName: venue.name || "Venue",
+            status: (booking.status || "confirmed").toUpperCase(),
+            date: bookingDate,
+            time: bookingTime,
+            location: venue.location || "TBA",
+            phone: booking.phoneNumber || "-",
+            total: totalDisplay,
+            reference: booking.referenceNumber || "-",
+            bookedOn: booking.createdAt
+                ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+                : "TBA"
+        };
+
+        return res.render("venueTicketDetails", { ticket });
+    } catch (err) {
+        console.error("Get Venue Ticket Details Error:", err);
         return res.status(500).render("404", { title: "Ticket Not Found" });
     }
 };

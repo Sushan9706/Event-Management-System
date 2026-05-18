@@ -79,37 +79,63 @@
             <table class="events-table">
                 <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Event Name</th>
-                        <th>Booking Date</th>
+                        <th>User</th>
+                        <th>Date Range</th>
                         <th>Time Slot</th>
+                        <th>Total</th>
+                        <th>Payment</th>
                         <th>Status</th>
+                        <th>Reference</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (confirmedBookings.length === 0 && cancelledBookings.length === 0) { %>
+                    <% if (confirmedBookings.length === 0 && cancelledBookings.length === 0 && pendingBookings.length === 0) { %>
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 48px; color: var(--text-muted);">
+                            <td colspan="7" style="text-align: center; padding: 48px; color: var(--text-muted);">
                                 No bookings found for this venue.
                             </td>
                         </tr>
                     <% } else { %>
                         <% confirmedBookings.forEach(booking => { %>
                             <tr>
-                                <td><%= booking.userName %></td>
-                                <td><%= booking.eventName || (booking.eventId ? booking.eventId.eventName : 'N/A') %></td>
-                                <td><%= new Date(booking.createdAt).toLocaleDateString() %></td>
-                                <td><%= booking.eventId ? booking.eventId.startTime + ' - ' + booking.eventId.endTime : 'N/A' %></td>
+                                <td>
+                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
+                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
+                                </td>
+                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
+                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
+                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
+                                <td><%= booking.paymentStatus || 'N/A' %></td>
                                 <td><span class="status-pill status-confirmed">Confirmed</span></td>
+                                <td><%= booking.referenceNumber || 'N/A' %></td>
+                            </tr>
+                        <% }) %>
+                        <% pendingBookings.forEach(booking => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
+                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
+                                </td>
+                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
+                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
+                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
+                                <td><%= booking.paymentStatus || 'N/A' %></td>
+                                <td><span class="status-pill" style="background:#fff4d9;color:#a86b00;border-color:#ffe3a3;">Pending</span></td>
+                                <td><%= booking.referenceNumber || 'N/A' %></td>
                             </tr>
                         <% }) %>
                         <% cancelledBookings.forEach(booking => { %>
                             <tr style="opacity: 0.6;">
-                                <td><%= booking.userName %></td>
-                                <td><%= booking.eventName || (booking.eventId ? booking.eventId.eventName : 'N/A') %></td>
-                                <td><%= new Date(booking.createdAt).toLocaleDateString() %></td>
-                                <td><%= booking.eventId ? booking.eventId.startTime + ' - ' + booking.eventId.endTime : 'N/A' %></td>
+                                <td>
+                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
+                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
+                                </td>
+                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
+                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
+                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
+                                <td><%= booking.paymentStatus || 'N/A' %></td>
                                 <td><span class="status-pill status-cancelled">Cancelled</span></td>
+                                <td><%= booking.referenceNumber || 'N/A' %></td>
                             </tr>
                         <% }) %>
                     <% } %>
@@ -152,8 +178,9 @@
             if (notifDot) notifDot.style.display = 'block';
             if (notifList) {
                 notifList.innerHTML = notifications.map(n => {
-                    const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
-                    return `<div class="notif-item"><p class="notif-item-title">New Booking: ${n.userName}</p><p class="notif-item-sub">${eventName}</p></div>`;
+                    const bookingName = n.name || 'Booking';
+                    const bookingType = n.type === 'venue' ? 'Venue' : 'Event';
+                    return `<div class="notif-item"><p class="notif-item-title">New ${bookingType} Booking: ${n.userName}</p><p class="notif-item-sub">${bookingName}</p></div>`;
                 }).join('');
             }
         }

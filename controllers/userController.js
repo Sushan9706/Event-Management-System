@@ -212,7 +212,7 @@ exports.getUserDashboard = async (req, res) => {
         // Normalize venue bookings
         const normalizedVenueBookings = venueBookings.filter(b => b.venueId !== null).map(b => ({
             _id: b._id,
-            targetId: b.venueId._id,
+            targetId: b._id,
             type: 'venue',
             name: b.venueId.name,
             image: b.venueId.image || b.venueId.imagePath,
@@ -304,7 +304,7 @@ exports.loadMoreBookings = async (req, res) => {
     // Normalize venue bookings
     const normalizedVenueBookings = venueBookings.filter(b => b.venueId !== null).map(b => ({
         _id: b._id,
-        targetId: b.venueId._id,
+        targetId: b._id,
         type: 'venue',
         name: b.venueId.name,
         image: b.venueId.image || b.venueId.imagePath,
@@ -423,23 +423,199 @@ exports.cancelBooking = async (req, res) => {
 exports.cancelBookingById = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { cancelCount: cancelCountRaw } = req.body || {};
+    const {
+      cancelCount: cancelCountRaw,
+      grouped: groupedRaw,
+      eventId: eventIdRaw
+    } = req.body || {};
     const userId = req.user.userId;
 
     if (!mongoose.Types.ObjectId.isValid(bookingId)) {
       return res.status(400).json({ success: false, message: "Invalid booking." });
     }
 
-    const cancelCount = Math.max(1, parseInt(cancelCountRaw, 10) || 0);
+    const parsedCancelCount = parseInt(cancelCountRaw, 10);
+    if (!Number.isInteger(parsedCancelCount) || parsedCancelCount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid ticket count to cancel.",
+      });
+    }
+    const cancelCount = parsedCancelCount;
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    const grouped = groupedRaw === true || groupedRaw === "true";
+    if (grouped && mongoose.Types.ObjectId.isValid(String(eventIdRaw || ""))) {
+      const bookingModel = require("../models/bookingModel");
+      const eventId = String(eventIdRaw);
+      let eventBookings = await bookingModel.find({
+        eventId,
+        userEmail: user.email,
+        status: { $nin: ["cancelled", "expired"] },
+      }).populate("eventId", "startDate");
+
+      await syncBookingsExpiry(eventBookings);
+
+      const cancellableBookings = eventBookings
+        .filter((b) => {
+          const status = String(b.status || "").toLowerCase();
+          return status !== "cancelled" && status !== "expired";
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (cancellableBookings.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No active tickets available to cancel for this event.",
+        });
+      }
+
+      const totalBooked = cancellableBookings.reduce((sum, b) => sum + Math.max(b.ticketCount || 1, 1), 0);
+      const normalizedCancel = Math.min(cancelCount, totalBooked);
+      let remainingToCancel = normalizedCancel;
+
+      for (const booking of cancellableBookings) {
+        if (remainingToCancel <= 0) break;
+
+        const currentCount = Math.max(booking.ticketCount || 1, 1);
+        const cancelFromThisBooking = Math.min(remainingToCancel, currentCount);
+        remainingToCancel -= cancelFromThisBooking;
+
+        let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
+        let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
+        const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+        if (ticketCodes.length < currentCount) {
+          for (let i = ticketCodes.length; i < currentCount; i += 1) {
+            const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+            ticketCodes.push(`${referenceNumber}-${String(i + 1).padStart(2, "0")}-${suffix}`);
+          }
+          booking.referenceNumber = referenceNumber;
+          booking.bookingRef = booking.bookingRef || referenceNumber;
+        }
+
+        if (cancelFromThisBooking >= currentCount) {
+          booking.status = "cancelled";
+        } else {
+          const keepCount = currentCount - cancelFromThisBooking;
+          const cancelledCodes = ticketCodes.slice(keepCount, keepCount + cancelFromThisBooking);
+          const cancelledNames = attendeeNames.slice(keepCount, keepCount + cancelFromThisBooking);
+
+          booking.ticketCount = keepCount;
+          booking.totalAmount = (booking.unitPrice || 0) * keepCount;
+          booking.ticketCodes = ticketCodes.slice(0, keepCount);
+          booking.attendeeNames = attendeeNames.slice(0, keepCount);
+
+          const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+          try {
+            await bookingModel.create({
+              eventId: booking.eventId,
+              userName: cancelledNames[0] || booking.userName,
+              userEmail: booking.userEmail,
+              attendeeEmail: booking.attendeeEmail || booking.userEmail,
+              attendeeNames: cancelledNames,
+              ticketCount: cancelFromThisBooking,
+              unitPrice: booking.unitPrice || 0,
+              totalAmount: (booking.unitPrice || 0) * cancelFromThisBooking,
+              ticketCodes: cancelledCodes,
+              referenceNumber: cancellationRef,
+              bookingRef: cancellationRef,
+              status: "cancelled",
+            });
+          } catch (err) {
+            console.error("Grouped cancel history insert failed:", err);
+          }
+        }
+
+        await booking.save();
+      }
+
+      if (!Array.isArray(user.notifications)) {
+        user.notifications = [];
+      }
+      let eventName = "Event";
+      try {
+        const eventDoc = await eventModel.findById(eventId).select("eventName title");
+        if (eventDoc) eventName = eventDoc.eventName || eventDoc.title || eventName;
+      } catch (err) {
+        console.error("Error fetching event name for grouped cancellation:", err);
+      }
+      user.notifications.unshift({
+        type: "booking_cancelled",
+        eventId,
+        eventName,
+        ticketCount: normalizedCancel,
+        createdAt: new Date(),
+      });
+      if (user.notifications.length > 20) {
+        user.notifications = user.notifications.slice(0, 20);
+      }
+
+      const remainingActive = await bookingModel.countDocuments({
+        eventId,
+        userEmail: user.email,
+        status: { $nin: ["cancelled", "expired"] },
+      });
+      if (remainingActive === 0) {
+        user.bookedEvents = user.bookedEvents.filter((id) => id.toString() !== eventId);
+      }
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: normalizedCancel >= totalBooked ? "Booking cancelled successfully" : "Tickets cancelled successfully",
+        status: normalizedCancel >= totalBooked ? "cancelled" : "confirmed",
+        remainingTickets: Math.max(totalBooked - normalizedCancel, 0),
+      });
+    }
+
     const bookingModel = require("../models/bookingModel");
+    const VenueBooking = require("../models/venueBookingModel");
     const booking = await bookingModel.findById(bookingId).populate("eventId", "startDate");
+
     if (!booking) {
-      return res.status(404).json({ success: false, message: "Booking not found" });
+      const venueBooking = await VenueBooking.findById(bookingId).populate("venueId", "name");
+      if (!venueBooking) {
+        return res.status(404).json({ success: false, message: "Booking not found" });
+      }
+      if (String(venueBooking.userId) !== String(user._id)) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to cancel this booking",
+        });
+      }
+      if (venueBooking.status === "cancelled") {
+        return res.status(400).json({ success: false, message: "Booking is already cancelled" });
+      }
+
+      venueBooking.status = "cancelled";
+      venueBooking.paymentStatus = "unpaid";
+      await venueBooking.save();
+
+      if (!Array.isArray(user.notifications)) {
+        user.notifications = [];
+      }
+      user.notifications.unshift({
+        type: "booking_cancelled",
+        eventId: venueBooking.venueId ? venueBooking.venueId._id : null,
+        eventName: venueBooking.venueId ? venueBooking.venueId.name : "Venue Booking",
+        ticketCount: 1,
+        createdAt: new Date(),
+      });
+      if (user.notifications.length > 20) {
+        user.notifications = user.notifications.slice(0, 20);
+      }
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Venue booking cancelled successfully",
+        status: "cancelled",
+        remainingTickets: 0,
+      });
     }
 
     await syncBookingExpiry(booking);

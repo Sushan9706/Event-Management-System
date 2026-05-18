@@ -12,6 +12,7 @@ router.get('/', redirectIfLoggedIn, (req, res) => {
     res.redirect('/guest');
 });
 router.get("/guest", redirectIfLoggedIn, userController.getGuestDashboard);
+router.get("/venue-tickets/:referenceNumber", bookingController.getVenueTicketDetails);
 router.get("/event", async (req, res) => {
     try {
         let event = null;
