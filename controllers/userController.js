@@ -578,19 +578,22 @@ exports.cancelBookingById = async (req, res) => {
 exports.getGuestDashboard = async (req, res) => {
     try {
         const { hasEventEnded } = require("../utils/bookingStatus");
+        const Venue = require("../models/venueModel");
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Fetch events where endDate is today or in the future
+        // Fetch upcoming events
         let events = await eventModel.find({ 
             endDate: { $gte: today },
             status: { $ne: 'cancelled' }
         }).populate('categoryId').lean();
 
-        // Filter out events that have precisely ended (date + time)
         events = events.filter(event => !hasEventEnded(event));
 
-        res.render("index", { events: events, user: null });
+        // Fetch active venues
+        const venues = await Venue.find({ status: 'available' }).lean();
+
+        res.render("index", { events, venues, user: null });
     } catch (err) {
         console.error("Error loading guest dashboard:", err);
         res.status(500).send("Error loading dashboard");

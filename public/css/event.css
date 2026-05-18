@@ -863,11 +863,12 @@ body {
   margin-top: auto;
 }
 
-.footer p {
-  font-size: 10.5px;
+.footer-copy, .footer p {
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
   color: #bbb;
+  text-transform: uppercase;
 }
 
 .footer-links {
@@ -877,13 +878,14 @@ body {
 
 .footer-links a {
   text-decoration: none;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   color: #bbb;
   transition: color 0.2s;
+  text-transform: uppercase;
 }
 
 .footer-links a:hover {
-  color: var(--navy);
+  color: #333;
 }

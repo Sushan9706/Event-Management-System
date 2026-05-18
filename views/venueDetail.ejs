@@ -17,7 +17,7 @@
     </div>
 
     <header class="navbar">
-      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: inherit;">EMS</a>
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
       <nav class="nav-center">
         <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
         <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
@@ -396,11 +396,11 @@
     <% } %>
 
     <footer class="footer">
-        <div class="footer-left">COPYRIGHT &copy; 2026 EMS. ALL RIGHTS RESERVED.</div>
-        <div class="footer-right">
-            <a href="#">TERMS</a>
-            <a href="#">PRIVACY</a>
-            <a href="#">SUPPORT</a>
+        <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+        <div class="footer-links">
+            <a href="/privacy">PRIVACY POLICY</a>
+            <a href="/terms">TERMS OF SERVICE</a>
+            <a href="/contact">CONTACT</a>
         </div>
     </footer>
 

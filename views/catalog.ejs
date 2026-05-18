@@ -16,7 +16,7 @@
 <body>
   <header class="navbar">
     <div class="nav-inner">
-      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: inherit;">EMS</a>
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
       <nav class="nav-center">
         <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
         <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
@@ -124,16 +124,6 @@
             <button class="filter-tag" data-filter="food and drink">Food</button>
             <button class="filter-tag" data-filter="networking">Networking</button>
             <button class="filter-tag" data-filter="education">Education</button>
-          </div>
-        </div>
-        <div class="filter-group location-group">
-          <label>LOCATION</label>
-          <div class="location-input-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            <input type="text" id="locationFilter" placeholder="Filter by city or venue..." />
           </div>
         </div>
       </div>
@@ -295,7 +285,7 @@
     <% } %>
 
     <footer class="footer">
-      <span class="footer-copy">COPYRIGHT 2026 EMS MANAGEMENT</span>
+      <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
       <div class="footer-links">
       <a href="/privacy">PRIVACY POLICY</a>
       <a href="/terms">TERMS OF SERVICE</a>
