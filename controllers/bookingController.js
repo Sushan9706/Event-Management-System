@@ -601,7 +601,10 @@ exports.getBookingsPage = async (req, res) => {
         }
 
         // 1. Fetch Event Bookings
-        let eventBookings = await Booking.find({ userEmail: user.email })
+        let eventBookings = await Booking.find({
+            userEmail: user.email,
+            status: { $in: ['confirmed', 'cancelled', 'expired'] }
+        })
             .populate('eventId')
             .sort({ createdAt: -1 });
 
@@ -625,7 +628,10 @@ exports.getBookingsPage = async (req, res) => {
             });
 
         // 2. Fetch Venue Bookings
-        let venueBookings = await VenueBooking.find({ userId: user._id })
+        let venueBookings = await VenueBooking.find({
+            userId: user._id,
+            status: { $in: ['confirmed', 'cancelled', 'expired'] }
+        })
             .populate('venueId')
             .sort({ createdAt: -1 });
 
