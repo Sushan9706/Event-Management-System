@@ -396,14 +396,16 @@
             notifDot.style.display = 'block';
 
             notifList.innerHTML = notifications.map(n => {
-                const eventName = n.eventId ? (n.eventId.eventName || n.eventId.title) : 'Event';
+                const bookingName = n.name || 'Booking';
+                const bookingType = n.type === 'venue' ? 'Venue' : 'Event';
+                const ticketLabel = n.countLabel || '';
                 const date = new Date(n.createdAt).toLocaleString('en-US', { 
                     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                 });
                 return `
                     <div class="notif-item">
-                        <p class="notif-item-title">New Booking: ${n.userName}</p>
-                        <p class="notif-item-sub">${eventName} · ${n.ticketCount} tickets</p>
+                        <p class="notif-item-title">New ${bookingType} Booking: ${n.userName}</p>
+                        <p class="notif-item-sub">${bookingName}${ticketLabel ? ' · ' + ticketLabel : ''}</p>
                         <p class="notif-time">${date}</p>
                     </div>
                 `;

@@ -193,7 +193,7 @@
         <% } else if (isSoldOut) { %>
           <button class="book-btn" type="button" disabled>Sold Out</button>
           <% } else { %>
-            <button class="book-btn" type="button" onclick="handleBooking()">Continue Booking</button>
+            <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
             <% } %>
               <p class="secure-note">
                 SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
@@ -410,7 +410,7 @@
 
           <p class="booking-error" id="bookingError" aria-live="polite"></p>
           <p class="booking-countdown" id="paymentTimerNote" hidden>30:00</p>
-          <button class="booking-submit" id="bookingSubmitBtn" type="button">Continue Booking</button>
+          <button class="booking-submit" id="bookingSubmitBtn" type="button">Book Now</button>
         </form>
       </div>
 
@@ -553,7 +553,7 @@
 
       if (bookingSubmitBtn) {
         bookingSubmitBtn.disabled = esewaRequestInFlight;
-        bookingSubmitBtn.textContent = requiresPayment ? "Pay with eSewa" : "Continue Booking";
+        bookingSubmitBtn.textContent = requiresPayment ? "Pay with eSewa" : "Book Now";
       }
       if (paymentTimerNote) {
         paymentTimerNote.hidden = !requiresPayment;

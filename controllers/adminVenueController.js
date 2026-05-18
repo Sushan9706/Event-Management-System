@@ -1,5 +1,6 @@
 const Venue = require('../models/venueModel');
 const Booking = require('../models/bookingModel');
+const VenueBooking = require('../models/venueBookingModel');
 const Event = require('../models/event');
 const User = require('../models/user');
 const mongoose = require('mongoose');
@@ -207,10 +208,24 @@ exports.deleteVenue = async (req, res) => {
             await event.save();
         }
 
+        // Cancel active venue bookings for this venue as the venue is no longer available.
+        await VenueBooking.updateMany(
+            {
+                venueId: targetVenue._id,
+                status: { $in: ['confirmed', 'pending'] }
+            },
+            {
+                $set: {
+                    status: 'cancelled',
+                    paymentStatus: 'unpaid'
+                }
+            }
+        );
+
         targetVenue.status = 'archived'; // Soft delete
         await targetVenue.save();
 
-        req.flash('success', 'Venue deleted and upcoming events cancelled.');
+        req.flash('success', 'Venue deleted and active bookings cancelled.');
         res.redirect('/admin/venues');
     } catch (err) {
         console.error('Error in deleteVenue:', err);
@@ -228,22 +243,19 @@ exports.getVenueBookings = async (req, res) => {
             return res.redirect('/admin/venues');
         }
 
-        // Find events at this venue
-        const events = await Event.find({ 
-            location: { $regex: venue.name, $options: 'i' }
-        });
-
-        const eventIds = events.map(e => e._id);
-        const bookings = await Booking.find({ eventId: { $in: eventIds } })
+        const bookings = await VenueBooking.find({ venueId: venue._id })
+            .populate('userId', 'username email')
             .sort({ createdAt: -1 });
 
         const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
         const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+        const pendingBookings = bookings.filter(b => b.status === 'pending');
 
         res.render('admin/venueBookings', {
             venue,
             confirmedBookings,
             cancelledBookings,
+            pendingBookings,
             totalConfirmed: confirmedBookings.length
         });
     } catch (err) {
@@ -258,21 +270,19 @@ exports.exportVenueBookingsCsv = async (req, res) => {
         const venue = await Venue.findById(req.params.id);
         if (!venue) return res.status(404).send('Venue not found');
 
-        const events = await Event.find({ 
-            location: { $regex: venue.name, $options: 'i' }
-        });
-
-        const eventIds = events.map(e => e._id);
-        const bookings = await Booking.find({ eventId: { $in: eventIds } })
-            .populate('eventId')
+        const bookings = await VenueBooking.find({ venueId: venue._id })
+            .populate('userId', 'username email')
             .sort({ createdAt: -1 });
 
-        let csv = 'Username,Event Name,Booking Date,Time Slot,Status\n';
+        let csv = 'Username,Email,Venue Name,Start Date,End Date,Time Slot,Phone,Total Amount,Payment Status,Status,Booked At,Reference\n';
         bookings.forEach(b => {
-            const eventName = b.eventName || (b.eventId ? b.eventId.eventName : 'N/A');
-            const date = new Date(b.createdAt).toLocaleDateString();
-            const timeSlot = b.eventId ? `${b.eventId.startTime} - ${b.eventId.endTime}` : 'N/A';
-            csv += `"${b.userName}","${eventName}","${date}","${timeSlot}","${b.status}"\n`;
+            const username = b.userId && b.userId.username ? b.userId.username : 'N/A';
+            const email = b.userId && b.userId.email ? b.userId.email : 'N/A';
+            const startDate = b.startDate ? new Date(b.startDate).toLocaleDateString() : 'N/A';
+            const endDate = b.endDate ? new Date(b.endDate).toLocaleDateString() : 'N/A';
+            const bookedAt = b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A';
+            const timeSlot = `${b.startTime || 'N/A'} - ${b.endTime || 'N/A'}`;
+            csv += `"${username}","${email}","${venue.name}","${startDate}","${endDate}","${timeSlot}","${b.phoneNumber || 'N/A'}","${typeof b.totalAmount === 'number' ? b.totalAmount : 'N/A'}","${b.paymentStatus || 'N/A'}","${b.status || 'N/A'}","${bookedAt}","${b.referenceNumber || 'N/A'}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');
