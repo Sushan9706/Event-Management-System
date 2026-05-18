@@ -90,8 +90,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function updateCategoryFromSearch(text) {
+    let foundCategory = "all";
+    if (text) {
+      const formattedText = text.replace(/\s+/g, '-');
+      const filterTags = Array.from(document.querySelectorAll(".filter-tag"));
+      const match = filterTags.find(t => 
+        t.dataset.filter !== "all" && 
+        t.dataset.filter.toLowerCase() === formattedText
+      );
+      if (match) {
+        foundCategory = match.dataset.filter.toLowerCase();
+      }
+    }
+
+    document.querySelectorAll(".filter-tag").forEach((t) => {
+      t.classList.remove("active");
+      if (t.dataset.filter === foundCategory) {
+        t.classList.add("active");
+      }
+    });
+    
+    currentCategory = foundCategory;
+  }
+
   heroSearch?.addEventListener("input", (e) => {
     searchText = e.target.value.trim().toLowerCase();
+    updateCategoryFromSearch(searchText);
     showAllMatching = false; // Reset "load more" state on new search
     applyFilters();
   });
@@ -154,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
   searchInput?.addEventListener("input", (e) => {
     searchText = e.target.value.trim().toLowerCase();
     if (heroSearch) heroSearch.value = e.target.value;
+    updateCategoryFromSearch(searchText);
     showAllMatching = false;
     applyFilters();
   });
