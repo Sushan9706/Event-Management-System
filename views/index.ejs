@@ -245,7 +245,7 @@
 
         <div class="events-grid">
           <% if (events && events.length> 0) { %> <% events.forEach(event=> { %>
-              <div class="event-card" onclick="window.location.href='/event/<%= event._id %>'"
+              <div class="event-card" onclick="window.location.href='/login'"
                 style="cursor:pointer; width:100%;">
                 <div class="card-img-wrap">
                   <img src="<%= event.imagePath || event.image || '/images/default-event.png' %>"
@@ -301,7 +301,7 @@
       <div class="events-grid">
         <% if (typeof venues !=='undefined' && venues && venues.length> 0) { %>
           <% venues.forEach(venue=> { %>
-            <div class="event-card" onclick="window.location.href='/venue/<%= venue._id %>'"
+            <div class="event-card" onclick="window.location.href='/login'"
               style="cursor:pointer; width:100%;">
               <div class="card-img-wrap">
                 <img src="<%= venue.imagePath || '/images/default-venue.png' %>" alt="<%= venue.name %>" />
