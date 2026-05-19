@@ -323,7 +323,7 @@ svg {
 }
 .tbl-head {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 80px;
+  grid-template-columns: 1fr 100px 100px 130px 90px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text-light);
@@ -333,7 +333,7 @@ svg {
 }
 .tbl-row {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 80px;
+  grid-template-columns: 1fr 100px 100px 130px 90px;
   align-items: center;
   padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
