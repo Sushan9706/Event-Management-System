@@ -188,7 +188,10 @@ exports.getUserDashboard = async (req, res) => {
             userEmail: user.email,
             status: 'confirmed'
         })
-        .populate('eventId')
+        .populate({
+            path: 'eventId',
+            populate: { path: 'categoryId' }
+        })
         .sort({ createdAt: -1 });
 
         // Fetch venue bookings
@@ -209,7 +212,9 @@ exports.getUserDashboard = async (req, res) => {
             location: b.eventId.location,
             date: b.eventId.date || b.eventId.startDate,
             status: b.status,
-            createdAt: b.createdAt
+            createdAt: b.createdAt,
+            price: b.totalAmount || b.eventId.ticketPrice || 0,
+            category: (b.eventId.categoryId && b.eventId.categoryId.name) || b.eventId.category || 'Event'
         }));
 
         // Normalize venue bookings
@@ -222,7 +227,9 @@ exports.getUserDashboard = async (req, res) => {
             location: b.venueId.location,
             date: b.startDate,
             status: b.status,
-            createdAt: b.createdAt
+            createdAt: b.createdAt,
+            price: b.totalAmount || b.venueId.dailyRate || b.venueId.hourlyRate || 0,
+            category: b.venueId.category || 'Venue'
         }));
 
         // Merge and sort
@@ -287,7 +294,10 @@ exports.loadMoreBookings = async (req, res) => {
         userEmail: user.email,
         status: 'confirmed'
     })
-    .populate('eventId')
+    .populate({
+        path: 'eventId',
+        populate: { path: 'categoryId' }
+    })
     .sort({ createdAt: -1 });
 
     // Fetch venue bookings
@@ -308,7 +318,9 @@ exports.loadMoreBookings = async (req, res) => {
         location: b.eventId.location,
         date: b.eventId.date || b.eventId.startDate,
         status: b.status,
-        createdAt: b.createdAt
+        createdAt: b.createdAt,
+        price: b.totalAmount || b.eventId.ticketPrice || 0,
+        category: (b.eventId.categoryId && b.eventId.categoryId.name) || b.eventId.category || 'Event'
     }));
 
     // Normalize venue bookings
@@ -321,7 +333,9 @@ exports.loadMoreBookings = async (req, res) => {
         location: b.venueId.location,
         date: b.startDate,
         status: b.status,
-        createdAt: b.createdAt
+        createdAt: b.createdAt,
+        price: b.totalAmount || b.venueId.dailyRate || b.venueId.hourlyRate || 0,
+        category: b.venueId.category || 'Venue'
     }));
 
     // Merge and sort

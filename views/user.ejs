@@ -208,7 +208,8 @@
               <span class="th">EVENT AND VENUE NAME</span>
               <span class="th">STATUS</span>
               <span class="th">DATE</span>
-              <span class="th">ACTION</span>
+              <span class="th">CATEGORY</span>
+              <span class="th">PRICE</span>
             </div>
             <% if (locals.recentBookings && recentBookings.length> 0) { %>
               <% recentBookings.forEach(booking=> { %>
@@ -235,16 +236,11 @@
                   <div class="td">
                     <%= new Date(booking.date).toLocaleDateString() %>
                   </div>
-                  <div class="td">
-                    <% const actionHref = booking.type === 'event' ? '/bookings/manage/' + booking.targetId : '/venue/' + booking.targetId; %>
-                    <a href="<%= actionHref %>" class="act-btn"
-                      style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M5 12h14"></path>
-                        <path d="m12 5 7 7-7 7"></path>
-                      </svg>
-                    </a>
+                  <div class="td" style="color: var(--text-mid); font-weight: 500;">
+                    <%= booking.category %>
+                  </div>
+                  <div class="td" style="font-weight: 600; color: var(--text-dark);">
+                    Rs. <%= booking.price %>
                   </div>
                 </div>
                 <% }) %>
@@ -262,7 +258,7 @@
         </div>
       </section>
     </main>
-
+ 
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         let skipCount = 3;
@@ -279,11 +275,7 @@
                 data.bookings.forEach(b => {
                   const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
                   const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
-                  const actionHref = b.type === 'event' ? `/bookings/manage/${b.targetId}` : `/venue/${b.targetId}`;
-                  const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                                  </a>`;
-
+ 
                   const row = document.createElement('div');
                   row.className = 'tbl-row';
                   row.innerHTML = `
@@ -297,7 +289,8 @@
                 </div>
                 <div class="td"><span class="pill pill--ok" style="${statusColor}">${(b.status || 'confirmed').toUpperCase()}</span></div>
                 <div class="td">${dateStr}</div>
-                <div class="td">${actionHtml}</div>
+                <div class="td" style="color: var(--text-mid); font-weight: 500;">${b.category || 'N/A'}</div>
+                <div class="td" style="font-weight: 600; color: var(--text-dark);">Rs. ${b.price || 0}</div>
               `;
                   tbl.appendChild(row);
                 });
