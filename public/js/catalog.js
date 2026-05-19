@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const notifDropdown = document.getElementById("notifDropdown");
   const avatarSidebar = document.getElementById("avatarSidebar");
-  const avatarBtn = document.getElementById("avatarBtn");
   const notifBtn = document.getElementById("notifBtn");
   const heroSearch = document.getElementById("heroSearch");
   const eventsGrid = document.getElementById("eventsGrid");
@@ -28,8 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let visibleCount = 0;
 
     cards.forEach((card) => {
-      const name = card.querySelector(".card-name").textContent.toLowerCase();
-      const location = card.querySelectorAll(".card-meta-row")[1].textContent.toLowerCase();
+      const nameEl = card.querySelector(".card-name");
+      const metaRows = card.querySelectorAll(".card-meta-row");
+      const locationEl = metaRows.length > 1 ? metaRows[1] : metaRows[0];
+      const name = (nameEl ? nameEl.textContent : "").toLowerCase();
+      const location = (locationEl ? locationEl.textContent : "").toLowerCase();
       const category = (card.dataset.category || "").toLowerCase().trim().replace(/\s+/g, '-');
       const eventDate = card.dataset.date;
 
@@ -196,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const card = btn.closest(".event-card");
-      const eventId = card.dataset.id;
+      const eventId = card ? card.dataset.id : "";
       if (eventId) window.location.href = `/event/${eventId}`;
     });
   });

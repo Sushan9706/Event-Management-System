@@ -3,9 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const venuesGrid = document.getElementById("venuesGrid");
     const noResults = document.getElementById("noResults");
     const filterSection = document.getElementById("filters");
-    const avatarBtn = document.getElementById('avatarBtn');
-    const avatarSidebar = document.getElementById('avatarSidebar');
-
     let currentFilter = "all";
     let searchText = "";
 
@@ -73,6 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (venueId) window.location.href = `/venue/${venueId}`;
         });
     });
+
+    applyFilters();
 
     // Voice search initialization is handled by voice-search.js
     // but we can add specific logic if needed.
