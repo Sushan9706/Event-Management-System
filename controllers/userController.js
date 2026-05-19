@@ -844,6 +844,7 @@ exports.markNotificationsRead = async (req, res) => {
     if (Array.isArray(user.notifications)) {
       user.notifications.forEach(n => {
         n.read = true;
+        n.isRead = true;
       });
       await user.save();
     }
@@ -1337,8 +1338,9 @@ exports.markNotificationsRead = async (req, res) => {
         if (user && Array.isArray(user.notifications)) {
             let modified = false;
             user.notifications.forEach(n => {
-                if (!n.isRead) {
+                if (!n.isRead || !n.read) {
                     n.isRead = true;
+                    n.read = true;
                     modified = true;
                 }
             });

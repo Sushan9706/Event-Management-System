@@ -9,6 +9,104 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
         rel="stylesheet" />
+    <style>
+        /* ── Custom Deletion Modal ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-card {
+            background: #ffffff;
+            width: 90%;
+            max-width: 440px;
+            padding: 32px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+        }
+        .modal-overlay.show .modal-card {
+            transform: scale(1) translateY(0);
+        }
+        .modal-warning-icon {
+            width: 64px;
+            height: 64px;
+            background: #fef2f2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .modal-title {
+            font-size: 24px;
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .modal-text {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .modal-event-name {
+            display: block;
+            margin-top: 8px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .btn-cancel:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .btn-confirm-delete {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 
 <body>
@@ -130,6 +228,10 @@
                     </svg>
                     BACK TO VENUES
                 </a>
+                <button type="button" class="btn-danger-outline" onclick="openDeleteModal('<%= venue._id %>', '<%= venue.name.replace(/\'/g, "\\'") %>')"
+                    style="border: none; color: #ef4444; background: #fee2e2; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    DELETE VENUE
+                </button>
             </div>
 
             <% if (locals.error && error.length> 0) { %>
@@ -300,8 +402,52 @@
 
     </script>
 
+    <!-- Deletion Modal Script & HTML -->
+    <script>
+        function openDeleteModal(venueId, venueName) {
+            const deleteModal = document.getElementById('deleteModal');
+            const deleteForm = document.getElementById('deleteForm');
+            const venueNameSpan = document.getElementById('deleteVenueName');
+            
+            if (deleteForm) deleteForm.action = `/admin/venues/delete/${venueId}`;
+            if (venueNameSpan) venueNameSpan.textContent = venueName;
+            if (deleteModal) deleteModal.classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) deleteModal.classList.remove('show');
+        }
+    </script>
+
+    <!-- ── Deletion Modal HTML ── -->
+    <div class="modal-overlay" id="deleteModal" onclick="if(event.target === this) closeDeleteModal()">
+        <div class="modal-card">
+            <div class="modal-warning-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </div>
+            <h2 class="modal-title">Delete Venue?</h2>
+            <p class="modal-text">
+                Are you sure you want to permanently remove
+                <span id="deleteVenueName" class="modal-event-name">Venue Name</span>
+                This action cannot be undone. All bookings and slots for this venue will also be removed.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn btn-cancel" onclick="closeDeleteModal()">CANCEL</button>
+                <form id="deleteForm" method="POST" style="flex: 1;">
+                    <button type="submit" class="modal-btn btn-confirm-delete">CONFIRM DELETE</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Unified Notifications System -->
     <script src="/js/admin-notif.js"></script>
 </body>
-
 </html>

@@ -94,7 +94,7 @@ body {
     color: var(--accent-indigo);
 }
 
-.nav-link.active::after {
+.nav-link::after {
     content: '';
     position: absolute;
     bottom: -8px;
@@ -103,6 +103,13 @@ body {
     height: 2px;
     background: var(--accent-indigo);
     border-radius: 2px;
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.nav-link.active::after,
+.nav-link:hover::after {
+    transform: scaleX(1);
 }
 
 /* User Dropdown */

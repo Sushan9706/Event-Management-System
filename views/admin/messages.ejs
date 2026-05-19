@@ -103,9 +103,16 @@
 
         <!-- ── Messages Table Section ── -->
         <div class="table-container">
-            <div class="table-controls">
+            <div class="table-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div class="search-mini" style="position: relative; display: flex; align-items: center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; color: var(--text-light); pointer-events: none;">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="messageSearch" placeholder="Search messages..." value="<%= filters.search || '' %>" style="padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid var(--border-soft); font-size: 13px; color: var(--text-rich); background: #fff; width: 260px; transition: all 0.2s;" />
+                </div>
                 <div class="filter-group">
-                    <select class="select-plain" id="statusFilter" onchange="location = '?status=' + this.value;">
+                    <select class="select-plain" id="statusFilter">
                         <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Statuses</option>
                         <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending</option>
                         <option value="resolved" <%= filters.status === 'resolved' ? 'selected' : '' %>>Resolved</option>
@@ -165,8 +172,8 @@
             </table>
 
             <!-- Pagination -->
-            <% if (pagination.totalPages > 1) { %>
-                <div class="pagination">
+            <div class="pagination" style="display: <%= pagination.totalPages > 1 ? 'flex' : 'none' %>;">
+                <% if (pagination.totalPages > 1) { %>
                     <a href="?status=<%= filters.status %>&page=<%= pagination.currentPage - 1 %>" class="pg-btn <%= pagination.currentPage <= 1 ? 'disabled' : '' %>">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -182,8 +189,8 @@
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </a>
-                </div>
-            <% } %>
+                <% } %>
+            </div>
         </div>
     </main>
 
@@ -198,6 +205,107 @@
                 setTimeout(() => { msg.remove(); }, 400);
             }, 2000);
         });
+
+        // Real-time search & status filter
+        const messageSearch = document.getElementById('messageSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        let searchTimeout;
+
+        function fetchMessages() {
+            const search = messageSearch.value;
+            const status = statusFilter.value;
+            fetch(`/admin/messages?search=${encodeURIComponent(search)}&status=${status}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                renderMessagesTable(data.messages, data.pagination);
+            })
+            .catch(err => console.error("Error fetching messages:", err));
+        }
+
+        messageSearch.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(fetchMessages, 300);
+        });
+
+        statusFilter.addEventListener('change', fetchMessages);
+
+        function renderMessagesTable(messages, pagination) {
+            const tbody = document.querySelector('.events-table tbody');
+            const paginationDiv = document.querySelector('.pagination');
+
+            if (messages.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px; color: var(--text-muted);">No contact messages found.</td></tr>';
+                if (paginationDiv) paginationDiv.style.display = 'none';
+                return;
+            }
+
+            tbody.innerHTML = messages.map(msg => {
+                const dateStr = new Date(msg.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const pillClass = msg.status === 'pending' ? 'live' : 'completed';
+                const actionText = msg.status === 'pending' ? 'RESOLVE' : 'RE-OPEN';
+                const actionBg = msg.status === 'pending' ? '#2563eb' : '#64748b';
+
+                return `
+                    <tr>
+                        <td>
+                            <p style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 2px;">${msg.name}</p>
+                            <p style="font-size: 12px; color: #64748b;">${msg.email}</p>
+                            <p style="font-size: 10px; color: #94a3b8; margin-top: 4px;">${dateStr}</p>
+                        </td>
+                        <td>
+                            <span style="font-weight: 500; font-size: 13px; color: #1e293b;">${msg.subject}</span>
+                        </td>
+                        <td>
+                            <p style="font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">${msg.message}</p>
+                        </td>
+                        <td>
+                            <span class="status-pill status-${pillClass}" style="text-transform: uppercase; font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 20px;">
+                                ${msg.status}
+                            </span>
+                        </td>
+                        <td>
+                            <form action="/admin/messages/resolve/${msg._id}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-view" style="font-size: 10px; padding: 6px 12px; background: ${actionBg}; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; text-transform: uppercase;">
+                                    ${actionText}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (paginationDiv) {
+                if (pagination.totalPages > 1) {
+                    paginationDiv.style.display = 'flex';
+                    let pgHtml = `
+                        <a href="?status=${statusFilter.value}&page=${pagination.currentPage - 1}" class="pg-btn ${pagination.currentPage <= 1 ? 'disabled' : ''}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </a>
+                    `;
+                    for (let i = 1; i <= pagination.totalPages; i++) {
+                        pgHtml += `
+                            <a href="?status=${statusFilter.value}&page=${i}" class="pg-btn ${i === pagination.currentPage ? 'active' : ''}">
+                                ${i}
+                            </a>
+                        `;
+                    }
+                    pgHtml += `
+                        <a href="?status=${statusFilter.value}&page=${pagination.currentPage + 1}" class="pg-btn ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    `;
+                    paginationDiv.innerHTML = pgHtml;
+                } else {
+                    paginationDiv.style.display = 'none';
+                }
+            }
+        }
     </script>
 <script src="/js/user.js"></script>
 </body>

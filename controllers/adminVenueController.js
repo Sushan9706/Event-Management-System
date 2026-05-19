@@ -47,7 +47,7 @@ exports.getManageVenues = async (req, res) => {
             totalVenues
         };
 
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
             return res.json({ venues, pagination, stats });
         }
 
@@ -236,7 +236,7 @@ exports.deleteVenue = async (req, res) => {
     }
 };
 
-// --- VIEW BOOKINGS ---
+// --- VIEW BOOKINGS WITH AJAX SEARCH & FILTER ---
 exports.getVenueBookings = async (req, res) => {
     try {
         const venue = await Venue.findById(req.params.id);
@@ -245,20 +245,70 @@ exports.getVenueBookings = async (req, res) => {
             return res.redirect('/admin/venues');
         }
 
-        const bookings = await VenueBooking.find({ venueId: venue._id })
-            .populate('userId', 'username email')
-            .sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const statusFilter = req.query.status || 'all';
+        const search = req.query.search || '';
 
-        const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
-        const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
-        const pendingBookings = bookings.filter(b => b.status === 'pending');
+        // Build query
+        const query = { venueId: venue._id };
+        if (statusFilter !== 'all') query.status = statusFilter;
+
+        // If search term is present, we must support searching username, email, phone, reference number
+        if (search) {
+            // First we need to search users matching name/email to get their IDs
+            const matchingUsers = await User.find({
+                $or: [
+                    { username: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ]
+            }).select('_id');
+            const userIds = matchingUsers.map(u => u._id);
+
+            query.$or = [
+                { userId: { $in: userIds } },
+                { referenceNumber: { $regex: search, $options: 'i' } },
+                { phoneNumber: { $regex: search, $options: 'i' } },
+                { paymentStatus: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const totalItems = await VenueBooking.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const bookings = await VenueBooking.find(query)
+            .populate('userId', 'username email')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        const confirmedBookingsCount = await VenueBooking.countDocuments({ venueId: venue._id, status: 'confirmed' });
+
+        // If AJAX request
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            return res.json({
+                bookings,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems
+                }
+            });
+        }
 
         res.render('admin/venueBookings', {
             venue,
-            confirmedBookings,
-            cancelledBookings,
-            pendingBookings,
-            totalConfirmed: confirmedBookings.length
+            bookings,
+            totalConfirmed: confirmedBookingsCount,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems
+            },
+            filters: {
+                status: statusFilter,
+                search
+            }
         });
     } catch (err) {
         console.error('Error in getVenueBookings:', err);

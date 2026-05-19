@@ -171,8 +171,18 @@
                                         <div class="velocity-fill" style="width: <%= capacityPercent %>%"></div>
                                     </div>
                                     <p class="velocity-text">
-                                        <strong>Demand Insights:</strong> Registration is currently at high velocity.
-                                        Recommended to close registration soon or increase capacity if venue permits.
+                                        <strong>Demand Insights:</strong>
+                                        <% if (capacityPercent >= 95) { %>
+                                            Registration is at critical capacity (<%= capacityPercent %>%). Event is nearly sold out. Recommended to close registrations or expand capacity.
+                                        <% } else if (capacityPercent >= 75) { %>
+                                            Strong demand! Registration is currently at high velocity (<%= capacityPercent %>%). Excellent momentum.
+                                        <% } else if (capacityPercent >= 40) { %>
+                                            Steady demand. Registration is currently at moderate velocity (<%= capacityPercent %>%). On track to meet capacity goals.
+                                        <% } else if (capacityPercent > 0) { %>
+                                            Registration velocity is currently gradual (<%= capacityPercent %>%). Steady engagement.
+                                        <% } else { %>
+                                            No registrations recorded yet. Event is open and waiting for first bookings.
+                                        <% } %>
                                     </p>
                                 </div>
 
@@ -213,16 +223,15 @@
                     <table class="bookings-table">
                         <thead>
                             <tr>
-                                <th style="width: 40%;">User</th>
-                                <th style="width: 30%;">Ref & Date</th>
+                                <th style="width: 45%;">User</th>
+                                <th style="width: 35%;">Ref & Date</th>
                                 <th style="width: 20%;">Status</th>
-                                <th style="width: 10%;"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <% if (bookings.length===0) { %>
                                 <tr>
-                                    <td colspan="4"
+                                    <td colspan="3"
                                         style="text-align: center; padding: 48px; color: var(--text-light);">No
                                         attendees registered yet.</td>
                                 </tr>
@@ -257,16 +266,6 @@
                                                 <span class="status-tag status-<%= booking.status %>">
                                                     <%= booking.status %>
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    style="border: none; background: none; color: var(--text-light); cursor: pointer;">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                                        <circle cx="12" cy="7" r="2"></circle>
-                                                        <circle cx="12" cy="12" r="2"></circle>
-                                                        <circle cx="12" cy="17" r="2"></circle>
-                                                    </svg>
-                                                </button>
                                             </td>
                                         </tr>
                                         <% }) %>
@@ -336,15 +335,6 @@
                     </td>
                     <td>
                         <span class="status-tag status-${b.status}">${b.status}</span>
-                    </td>
-                    <td>
-                        <button style="border: none; background: none; color: var(--text-light); cursor: pointer;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="12" cy="7" r="2"></circle>
-                                <circle cx="12" cy="12" r="2"></circle>
-                                <circle cx="12" cy="17" r="2"></circle>
-                            </svg>
-                        </button>
                     </td>
                 </tr>
             `).join('');

@@ -35,6 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (profileTrigger) {
         profileTrigger.addEventListener("click", (e) => {
             e.stopPropagation();
+            if (notifDropdown) {
+                notifDropdown.classList.remove("open");
+            }
             toggleSidebar(true);
         });
     }
@@ -50,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Initialize basic structure
         notifDropdown.innerHTML = `
             <div class="notif-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                <span class="notif-title" style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #64748b; text-transform: uppercase;">Notifications</span>
+                <span class="notif-title" style="padding: 0 !important; margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #64748b; text-transform: uppercase;">Notifications</span>
                 <button id="markAllReadBtn" class="mark-all-read-btn" style="background: none; border: none; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s;">Mark all as Read</button>
             </div>
             <div id="notifList" style="max-height: 320px; overflow-y: auto;">

@@ -4,12 +4,212 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Venue Bookings – <%= venue.name %>
-    </title>
-    <link rel="stylesheet" href="/css/admin-manage.css" />
+    <title>Venue Bookings – <%= venue.name %></title>
+    <link rel="stylesheet" href="/css/admin-booking.css" />
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
         rel="stylesheet" />
+    <style>
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 32px;
+            margin-top: 32px;
+            align-items: start;
+        }
+
+        .event-summary-card {
+            background: var(--white);
+            border-radius: 20px;
+            border: 1px solid var(--border-soft);
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .event-img-small {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .event-summary-body {
+            padding: 24px;
+        }
+
+        .event-category-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 100px;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .event-summary-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-rich);
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .summary-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed var(--border-soft);
+            margin-bottom: 20px;
+        }
+
+        .meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .meta-row svg {
+            color: var(--text-light);
+            flex-shrink: 0;
+        }
+
+        .velocity-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .velocity-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-light);
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .velocity-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        .velocity-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 100px;
+        }
+
+        .velocity-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Responsive table table data scrollable style */
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #f1f5f9;
+            color: var(--primary);
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .user-info p {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-rich);
+            margin: 0 0 2px;
+        }
+
+        .user-info span {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status-tag.status-confirmed {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .status-tag.status-pending {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+
+        .status-tag.status-cancelled {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .search-mini {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-mini svg {
+            position: absolute;
+            left: 12px;
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .search-mini input {
+            padding: 8px 12px 8px 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border-soft);
+            font-size: 13px;
+            color: var(--text-rich);
+            background: #fff;
+            width: 220px;
+            transition: all 0.2s;
+        }
+
+        .search-mini input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+    </style>
 </head>
 
 <body>
@@ -80,102 +280,255 @@
     </header>
 
     <main class="page-main">
-        <div class="page-header">
-            <div class="header-content">
-                <a href="/admin/venues"
-                    style="color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    BACK TO VENUES
-                </a>
-                <h1 class="page-title">Bookings for <%= venue.name %>
-                </h1>
-                <p class="page-eyebrow">
-                    <%= totalConfirmed %> Confirmed Bookings
-                </p>
-            </div>
-            <div class="header-actions">
-                <a href="/admin/venues/export-csv/<%= venue._id %>" class="btn-create">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    EXPORT CSV
-                </a>
-            </div>
+        <div style="margin-bottom: 32px;">
+            <a href="/admin/venues"
+                style="color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                BACK TO LIST
+            </a>
         </div>
 
-        <div class="table-container">
-            <table class="events-table">
-                <thead>
-                    <tr>
-                        <th style="width: 20%;">User</th>
-                        <th style="width: 20%;">Date Range</th>
-                        <th style="width: 15%;">Time Slot</th>
-                        <th style="width: 12%;">Total</th>
-                        <th style="width: 10%;">Payment</th>
-                        <th style="width: 10%;">Status</th>
-                        <th style="width: 13%;">Reference</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (confirmedBookings.length === 0 && cancelledBookings.length === 0 && pendingBookings.length === 0) { %>
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 48px; color: var(--text-muted);">
-                                No bookings found for this venue.
-                            </td>
-                        </tr>
-                    <% } else { %>
-                        <% confirmedBookings.forEach(booking => { %>
+        <div class="booking-layout">
+            <!-- ── Left Column: Summary Card ── -->
+            <aside class="event-summary-card">
+                <% if (venue.imagePath && venue.imagePath !== '/images/default-venue.png') { %>
+                    <img src="<%= venue.imagePath %>" alt="Venue Cover" class="event-img-small" />
+                <% } else { %>
+                    <div style="width:100%; height:180px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:var(--text-light);">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                <% } %>
+
+                <div class="event-summary-body">
+                    <span class="event-category-badge">
+                        <%= venue.category || 'Venue' %>
+                    </span>
+                    <h2 class="event-summary-title">
+                        <%= venue.name %>
+                    </h2>
+
+                    <div class="summary-meta">
+                        <div class="meta-row">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            <span>Capacity: <%= venue.capacity %> Persons</span>
+                        </div>
+                        <div class="meta-row">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <span>
+                                Rates: <%= venue.hourlyRate ? 'NPR. ' + venue.hourlyRate + '/hr' : '' %> <%= venue.dailyRate ? (venue.hourlyRate ? ' | ' : '') + 'NPR. ' + venue.dailyRate + '/day' : '' %>
+                            </span>
+                        </div>
+                        <div class="meta-row">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span><%= venue.location %></span>
+                        </div>
+                    </div>
+
+                    <div class="velocity-section">
+                        <div class="velocity-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                            </svg>
+                            BOOKING SUMMARY
+                        </div>
+                        <p style="font-size: 13px; font-weight: 700; margin-bottom: 4px;">
+                            <%= totalConfirmed %> Active Bookings
+                        </p>
+                        <div class="velocity-bar">
+                            <div class="velocity-fill" style="width: <%= totalConfirmed > 0 ? Math.min(100, totalConfirmed * 10) : 0 %>%"></div>
+                        </div>
+                        <p class="velocity-text">
+                            <strong>Status:</strong> <%= venue.status === 'available' ? 'Venue is active and available for bookings.' : 'Venue is currently under maintenance.' %>
+                        </p>
+                    </div>
+
+                    <a href="/admin/venues/edit/<%= venue._id %>"
+                        style="display: block; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-soft); text-align: center; text-decoration: none; color: var(--text-rich); font-size: 13px; font-weight: 700; margin-top: 24px; transition: all 0.2s;">
+                        Edit Venue Context
+                    </a>
+                </div>
+            </aside>
+
+            <!-- ── Right Column: Bookings Table ── -->
+            <section class="panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">Bookings List</h2>
+                    <div class="header-actions">
+                        <div class="search-mini">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="venueBookingSearch" placeholder="Search bookings..." value="<%= filters.search %>" />
+                        </div>
+                        <a href="/admin/venues/export-csv/<%= venue._id %>" class="btn-export">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            EXPORT CSV
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive-wrapper">
+                    <table class="bookings-table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
-                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
-                                </td>
-                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
-                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
-                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
-                                <td><%= booking.paymentStatus || 'N/A' %></td>
-                                <td><span class="status-pill status-confirmed">Confirmed</span></td>
-                                <td><%= booking.referenceNumber || 'N/A' %></td>
+                                <th style="width: 22%;">User</th>
+                                <th style="width: 20%;">Date Range</th>
+                                <th style="width: 18%;">Time Slot</th>
+                                <th style="width: 12%;">Total</th>
+                                <th style="width: 10%;">Payment</th>
+                                <th style="width: 10%;">Status</th>
+                                <th style="width: 8%;">Ref</th>
                             </tr>
-                        <% }) %>
-                        <% pendingBookings.forEach(booking => { %>
-                            <tr>
-                                <td>
-                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
-                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
-                                </td>
-                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
-                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
-                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
-                                <td><%= booking.paymentStatus || 'N/A' %></td>
-                                <td><span class="status-pill status-pending">Pending</span></td>
-                                <td><%= booking.referenceNumber || 'N/A' %></td>
-                            </tr>
-                        <% }) %>
-                        <% cancelledBookings.forEach(booking => { %>
-                            <tr>
-                                <td>
-                                    <strong><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></strong><br />
-                                    <small style="color: var(--text-muted);"><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></small>
-                                </td>
-                                <td><%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %> - <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %></td>
-                                <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
-                                <td><%= typeof booking.totalAmount === 'number' ? 'NPR. ' + booking.totalAmount.toFixed(2) : 'N/A' %></td>
-                                <td><%= booking.paymentStatus || 'N/A' %></td>
-                                <td><span class="status-pill status-cancelled">Cancelled</span></td>
-                                <td><%= booking.referenceNumber || 'N/A' %></td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            <% if (bookings.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 48px; color: var(--text-light);">
+                                        No bookings found for this venue.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% bookings.forEach(booking => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="user-avatar">
+                                                    <%= booking.userId && booking.userId.username ? booking.userId.username.charAt(0).toUpperCase() : '?' %>
+                                                </div>
+                                                <div class="user-info">
+                                                    <p><%= booking.userId && booking.userId.username ? booking.userId.username : 'N/A' %></p>
+                                                    <span><%= booking.userId && booking.userId.email ? booking.userId.email : 'N/A' %></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p style="font-weight: 500; font-size: 13px;">
+                                                <%= booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A' %>
+                                            </p>
+                                            <p style="font-size: 11px; color: var(--text-light);">
+                                                to <%= booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A' %>
+                                            </p>
+                                        </td>
+                                        <td><%= booking.startTime || 'N/A' %> - <%= booking.endTime || 'N/A' %></td>
+                                        <td><strong>NPR. <%= typeof booking.totalAmount === 'number' ? booking.totalAmount.toFixed(2) : '0.00' %></strong></td>
+                                        <td><span style="font-size: 11px; font-weight: 700; text-transform: uppercase;"><%= booking.paymentStatus || 'N/A' %></span></td>
+                                        <td><span class="status-tag status-<%= booking.status %>"><%= booking.status %></span></td>
+                                        <td><span style="font-family: monospace; font-size: 11px;"><%= booking.referenceNumber || 'N/A' %></span></td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="footer-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-top: 1px solid var(--border-soft);">
+                    <div style="font-size: 12px; color: var(--text-light);" id="totalItemsText">
+                        Showing <%= pagination.totalItems %> bookings
+                    </div>
+                    <div class="pagination-group" style="display: flex; gap: 8px;">
+                        <% for(let i=1; i <= pagination.totalPages; i++) { %>
+                            <a href="?page=<%= i %>" class="page-link <%= i === pagination.currentPage ? 'active' : '' %>" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-soft); text-decoration: none; color: var(--text-muted); font-size: 12px; font-weight: 600;">
+                                <%= i %>
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
+
+    <script>
+        // Real-time search for venue bookings
+        const venueBookingSearch = document.getElementById('venueBookingSearch');
+        let searchTimeout;
+
+        venueBookingSearch.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const search = venueBookingSearch.value;
+                const venueId = '<%= venue._id %>';
+                const response = await fetch(`/admin/venues/${venueId}/bookings?search=${search}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                renderBookingsTable(data.bookings, data.pagination);
+            }, 300);
+        });
+
+        function renderBookingsTable(bookings, pagination) {
+            const tbody = document.querySelector('.bookings-table tbody');
+            const pgGroup = document.querySelector('.pagination-group');
+            const totalText = document.getElementById('totalItemsText');
+
+            if (totalText) {
+                totalText.textContent = `Showing ${pagination.totalItems} bookings`;
+            }
+
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px; color: var(--text-light);">No bookings found.</td></tr>';
+                pgGroup.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => {
+                const username = b.userId && b.userId.username ? b.userId.username : 'N/A';
+                const email = b.userId && b.userId.email ? b.userId.email : 'N/A';
+                const start = b.startDate ? new Date(b.startDate).toLocaleDateString() : 'N/A';
+                const end = b.endDate ? new Date(b.endDate).toLocaleDateString() : 'N/A';
+                const total = typeof b.totalAmount === 'number' ? b.totalAmount.toFixed(2) : '0.00';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">${username.charAt(0).toUpperCase()}</div>
+                                <div class="user-info">
+                                    <p>${username}</p>
+                                    <span>${email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <p style="font-weight: 500; font-size: 13px;">${start}</p>
+                            <p style="font-size: 11px; color: var(--text-light);">to ${end}</p>
+                        </td>
+                        <td>${b.startTime || 'N/A'} - ${b.endTime || 'N/A'}</td>
+                        <td><strong>NPR. ${total}</strong></td>
+                        <td><span style="font-size: 11px; font-weight: 700; text-transform: uppercase;">${b.paymentStatus || 'N/A'}</span></td>
+                        <td><span class="status-tag status-${b.status}">${b.status}</span></td>
+                        <td><span style="font-family: monospace; font-size: 11px;">${b.referenceNumber || 'N/A'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            let pgHtml = '';
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                pgHtml += `<a href="?page=${i}" class="page-link ${i === pagination.currentPage ? 'active' : ''}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-soft); text-decoration: none; color: var(--text-muted); font-size: 12px; font-weight: 600;">${i}</a>`;
+            }
+            pgGroup.innerHTML = pgHtml;
+        }
+    </script>
 
     <!-- Unified Notifications System -->
     <script src="/js/admin-notif.js"></script>

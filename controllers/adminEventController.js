@@ -101,7 +101,7 @@ exports.getManageEvents = async (req, res) => {
         };
 
         // If AJAX request, return JSON
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
             return res.json({
                 events,
                 pagination: {
@@ -370,7 +370,8 @@ exports.getBookingDetails = async (req, res) => {
             query.$or = [
                 { userName: { $regex: search, $options: 'i' } },
                 { userEmail: { $regex: search, $options: 'i' } },
-                { referenceNumber: { $regex: search, $options: 'i' } }
+                { referenceNumber: { $regex: search, $options: 'i' } },
+                { attendeeNames: { $regex: search, $options: 'i' } }
             ];
         }
 
@@ -387,7 +388,7 @@ exports.getBookingDetails = async (req, res) => {
         const capacityPercent = event.maxCapacity > 0 ? Math.round((totalBookings / event.maxCapacity) * 100) : 0;
 
         // If AJAX request
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
             return res.json({
                 bookings,
                 pagination: {
@@ -502,15 +503,25 @@ exports.getNotifications = async (req, res) => {
     }
 };
 
-// ─── CONTACT MESSAGES ─────────────────────────────────────────
+// ─── CONTACT MESSAGES WITH AJAX SEARCH & FILTER ───────────────────
 exports.getMessages = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const statusFilter = req.query.status || 'all';
+        const search = req.query.search || '';
 
         const query = {};
         if (statusFilter !== 'all') query.status = statusFilter;
+
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { subject: { $regex: search, $options: 'i' } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
 
         const totalItems = await Contact.countDocuments(query);
         const totalPages = Math.ceil(totalItems / limit);
@@ -520,6 +531,18 @@ exports.getMessages = async (req, res) => {
             .skip((page - 1) * limit)
             .limit(limit);
 
+        // If AJAX request
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            return res.json({
+                messages,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems
+                }
+            });
+        }
+
         res.render('admin/messages', {
             messages,
             pagination: {
@@ -528,7 +551,8 @@ exports.getMessages = async (req, res) => {
                 totalItems
             },
             filters: {
-                status: statusFilter
+                status: statusFilter,
+                search
             }
         });
     } catch (err) {

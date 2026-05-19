@@ -102,6 +102,72 @@
         </nav>
       </div>
     </header>
+  <% } else { %>
+    <!-- ── User Navbar ── -->
+    <header class="navbar">
+      <div class="nav-inner">
+        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
+          class="nav-logo"
+          style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+
+        <nav class="nav-center">
+          <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+          <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+          <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+          <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+        </nav>
+
+        <div class="nav-right">
+          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <% if (Array.isArray(locals.notifications) && locals.notifications.some(n=> !n.isRead)) { %>
+              <span class="notif-dot"></span>
+            <% } %>
+          </button>
+          <img
+            src="<%= (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+            alt="User avatar" class="avatar-circle" id="profileTrigger" />
+        </div>
+      </div>
+    </header>
+
+    <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : [];
+       const formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
+       const formatNotifTime = (date) => {
+         if (!date) return "Just now";
+         const d = new Date(date);
+         if (Number.isNaN(d.getTime())) return "Just now";
+         return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+       };
+    %>
+    <div class="notif-dropdown" id="notifDropdown">
+      <p class="notif-title" style="padding: 0 !important; margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); margin-bottom: 12px;">NOTIFICATIONS</p>
+      <% if (notifications.length===0) { %>
+        <p class="notif-empty">No new notifications</p>
+      <% } else { %>
+        <% notifications.forEach(function(note) { 
+             const title=note.type==='booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed'; 
+             const eventTitle=note.eventName || 'Event'; 
+             const countLabel=formatTicketCount(note.ticketCount || 1); 
+             const timeLabel=formatNotifTime(note.createdAt); 
+        %>
+          <div class="notif-item">
+            <p class="notif-item-title">
+              <%= title %>
+            </p>
+            <p class="notif-item-sub">
+              <%= eventTitle %> · <%= countLabel %>
+            </p>
+            <p class="notif-time">
+              <%= timeLabel %>
+            </p>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
   <% } %>
 
   <% if (locals.user && user.role === 'admin') { %>
@@ -230,6 +296,7 @@
     </div>
   <% } %>
 
+  <% if (locals.user && user.role !== 'admin') { %>
   <footer class="footer">
     <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
     <div class="footer-links">
@@ -238,6 +305,7 @@
       <a href="/contact">CONTACT</a>
     </div>
   </footer>
+  <% } %>
 
     <div id="toast"></div>
     <div class="modal-backdrop" id="discardModal">

@@ -119,7 +119,6 @@ svg {
   height: 2px;
   background: var(--blue);
   transform: scaleX(0);
-  transform-origin: bottom right;
   transition: transform 0.3s ease-out;
 }
 
@@ -130,7 +129,6 @@ svg {
 
 .nav-link:not(.active):hover::after {
   transform: scaleX(1);
-  transform-origin: bottom left;
 }
 
 /* Active State: Persistent Underline & Bold */
