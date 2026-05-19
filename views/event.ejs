@@ -848,6 +848,12 @@
         focusAttendeeName(invalidIndex);
         return;
       }
+      const shortNameIndex = attendeeNames.findIndex((name) => name.length < 3);
+      if (shortNameIndex !== -1) {
+        bookingError.textContent = "Each attendee full name must be at least 3 characters.";
+        focusAttendeeName(shortNameIndex);
+        return;
+      }
       const uniqueNames = new Set(attendeeNames.map((name) => name.toLowerCase()));
       if (uniqueNames.size !== attendeeNames.length) {
         bookingError.textContent = "Please enter a different attendee name for each ticket.";

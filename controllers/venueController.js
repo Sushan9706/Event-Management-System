@@ -250,6 +250,7 @@ exports.bookVenue = async (req, res) => {
         });
 
         const checkouts = getVenuePaymentCheckouts(req);
+        const expiresAt = Date.now() + VENUE_CHECKOUT_TTL_MS;
         checkouts[transactionUuid] = {
             transactionUuid,
             venueBookingId: newBooking._id.toString(),
@@ -258,7 +259,7 @@ exports.bookVenue = async (req, res) => {
             totalAmount,
             productCode: ESEWA_PRODUCT_CODE,
             createdAt: Date.now(),
-            expiresAt: Date.now() + VENUE_CHECKOUT_TTL_MS
+            expiresAt
         };
         req.session.venuePaymentCheckouts = checkouts;
 
@@ -274,7 +275,9 @@ exports.bookVenue = async (req, res) => {
             paymentProvider: 'esewa',
             payment_url: ESEWA_FORM_URL,
             form_fields: esewaPayload,
-            transaction_uuid: transactionUuid
+            transaction_uuid: transactionUuid,
+            expires_at: new Date(expiresAt).toISOString(),
+            expires_in: Math.max(Math.ceil((expiresAt - Date.now()) / 1000), 1)
         }));
     } catch (err) {
         console.error("Booking error:", err);

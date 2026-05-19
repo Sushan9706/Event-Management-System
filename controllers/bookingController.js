@@ -234,6 +234,9 @@ const prepareBookingCheckout = async ({ userId, eventId, email, ticketCountRaw, 
     if (attendeeNames.length !== ticketCount || attendeeNames.some(name => !name)) {
         throw createHttpError(400, `Please enter attendee full name for all ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.`);
     }
+    if (attendeeNames.some(name => name.length < 3)) {
+        throw createHttpError(400, 'Each attendee full name must be at least 3 characters.');
+    }
     if (attendeeNames.some(name => !attendeeNamePattern.test(name))) {
         throw createHttpError(400, 'Attendee names can contain letters and single spaces only.');
     }
@@ -747,10 +750,35 @@ exports.getManageBooking = async (req, res) => {
                         return sum + (typeof item.totalAmount === 'number' ? item.totalAmount : unitPrice * count);
                     }, 0);
 
+                    const mergedTicketCodes = [];
+                    const mergedAttendeeNames = [];
+                    for (const item of groupedBookings) {
+                        const currentCount = Math.max(item.ticketCount || 1, 1);
+                        let itemCodes = Array.isArray(item.ticketCodes) ? [...item.ticketCodes] : [];
+                        const itemNamesRaw = Array.isArray(item.attendeeNames) ? item.attendeeNames : [];
+                        const itemNames = Array.from(
+                            { length: currentCount },
+                            (_, idx) => normalizeAttendeeName(String(itemNamesRaw[idx] || (idx === 0 ? (item.userName || '') : '')))
+                        );
+                        if (itemCodes.length < currentCount) {
+                            const refNum = item.referenceNumber || createRef();
+                            const startIndex = itemCodes.length + 1;
+                            itemCodes = [...itemCodes, ...buildTicketCodes(refNum, startIndex, currentCount - itemCodes.length)];
+                            item.referenceNumber = item.referenceNumber || refNum;
+                            item.bookingRef = item.bookingRef || refNum;
+                            item.ticketCodes = itemCodes;
+                            await item.save();
+                        }
+                        mergedTicketCodes.push(...itemCodes.slice(0, currentCount));
+                        mergedAttendeeNames.push(...itemNames.slice(0, currentCount));
+                    }
+
                     primaryObj.ticketCount = totalTickets;
                     primaryObj.totalAmount = totalAmount;
                     primaryObj.isGroupedBooking = true;
                     primaryObj.groupedEventId = groupedEventId;
+                    primaryObj.ticketCodes = mergedTicketCodes;
+                    primaryObj.attendeeNames = mergedAttendeeNames;
 
                     return res.render("manageBooking", {
                         booking: primaryObj,
@@ -842,7 +870,7 @@ exports.getTicketDetails = async (req, res) => {
             eventName: pickEventName(event, booking.eventName),
             status: (booking.status || "confirmed").toUpperCase(),
             ticketPosition: `${ticketIndex + 1} of ${ticketCount}`,
-            attendeeName: attendeeNames[ticketIndex] || "-",
+            attendeeName: attendeeNames[ticketIndex] || booking.userName || "-",
             attendeeEmail: booking.attendeeEmail || booking.userEmail || "-",
             date: eventDate,
             time: eventTime,

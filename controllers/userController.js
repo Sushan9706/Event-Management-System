@@ -425,6 +425,7 @@ exports.cancelBookingById = async (req, res) => {
     const { bookingId } = req.params;
     const {
       cancelCount: cancelCountRaw,
+      selectedTicketCodes: selectedTicketCodesRaw,
       grouped: groupedRaw,
       eventId: eventIdRaw
     } = req.body || {};
@@ -442,6 +443,9 @@ exports.cancelBookingById = async (req, res) => {
       });
     }
     const cancelCount = parsedCancelCount;
+    const selectedTicketCodes = Array.isArray(selectedTicketCodesRaw)
+      ? [...new Set(selectedTicketCodesRaw.map((code) => String(code || "").trim()).filter(Boolean))]
+      : [];
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -475,15 +479,27 @@ exports.cancelBookingById = async (req, res) => {
 
       const totalBooked = cancellableBookings.reduce((sum, b) => sum + Math.max(b.ticketCount || 1, 1), 0);
       const normalizedCancel = Math.min(cancelCount, totalBooked);
-      let remainingToCancel = normalizedCancel;
+      if (normalizedCancel < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Please enter a valid ticket count to cancel.",
+        });
+      }
+      if (selectedTicketCodes.length > totalBooked) {
+        return res.status(400).json({ success: false, message: "Selected tickets are invalid." });
+      }
+      if (selectedTicketCodes.length !== normalizedCancel) {
+        return res.status(400).json({
+          success: false,
+          message: "Please select attendee names for exactly the number of tickets you want to cancel.",
+        });
+      }
 
+      const selectedSet = new Set(selectedTicketCodes);
+      const preparedBookings = [];
+      const availableTicketCodeSet = new Set();
       for (const booking of cancellableBookings) {
-        if (remainingToCancel <= 0) break;
-
         const currentCount = Math.max(booking.ticketCount || 1, 1);
-        const cancelFromThisBooking = Math.min(remainingToCancel, currentCount);
-        remainingToCancel -= cancelFromThisBooking;
-
         let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
         let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
         const referenceNumber = booking.referenceNumber || `EMS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -496,18 +512,41 @@ exports.cancelBookingById = async (req, res) => {
           booking.referenceNumber = referenceNumber;
           booking.bookingRef = booking.bookingRef || referenceNumber;
         }
+        if (attendeeNames.length < currentCount) {
+          attendeeNames = Array.from({ length: currentCount }, (_, idx) => attendeeNames[idx] || (idx === 0 ? booking.userName : ""));
+        }
+        ticketCodes.slice(0, currentCount).forEach((code) => availableTicketCodeSet.add(code));
+        preparedBookings.push({ booking, currentCount, ticketCodes, attendeeNames });
+      }
+      for (const selectedCode of selectedSet) {
+        if (!availableTicketCodeSet.has(selectedCode)) {
+          return res.status(400).json({ success: false, message: "Please select valid tickets from this booking." });
+        }
+      }
+      let matchedSelectedCount = 0;
+
+      for (const prepared of preparedBookings) {
+        const { booking, currentCount, ticketCodes, attendeeNames } = prepared;
+        const selectedIndexes = ticketCodes
+          .map((code, idx) => (selectedSet.has(code) ? idx : -1))
+          .filter((idx) => idx >= 0);
+        const cancelFromThisBooking = selectedIndexes.length;
+        matchedSelectedCount += cancelFromThisBooking;
+        if (!cancelFromThisBooking) continue;
 
         if (cancelFromThisBooking >= currentCount) {
           booking.status = "cancelled";
         } else {
-          const keepCount = currentCount - cancelFromThisBooking;
-          const cancelledCodes = ticketCodes.slice(keepCount, keepCount + cancelFromThisBooking);
-          const cancelledNames = attendeeNames.slice(keepCount, keepCount + cancelFromThisBooking);
+          const selectedIndexSet = new Set(selectedIndexes);
+          const cancelledCodes = ticketCodes.filter((_, idx) => selectedIndexSet.has(idx));
+          const cancelledNames = attendeeNames.filter((_, idx) => selectedIndexSet.has(idx));
+          const remainingCodes = ticketCodes.filter((_, idx) => !selectedIndexSet.has(idx));
+          const remainingNames = attendeeNames.filter((_, idx) => !selectedIndexSet.has(idx));
 
-          booking.ticketCount = keepCount;
-          booking.totalAmount = (booking.unitPrice || 0) * keepCount;
-          booking.ticketCodes = ticketCodes.slice(0, keepCount);
-          booking.attendeeNames = attendeeNames.slice(0, keepCount);
+          booking.ticketCount = currentCount - cancelFromThisBooking;
+          booking.totalAmount = (booking.unitPrice || 0) * booking.ticketCount;
+          booking.ticketCodes = remainingCodes;
+          booking.attendeeNames = remainingNames;
 
           const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
           try {
@@ -532,6 +571,9 @@ exports.cancelBookingById = async (req, res) => {
 
         await booking.save();
       }
+      if (matchedSelectedCount !== normalizedCancel) {
+        return res.status(400).json({ success: false, message: "Please select valid tickets from this booking." });
+      }
 
       if (!Array.isArray(user.notifications)) {
         user.notifications = [];
@@ -547,7 +589,7 @@ exports.cancelBookingById = async (req, res) => {
         type: "booking_cancelled",
         eventId,
         eventName,
-        ticketCount: normalizedCancel,
+        ticketCount: matchedSelectedCount,
         createdAt: new Date(),
       });
       if (user.notifications.length > 20) {
@@ -566,9 +608,9 @@ exports.cancelBookingById = async (req, res) => {
 
       return res.json({
         success: true,
-        message: normalizedCancel >= totalBooked ? "Booking cancelled successfully" : "Tickets cancelled successfully",
-        status: normalizedCancel >= totalBooked ? "cancelled" : "confirmed",
-        remainingTickets: Math.max(totalBooked - normalizedCancel, 0),
+        message: matchedSelectedCount >= totalBooked ? "Booking cancelled successfully" : "Tickets cancelled successfully",
+        status: matchedSelectedCount >= totalBooked ? "cancelled" : "confirmed",
+        remainingTickets: Math.max(totalBooked - matchedSelectedCount, 0),
       });
     }
 
@@ -638,6 +680,15 @@ exports.cancelBookingById = async (req, res) => {
 
     const currentCount = Math.max(booking.ticketCount || 1, 1);
     const normalizedCancel = Math.min(cancelCount, currentCount);
+    if (selectedTicketCodes.length > currentCount) {
+      return res.status(400).json({ success: false, message: "Selected tickets are invalid." });
+    }
+    if (selectedTicketCodes.length !== normalizedCancel) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select attendee names for exactly the number of tickets you want to cancel.",
+      });
+    }
 
     let ticketCodes = Array.isArray(booking.ticketCodes) ? [...booking.ticketCodes] : [];
     let attendeeNames = Array.isArray(booking.attendeeNames) ? [...booking.attendeeNames] : [];
@@ -651,20 +702,32 @@ exports.cancelBookingById = async (req, res) => {
       booking.referenceNumber = referenceNumber;
       booking.bookingRef = booking.bookingRef || referenceNumber;
     }
+    if (attendeeNames.length < currentCount) {
+      attendeeNames = Array.from({ length: currentCount }, (_, idx) => attendeeNames[idx] || (idx === 0 ? booking.userName : ""));
+    }
+    const selectedSet = new Set(selectedTicketCodes);
+    const selectedIndexes = ticketCodes
+      .map((code, idx) => (selectedSet.has(code) ? idx : -1))
+      .filter((idx) => idx >= 0);
+    if (selectedIndexes.length !== normalizedCancel) {
+      return res.status(400).json({ success: false, message: "Please select valid tickets from this booking." });
+    }
 
     const isFullCancel = normalizedCancel >= currentCount;
 
     if (isFullCancel) {
       booking.status = "cancelled";
     } else {
-      const remainingCount = currentCount - normalizedCancel;
-      const cancelledCodes = ticketCodes.slice(remainingCount, remainingCount + normalizedCancel);
-      const cancelledNames = attendeeNames.slice(remainingCount, remainingCount + normalizedCancel);
+      const selectedIndexSet = new Set(selectedIndexes);
+      const cancelledCodes = ticketCodes.filter((_, idx) => selectedIndexSet.has(idx));
+      const cancelledNames = attendeeNames.filter((_, idx) => selectedIndexSet.has(idx));
+      const remainingCodes = ticketCodes.filter((_, idx) => !selectedIndexSet.has(idx));
+      const remainingNames = attendeeNames.filter((_, idx) => !selectedIndexSet.has(idx));
       
-      booking.ticketCount = remainingCount;
-      booking.totalAmount = (booking.unitPrice || 0) * remainingCount;
-      booking.ticketCodes = ticketCodes.slice(0, remainingCount);
-      booking.attendeeNames = attendeeNames.slice(0, remainingCount);
+      booking.ticketCount = currentCount - normalizedCancel;
+      booking.totalAmount = (booking.unitPrice || 0) * booking.ticketCount;
+      booking.ticketCodes = remainingCodes;
+      booking.attendeeNames = remainingNames;
 
       // Create a separate cancelled-history record
       const cancellationRef = `EMS-CAN-${Date.now().toString(36).slice(-6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;

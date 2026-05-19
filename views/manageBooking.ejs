@@ -59,8 +59,13 @@
       const ticketCodesDisplay = ticketList.length ? ticketList.join(", ") : "TBA";
       const ticketIdLabel = ticketList.length > 1 ? "Ticket IDs" : "Ticket ID";
       const attendeeNames = Array.isArray(booking.attendeeNames) ? booking.attendeeNames : [];
-      const attendeeList = Array.from({ length: ticketSlots }, (_, index) => attendeeNames[index] || (index === 0 ? booking.userName : "")).filter(Boolean);
-      const attendeeNamesDisplay = attendeeList.length ? attendeeList.join(", ") : "-";
+      const attendeeList = Array.from({ length: ticketSlots }, (_, index) => attendeeNames[index] || (index === 0 ? booking.userName : ""));
+      const attendeeNamesDisplay = attendeeList.filter(Boolean).length ? attendeeList.filter(Boolean).join(", ") : "-";
+      const cancelTicketRows = ticketList.map((code, index) => ({
+        code,
+        attendeeName: attendeeList[index] || `Attendee ${index + 1}`,
+        index: index + 1
+      }));
       const unitPriceDisplay = unitPrice === 0 ? "Free" : `NPR. ${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`;
       const totalDisplay = totalAmount === 0 ? "Free" : `NPR. ${totalAmount % 1 === 0 ? totalAmount.toFixed(0) : totalAmount.toFixed(2)}`;
       const bookingDate = booking.createdAt
@@ -426,6 +431,8 @@
             />
           </div>
         </div>
+        <div id="cancelTicketSelector" style="display:none; margin-top: 10px; max-height: 170px; overflow-y: auto; border: 1px solid #e6dfd8; border-radius: 10px; padding: 10px;">
+        </div>
         <p class="cancel-warning" id="cancelWarning" style="display:none;">
           Are you sure you want to cancel these tickets? This action cannot be undone.
         </p>
@@ -481,9 +488,44 @@
       const cancelModalYes = document.getElementById('cancelModalYes');
       const cancelTicketCountInput = document.getElementById('cancelTicketCount');
       const cancelTotalTickets = document.getElementById('cancelTotalTickets');
+      const cancelTicketSelector = document.getElementById('cancelTicketSelector');
       const cancelWarning = document.getElementById('cancelWarning');
       const cancelBtn = document.getElementById('cancelBookingBtn');
+      const cancelTicketRows = <%- JSON.stringify(cancelTicketRows) %>;
       let cancelConfirmArmed = false;
+      const getSelectedTicketCodes = () => {
+        if (!cancelTicketSelector) return [];
+        return Array.from(cancelTicketSelector.querySelectorAll('input[type="checkbox"]:checked'))
+          .map((el) => String(el.value || '').trim())
+          .filter(Boolean);
+      };
+      const renderCancelTicketOptions = () => {
+        if (!cancelTicketSelector) return;
+        const cancelCount = getCancelCount() || 0;
+        if (!cancelCount) {
+          cancelTicketSelector.innerHTML = '';
+          cancelTicketSelector.style.display = 'none';
+          return;
+        }
+        cancelTicketSelector.style.display = 'block';
+        cancelTicketSelector.innerHTML = `
+          <p style="margin:0 0 8px; font-size:12px; color:#595766; font-weight:600;">Select ${cancelCount} attendee name${cancelCount > 1 ? 's' : ''} to cancel</p>
+          ${cancelTicketRows.map((row) => `
+            <label style="display:flex; align-items:center; gap:8px; margin:0 0 6px; font-size:13px; color:#242333;">
+              <input type="checkbox" value="${String(row.code || '').replace(/"/g, '&quot;')}" />
+              <span>${row.attendeeName} · ${row.code}</span>
+            </label>
+          `).join('')}
+        `;
+        const checkboxes = Array.from(cancelTicketSelector.querySelectorAll('input[type="checkbox"]'));
+        checkboxes.forEach((checkbox) => {
+          checkbox.addEventListener('change', () => {
+            const selected = checkboxes.filter((item) => item.checked);
+            if (selected.length > cancelCount) checkbox.checked = false;
+            updateCancelButtonLabel();
+          });
+        });
+      };
       const getTotalTickets = () => {
         if (cancelBtn) {
           const fromDataset = Number.parseInt(cancelBtn.dataset.count || '', 10);
@@ -526,6 +568,7 @@
               cancelTicketCountInput.setAttribute('value', '');
               cancelTicketCountInput.placeholder = '';
             }
+            renderCancelTicketOptions();
             updateCancelButtonLabel();
           }
         cancelModal.classList.add('open');
@@ -536,6 +579,10 @@
         if (!cancelModal) return;
         cancelConfirmArmed = false;
         if (cancelWarning) cancelWarning.style.display = 'none';
+        if (cancelTicketSelector) {
+          cancelTicketSelector.innerHTML = '';
+          cancelTicketSelector.style.display = 'none';
+        }
         cancelModal.classList.remove('open');
         cancelModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
@@ -560,6 +607,7 @@
           if (digitsOnly && parseInt(digitsOnly, 10) > totalTickets) {
             cancelTicketCountInput.value = String(totalTickets);
           }
+          renderCancelTicketOptions();
           updateCancelButtonLabel();
         });
       }
@@ -613,10 +661,18 @@
             cancelTicketCountInput?.focus();
             return;
           }
+          const selectedTicketCodes = getSelectedTicketCodes();
+          if (selectedTicketCodes.length !== cancelCount) {
+            if (cancelWarning) {
+              cancelWarning.textContent = `Please select exactly ${cancelCount} attendee name${cancelCount > 1 ? 's' : ''} to cancel.`;
+              cancelWarning.style.display = 'block';
+            }
+            return;
+          }
           if (!cancelConfirmArmed) {
             cancelConfirmArmed = true;
             if (cancelWarning) {
-              cancelWarning.textContent = `Are you sure you want to cancel ${cancelCount} ticket${cancelCount > 1 ? 's' : ''}? This action cannot be undone.`;
+              cancelWarning.textContent = `Are you sure you want to cancel ${cancelCount} selected ticket${cancelCount > 1 ? 's' : ''}? This action cannot be undone.`;
               cancelWarning.style.display = 'block';
             }
             cancelModalYes.textContent = 'Yes, Cancel';
@@ -629,6 +685,7 @@
               credentials: 'same-origin',
               body: JSON.stringify({
                 cancelCount,
+                selectedTicketCodes,
                 grouped: cancelBtn.dataset.grouped === 'true',
                 eventId: cancelBtn.dataset.eventId || ''
               })

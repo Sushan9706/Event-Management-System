@@ -151,6 +151,7 @@
                             </div>
                         </div>
                         <button class="book-btn" id="confirmBookingBtn">Book Now</button>
+                        <p class="booking-countdown" id="venuePaymentTimerNote" hidden>30:00</p>
                     <% } else if (!user) { %>
                         <a href="/login" class="book-btn" style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
                     <% } else { %>
@@ -177,6 +178,62 @@
                         const todayStr = getYYYYMMDD(new Date());
                         const startDateInput = document.getElementById('startDate');
                         const endDateInput = document.getElementById('endDate');
+                        const startTimeInput = document.getElementById('startTime');
+                        const endTimeInput = document.getElementById('endTime');
+                        const phoneNumberInput = document.getElementById('phoneNumber');
+                        const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+                        const venuePaymentTimerNote = document.getElementById('venuePaymentTimerNote');
+                        const VENUE_BOOKING_WINDOW_MS = 30 * 60 * 1000;
+                        let venueBookingTimerId = null;
+                        let venueBookingDeadline = null;
+
+                        function formatCountdown(ms) {
+                            const totalSeconds = Math.max(Math.floor(ms / 1000), 0);
+                            const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+                            const seconds = String(totalSeconds % 60).padStart(2, '0');
+                            return `${minutes}:${seconds}`;
+                        }
+
+                        function clearVenueBookingTimer({ hide = true } = {}) {
+                            if (venueBookingTimerId) {
+                                window.clearInterval(venueBookingTimerId);
+                                venueBookingTimerId = null;
+                            }
+                            venueBookingDeadline = null;
+                            if (venuePaymentTimerNote) {
+                                if (hide) {
+                                    venuePaymentTimerNote.hidden = true;
+                                    venuePaymentTimerNote.textContent = '';
+                                } else {
+                                    venuePaymentTimerNote.hidden = false;
+                                    venuePaymentTimerNote.textContent = '00:00';
+                                }
+                            }
+                        }
+
+                        function startVenueBookingTimer() {
+                            if (!venuePaymentTimerNote || venueBookingTimerId) return;
+                            venueBookingDeadline = Date.now() + VENUE_BOOKING_WINDOW_MS;
+                            venuePaymentTimerNote.hidden = false;
+                            venuePaymentTimerNote.textContent = formatCountdown(VENUE_BOOKING_WINDOW_MS);
+
+                            venueBookingTimerId = window.setInterval(() => {
+                                const remaining = venueBookingDeadline - Date.now();
+                                if (remaining <= 0) {
+                                    clearVenueBookingTimer({ hide: false });
+                                    if (confirmBookingBtn) confirmBookingBtn.disabled = true;
+                                    showNotification('Booking session expired after 30 minutes. Update any field to restart.');
+                                    return;
+                                }
+                                venuePaymentTimerNote.textContent = formatCountdown(remaining);
+                            }, 1000);
+                        }
+
+                        function ensureVenueBookingTimer() {
+                            if (confirmBookingBtn && confirmBookingBtn.disabled) confirmBookingBtn.disabled = false;
+                            if (!venueBookingTimerId) startVenueBookingTimer();
+                        }
+
                         if (startDateInput) startDateInput.min = todayStr;
                         if (endDateInput) endDateInput.min = todayStr;
 
@@ -257,12 +314,20 @@
                             }, 4000);
                         }
 
-                        document.getElementById('confirmBookingBtn')?.addEventListener('click', async () => {
-                            const startDate = document.getElementById('startDate').value;
-                            const endDate = document.getElementById('endDate').value;
-                            const startTime = document.getElementById('startTime').value;
-                            const endTime = document.getElementById('endTime').value;
-                            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                        [startDateInput, endDateInput, startTimeInput, endTimeInput, phoneNumberInput]
+                            .filter(Boolean)
+                            .forEach((inputEl) => {
+                                inputEl.addEventListener('focus', ensureVenueBookingTimer);
+                                inputEl.addEventListener('input', ensureVenueBookingTimer);
+                                inputEl.addEventListener('change', ensureVenueBookingTimer);
+                            });
+
+                        confirmBookingBtn?.addEventListener('click', async () => {
+                            const startDate = startDateInput?.value;
+                            const endDate = endDateInput?.value;
+                            const startTime = startTimeInput?.value;
+                            const endTime = endTimeInput?.value;
+                            const phoneNumber = phoneNumberInput?.value.trim();
 
                             if (!startDate || !endDate || !startTime || !endTime) {
                                 showNotification('Please select both start and end dates and times.');
@@ -288,8 +353,14 @@
                                 showNotification('Please enter a valid mobile number.');
                                 return;
                             }
+                            ensureVenueBookingTimer();
+                            if (venueBookingDeadline && Date.now() > venueBookingDeadline) {
+                                showNotification('Booking session expired. Update any field to restart the 30-minute timer.');
+                                return;
+                            }
 
                             try {
+                                if (confirmBookingBtn) confirmBookingBtn.disabled = true;
                                 const response = await fetch('/venue/book', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -306,6 +377,7 @@
                                 const data = await response.json();
                                 if (data.success) {
                                     if (!data.payment_url || !data.form_fields) {
+                                        if (confirmBookingBtn) confirmBookingBtn.disabled = false;
                                         showNotification('Unable to start eSewa payment.');
                                         return;
                                     }
@@ -323,9 +395,11 @@
                                     document.body.appendChild(form);
                                     form.submit();
                                 } else {
+                                    if (confirmBookingBtn) confirmBookingBtn.disabled = false;
                                     showNotification(data.message || 'Booking failed.');
                                 }
                             } catch (err) {
+                                if (confirmBookingBtn) confirmBookingBtn.disabled = false;
                                 console.error(err);
                                 showNotification('An error occurred. Please try again.');
                             }
