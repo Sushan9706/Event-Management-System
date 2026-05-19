@@ -60,6 +60,12 @@ body {
   letter-spacing: normal !important;
 }
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .nav-links .nav-link {
   text-decoration: none;
   color: var(--text-secondary);
