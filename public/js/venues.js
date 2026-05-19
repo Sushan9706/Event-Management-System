@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let matchingCount = 0;
 
         cards.forEach((card) => {
-            const name = card.querySelector(".card-name").textContent.toLowerCase();
-            const location = card.querySelector(".card-meta").textContent.toLowerCase();
-            const capacity = parseInt(card.querySelector(".card-tag").textContent.replace(/[^0-9]/g, '')) || 0;
+            const name = (card.dataset.name || "").toLowerCase();
+            const location = (card.dataset.location || "").toLowerCase();
+            const capacity = parseInt(card.dataset.capacity, 10) || 0;
 
             const matchesText = !searchText || name.includes(searchText) || location.includes(searchText);
             
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (currentFilter === "small") matchesFilter = capacity < 100;
 
             if (matchesText && matchesFilter) {
-                card.style.display = "block";
+                card.style.display = "";
                 matchingCount++;
             } else {
                 card.style.display = "none";

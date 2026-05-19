@@ -94,12 +94,16 @@
 
 .nav-link {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--muted);
   text-decoration: none;
   padding: 4px 0;
   transition: all var(--transition-speed) ease;
   position: relative;
+}
+
+.navbar .nav-link {
+  font-weight: 700 !important;
 }
 
 .nav-link.active {

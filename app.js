@@ -28,6 +28,43 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Enforce a single global font across all rendered pages (user + admin).
+app.use((req, res, next) => {
+  const originalRender = res.render.bind(res);
+  const fontOverrideStyle =
+    '<style id="global-font-override">*,*::before,*::after{font-family:sans-serif !important;}</style>';
+
+  res.render = (view, options, callback) => {
+    let renderOptions = options;
+    let renderCallback = callback;
+
+    if (typeof renderOptions === "function") {
+      renderCallback = renderOptions;
+      renderOptions = {};
+    }
+
+    const injectOverride = (html) => {
+      if (typeof html !== "string") return html;
+      if (html.includes('id="global-font-override"')) return html;
+      return html.replace(/<\/head>/i, `${fontOverrideStyle}</head>`);
+    };
+
+    if (typeof renderCallback === "function") {
+      return originalRender(view, renderOptions, (err, html) => {
+        if (err) return renderCallback(err);
+        return renderCallback(null, injectOverride(html));
+      });
+    }
+
+    return originalRender(view, renderOptions, (err, html) => {
+      if (err) return next(err);
+      return res.send(injectOverride(html));
+    });
+  };
+
+  next();
+});
+
 // 🔐 auth-related middlewares (your part)
 app.use(cookieParser());
 

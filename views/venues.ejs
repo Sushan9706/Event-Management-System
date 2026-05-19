@@ -118,7 +118,7 @@
       <button class="filter-tag active" data-filter="all">All Venues</button>
       <button class="filter-tag" data-filter="large">Large (500+)</button>
       <button class="filter-tag" data-filter="medium">Medium (100-500)</button>
-      <button class="filter-tag" data-filter="small">Small (<100)< /button>
+      <button class="filter-tag" data-filter="small">Small (&lt;100)</button>
     </div>
 
     <section class="events-section">
@@ -136,7 +136,13 @@
             imgUrl = '/' + imgUrl;
             }
             %>
-            <div class="event-card" data-id="<%= venue._id %>">
+            <div
+              class="event-card"
+              data-id="<%= venue._id %>"
+              data-name="<%= (venue.name || '').toLowerCase() %>"
+              data-location="<%= (venue.location || '').toLowerCase() %>"
+              data-capacity="<%= venue.capacity || 0 %>"
+            >
               <div class="card-img">
                 <img src="<%= imgUrl %>" alt="<%= venue.name %>"
                   onerror="this.onerror=null;this.src='/images/default-venue.png';" />
@@ -144,6 +150,8 @@
                   Capacity: <%= venue.capacity %>
                 </span>
               </div>
+              <div class="card-body">
+                <h3 class="card-name"><%= venue.name || 'Venue' %></h3>
                 <div class="card-meta">
                   <div class="card-meta-row">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

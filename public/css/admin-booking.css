@@ -74,6 +74,10 @@ body {
     position: relative;
 }
 
+.navbar .nav-link {
+    font-weight: 700 !important;
+}
+
 .nav-link:hover,
 .nav-link.active {
     color: var(--accent-indigo);
