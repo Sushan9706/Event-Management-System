@@ -77,17 +77,21 @@
       <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
     </nav>
       <div class="nav-icons">
-        <button class="icon-btn" aria-label="Notifications" id="notifBtn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-        </button>
-        <div class="avatar" id="profileTrigger" style="cursor: pointer">
-          <img
-            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
-            alt="User avatar" onerror="this.style.display='none'" />
-        </div>
+        <% if (locals.user) { %>
+          <button class="icon-btn" aria-label="Notifications" id="notifBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </button>
+          <div class="avatar" id="profileTrigger" style="cursor: pointer">
+            <img
+              src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
+              alt="User avatar" onerror="this.style.display='none'" />
+          </div>
+        <% } else { %>
+          <a href="/login" class="nav-link" style="text-decoration: none; color: #1e293b !important; font-weight: 500; font-size: 14px;">Login</a>
+        <% } %>
       </div>
   </header>
 
@@ -141,29 +145,7 @@
           <% }) %>
       </div>
 
-      <div class="location-section">
-        <div class="location-header">
-          <h2>Location</h2>
-          <a href="#" class="get-directions">
-            Get Directions
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </a>
-        </div>
-        <div class="map-container">
-          <img src="https://gisgeography.com/wp-content/uploads/2017/10/Japan-Map-1265x1223.jpg"
-            alt="Map of Tokyo, Japan" class="map-img" onerror="this.innerHTML=''" />
-          <div class="map-pin">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#1a1a2e" stroke="white" stroke-width="1.5">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" fill="white" stroke="none" />
-            </svg>
-          </div>
-        </div>
-      </div>
+
     </div>
 
     <aside class="booking-sidebar">
@@ -260,6 +242,7 @@
     </div>
   </div>
 
+  <% if (locals.user) { %>
   <div id="evOverlay" style="display: none; position: fixed; inset: 0; z-index: 300"></div>
   <aside id="evSidebar" style="
         position: fixed;
@@ -322,6 +305,7 @@
       Log Out
     </a>
   </aside>
+  <% } %>
 
   <div id="bookingModal" class="booking-modal" aria-hidden="true" data-event-id="<%= eventId %>"
     data-event-name="<%= eventTitle %>" data-event-date="<%= eventDateRange %>" data-event-time="<%= eventTimeRange %>"

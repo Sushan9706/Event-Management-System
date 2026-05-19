@@ -66,8 +66,8 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
         return 'Please select both start and end dates and times.';
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return 'Please select valid start and end dates.';
     }
@@ -79,6 +79,13 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
     if (start > end) {
         return 'Start date cannot be after end date.';
     }
+    
+    const timeDiffMs = end.getTime() - start.getTime();
+    const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+    if (hoursDiff < 2) {
+        return 'Minimum booking duration is 2 hours.';
+    }
+
     return null;
 };
 
@@ -104,7 +111,7 @@ const calculateVenueAmount = ({ venue, startDate, endDate, startTime, endTime })
 
 exports.getVenues = async (req, res) => {
     try {
-        const venues = await Venue.find({ status: { $ne: 'maintenance' } }).lean();
+        const venues = await Venue.find({ status: 'available' }).lean();
         
         let fullUser = null;
         if (req.user && req.user.userId) {
@@ -163,7 +170,7 @@ exports.getVenueById = async (req, res) => {
 exports.searchVenues = async (req, res) => {
     try {
         let { q, location, capacity } = req.query;
-        let queryObj = { status: { $ne: 'maintenance' } };
+        let queryObj = { status: 'available' };
 
         if (q) {
             queryObj.name = { $regex: q, $options: "i" };

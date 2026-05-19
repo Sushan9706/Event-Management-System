@@ -39,7 +39,7 @@ const venueBookingSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['confirmed', 'pending', 'cancelled'],
+            enum: ['confirmed', 'pending', 'cancelled', 'expired'],
             default: 'confirmed'
         },
         paymentStatus: {

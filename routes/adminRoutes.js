@@ -30,6 +30,7 @@ router.get('/events/:id/bookings', adminEventController.getBookingDetails);
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────
 router.get('/notifications', adminEventController.getNotifications);
+router.post('/notifications/mark-read', adminEventController.markAllNotificationsRead);
 
 // ─── EXPORT CSV ──────────────────────────────────────────────
 router.get('/events/:id/bookings/export', adminEventController.exportBookingsCsv);
@@ -51,5 +52,9 @@ router.post('/venues/delete/:id', adminVenueController.deleteVenue);
 // ─── VIEW VENUE BOOKINGS ──────────────────────────────────────
 router.get('/venues/:id/bookings', adminVenueController.getVenueBookings);
 router.get('/venues/export-csv/:id', adminVenueController.exportVenueBookingsCsv);
+
+// ─── CONTACT MESSAGES ─────────────────────────────────────────
+router.get('/messages', adminEventController.getMessages);
+router.post('/messages/resolve/:id', adminEventController.resolveMessage);
 
 module.exports = router;

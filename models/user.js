@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     },
     profileImage: {
         type: String,
-        default: "https://tinyurl.com/3jjyxzj6"
+        default: ""
     }, 
     notifications: [{
         type: {
@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema({
             default: 1,
             min: 1
         },
+        read: {
+            type: Boolean,
+            default: false
+        },
         createdAt: {
             type: Date,
             default: Date.now
@@ -59,7 +63,11 @@ const userSchema = new mongoose.Schema({
     bookedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Event"
-    }]
+    }],
+    adminLastReadNotifications: {
+        type: Date,
+        default: () => new Date(0)
+    }
 }, {
     timestamps: true
 });

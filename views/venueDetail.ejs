@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= venue.name %> - EMS Venues</title>
+    <title>
+        <%= venue.name %> - EMS Venues
+    </title>
     <link rel="stylesheet" href="/css/venueDetail.css">
     <link rel="stylesheet" href="/css/common-nav.css">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+        rel="stylesheet" />
 </head>
+
 <body>
     <div id="notificationToast" class="notification-toast">
         <span class="notification-icon" id="notifIcon"></span>
@@ -17,44 +23,71 @@
     </div>
 
     <header class="navbar">
-      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
-      <nav class="nav-center">
-        <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
-        <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
-        <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
-        <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
-      </nav>
-      <div class="nav-icons">
-        <% if (locals.user) { %>
-        <button class="icon-btn" aria-label="Notifications" id="notifBtn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <% if (locals.notifications && locals.notifications.some(n => !n.isRead)) { %>
-            <span class="notif-dot"></span>
-          <% } %>
-        </button>
-        <div class="avatar" id="profileTrigger" style="cursor: pointer">
-          <img
-            src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
-            alt="User avatar"
-            onerror="this.style.display='none'"
-          />
-        </div>
-        <% } else { %>
-          <a href="/login" class="login-link">Login</a>
-        <% } %>
-      </div>
+        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
+            class="logo"
+            style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+        <nav class="nav-center">
+            <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+            <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+            <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+            <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+        </nav>
+        <div class="nav-icons">
+            <% if (locals.user) { %>
+                <button class="icon-btn" aria-label="Notifications" id="notifBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <% if (locals.notifications && locals.notifications.some(n=> !n.isRead)) { %>
+                        <span class="notif-dot"></span>
+                        <% } %>
+                </button>
+                <div class="avatar" id="profileTrigger" style="cursor: pointer">
+                    <img src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
+                        alt="User avatar" onerror="this.style.display='none'" />
+                    <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
+                        class="logo" style="text-decoration: none; color: inherit;">EMS</a>
+                    <nav class="nav-center">
+                        <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+                        <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+                        <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+                        <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+                    </nav>
+                    <div class="nav-icons">
+                        <% if (locals.user) { %>
+                            <button class="icon-btn" aria-label="Notifications" id="notifBtn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                </svg>
+                                <% if (locals.notifications && notifications.length> 0) { %>
+                                    <span class="notif-dot"></span>
+                                    <% } %>
+                            </button>
+                            <div class="avatar" id="profileTrigger" style="cursor: pointer">
+                                <img src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? (user.username || 'User') : 'User') + '&background=e74c3c&color=fff' %>"
+                                    alt="User avatar" onerror="this.style.display='none'" />
+                            </div>
+                            <% } else { %>
+                                <a href="/login" class="login-link">Login</a>
+                                <% } %>
+                    </div>
     </header>
 
-    <div class="venue-hero" <% if (venue.imagePath || venue.image) { %>style="background-image: url('<%= venue.imagePath || venue.image %>')"<% } %>>
-        <div class="hero-overlay">
-            <div class="hero-content">
-                <span class="venue-status"><%= venue.status || 'Available' %></span>
-                <h1><%= venue.name %></h1>
-            </div>
-        </div>
+    <div class="venue-hero" <% if (venue.imagePath || venue.image) { %>style="background-image: url('<%= venue.imagePath
+            || venue.image %>')"<% } %>>
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <span class="venue-status">
+                            <%= venue.status || 'Available' %>
+                        </span>
+                        <h1>
+                            <%= venue.name %>
+                        </h1>
+                    </div>
+                </div>
     </div>
 
     <main class="venue-main">
@@ -62,11 +95,15 @@
         <div class="venue-info-bar">
             <div class="info-box">
                 <span class="info-label">LOCATION</span>
-                <span class="info-value"><%= venue.location %></span>
+                <span class="info-value">
+                    <%= venue.location %>
+                </span>
             </div>
             <div class="info-box">
                 <span class="info-label">CAPACITY</span>
-                <span class="info-value"><%= venue.capacity %> Guests</span>
+                <span class="info-value">
+                    <%= venue.capacity %> Guests
+                </span>
             </div>
             <div class="info-box highlight">
                 <span class="info-label">BASE RATE</span>
@@ -97,23 +134,47 @@
 
             <div class="venue-description">
                 <h2>About This Venue</h2>
-                <p><%= venue.description || 'Experience the perfect blend of elegance and functionality at ' + venue.name + '. Ideal for both intimate gatherings and large-scale celebrations, this space offers modern amenities in a prime location.' %></p>
+                <p>
+                    <%= venue.description || 'Experience the perfect blend of elegance and functionality at ' +
+                        venue.name
+                        + '. Ideal for both intimate gatherings and large-scale celebrations, this space offers modern amenities in a prime location.'
+                        %>
+                </p>
 
                 <div class="amenities">
                     <div class="amenity-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
                         Professional Staff
                     </div>
                     <div class="amenity-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
                         AV Equipment
                     </div>
                     <div class="amenity-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                        </svg>
                         High-speed WiFi
                     </div>
                     <div class="amenity-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
                         Flexible Hours
                     </div>
                 </div>
@@ -127,7 +188,7 @@
                         <span class="price-per">starting per <%= venue.dailyRate ? 'day' : 'hour' %></span>
                     </div>
 
-                    <% if (venue.status === 'available' && locals.user) { %>
+                    <% if (venue.status==='available' && locals.user) { %>
                         <div class="booking-inputs-grid">
                             <div class="input-group">
                                 <label>START DATE</label>
@@ -151,29 +212,47 @@
                             </div>
                         </div>
                         <button class="book-btn" id="confirmBookingBtn">Book Now</button>
+<<<<<<< HEAD
                         <p class="booking-countdown" id="venuePaymentTimerNote" hidden>30:00</p>
                     <% } else if (!user) { %>
                         <a href="/login" class="book-btn" style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
                     <% } else { %>
                         <button class="book-btn unavailable" disabled>Currently Unavailable</button>
                     <% } %>
+=======
+                        <% } else if (!user) { %>
+                            <a href="/login" class="book-btn"
+                                style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
+                            <% } else { %>
+                                <button class="book-btn unavailable" disabled>Currently Unavailable</button>
+                                <% } %>
+                                    <button class="book-btn" id="confirmBookingBtn">Continue Booking</button>
+                                    <% } else if (!user) { %>
+                                        <a href="/login" class="book-btn"
+                                            style="text-align: center; text-decoration: none; display: block;">Login to
+                                            Book</a>
+                                        <% } else { %>
+                                            <button class="book-btn unavailable" disabled>Currently Unavailable</button>
+                                            <% } %>
+>>>>>>> origin/development
 
-                    <script>
-                        const bookedDates = JSON.parse('<%- locals.bookedDates || "[]" %>');
-                        const calendarGrid = document.getElementById('calendarGrid');
-                        const monthYearLabel = document.getElementById('currentMonthYear');
-                        const prevBtn = document.getElementById('prevMonth');
-                        const nextBtn = document.getElementById('nextMonth');
+                                                <script>
+                                                    const bookedDates = JSON.parse('<%- locals.bookedDates || "[]" %>');
+                                                    const calendarGrid = document.getElementById('calendarGrid');
+                                                    const monthYearLabel = document.getElementById('currentMonthYear');
+                                                    const prevBtn = document.getElementById('prevMonth');
+                                                    const nextBtn = document.getElementById('nextMonth');
 
-                        let currentDate = new Date();
+                                                    let currentDate = new Date();
 
-                        function getYYYYMMDD(date) {
-                            const y = date.getFullYear();
-                            const m = String(date.getMonth() + 1).padStart(2, '0');
-                            const d = String(date.getDate()).padStart(2, '0');
-                            return `${y}-${m}-${d}`;
-                        }
+                                                    function getYYYYMMDD(date) {
+                                                        const y = date.getFullYear();
+                                                        const m = String(date.getMonth() + 1).padStart(2, '0');
+                                                        const d = String(date.getDate()).padStart(2, '0');
+                                                        return `${y}-${m}-${d}`;
+                                                    }
 
+<<<<<<< HEAD
                         // Set min date for inputs to today
                         const todayStr = getYYYYMMDD(new Date());
                         const startDateInput = document.getElementById('startDate');
@@ -236,84 +315,88 @@
 
                         if (startDateInput) startDateInput.min = todayStr;
                         if (endDateInput) endDateInput.min = todayStr;
+=======
+                                                    // Set min date for inputs to today
+                                                    const todayStr = getYYYYMMDD(new Date());
+                                                    const startDateInput = document.getElementById('startDate');
+                                                    const endDateInput = document.getElementById('endDate');
+                                                    if (startDateInput) startDateInput.min = todayStr;
+                                                    if (endDateInput) endDateInput.min = todayStr;
+>>>>>>> origin/development
 
-                        startDateInput?.addEventListener('change', (e) => {
-                            if (endDateInput) endDateInput.min = e.target.value;
-                            if (endDateInput && endDateInput.value < e.target.value) {
-                                endDateInput.value = e.target.value;
-                            }
-                        });
+                                                    startDateInput?.addEventListener('change', (e) => {
+                                                        if (endDateInput) endDateInput.min = e.target.value;
+                                                        if (endDateInput && endDateInput.value < e.target.value) {
+                                                            endDateInput.value = e.target.value;
+                                                        }
+                                                    });
 
-                        function renderCalendar() {
-                            calendarGrid.innerHTML = '';
-                            const year = currentDate.getFullYear();
-                            const month = currentDate.getMonth();
+                                                    function renderCalendar() {
+                                                        calendarGrid.innerHTML = '';
+                                                        const year = currentDate.getFullYear();
+                                                        const month = currentDate.getMonth();
 
-                            monthYearLabel.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+                                                        monthYearLabel.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
 
-                            const firstDay = new Date(year, month, 1).getDay();
-                            const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                                        const firstDay = new Date(year, month, 1).getDay();
+                                                        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-                            ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
-                                const el = document.createElement('div');
-                                el.className = 'calendar-day-header';
-                                el.textContent = day;
-                                calendarGrid.appendChild(el);
-                            });
+                                                        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+                                                            const el = document.createElement('div');
+                                                            el.className = 'calendar-day-header';
+                                                            el.textContent = day;
+                                                            calendarGrid.appendChild(el);
+                                                        });
 
-                            for (let i = 0; i < firstDay; i++) {
-                                const el = document.createElement('div');
-                                el.className = 'calendar-day empty';
-                                calendarGrid.appendChild(el);
-                            }
+                                                        for (let i = 0; i < firstDay; i++) {
+                                                            const el = document.createElement('div');
+                                                            el.className = 'calendar-day empty';
+                                                            calendarGrid.appendChild(el);
+                                                        }
 
-                            for (let day = 1; day <= daysInMonth; day++) {
-                                const date = new Date(year, month, day);
-                                const dateStr = getYYYYMMDD(date);
-                                const isPast = dateStr < todayStr;
-                                const isBooked = bookedDates.includes(dateStr);
-                                
-                                const el = document.createElement('div');
-                                el.className = 'calendar-day';
-                                el.textContent = day;
+                                                        for (let day = 1; day <= daysInMonth; day++) {
+                                                            const date = new Date(year, month, day);
+                                                            const dateStr = getYYYYMMDD(date);
+                                                            const isPast = dateStr < todayStr;
+                                                            const isBooked = bookedDates.includes(dateStr);
 
-                                if (isPast) el.classList.add('past');
-                                else if (isBooked) {
-                                    el.classList.add('booked');
-                                    el.title = 'Venue is already booked for this date';
-                                }
-                                else el.classList.add('available');
+                                                            const el = document.createElement('div');
+                                                            el.className = 'calendar-day';
+                                                            el.textContent = day;
 
-                                calendarGrid.appendChild(el);
-                            }
-                        }
+                                                            if (isPast) el.classList.add('past');
+                                                            else if (isBooked) {
+                                                                el.classList.add('booked');
+                                                                el.title = 'Venue is already booked for this date';
+                                                            }
+                                                            else el.classList.add('available');
 
-                        prevBtn?.addEventListener('click', () => {
-                            currentDate.setMonth(currentDate.getMonth() - 1);
-                            renderCalendar();
-                        });
+                                                            calendarGrid.appendChild(el);
+                                                        }
+                                                    }
 
-                        nextBtn?.addEventListener('click', () => {
-                            currentDate.setMonth(currentDate.getMonth() + 1);
-                            renderCalendar();
-                        });
+                                                    prevBtn?.addEventListener('click', () => {
+                                                        currentDate.setMonth(currentDate.getMonth() - 1);
+                                                        renderCalendar();
+                                                    });
 
-                        renderCalendar();
+                                                    nextBtn?.addEventListener('click', () => {
+                                                        currentDate.setMonth(currentDate.getMonth() + 1);
+                                                        renderCalendar();
+                                                    });
 
-                        function showNotification(message, type = 'error') {
-                            const toast = document.getElementById('notificationToast');
-                            const icon = document.getElementById('notifIcon');
-                            const msg = document.getElementById('notifMessage');
+                                                    renderCalendar();
 
-                            toast.className = `notification-toast show ${type}`;
-                            msg.textContent = message;
-                            icon.textContent = type === 'success' ? '✓' : '⚠';
+                                                    function showNotification(message, type = 'error') {
+                                                        const toast = document.getElementById('notificationToast');
+                                                        const icon = document.getElementById('notifIcon');
+                                                        const msg = document.getElementById('notifMessage');
 
-                            setTimeout(() => {
-                                toast.classList.remove('show');
-                            }, 4000);
-                        }
+                                                        toast.className = `notification-toast show ${type}`;
+                                                        msg.textContent = message;
+                                                        icon.textContent = type === 'success' ? '✓' : '⚠';
 
+<<<<<<< HEAD
                         [startDateInput, endDateInput, startTimeInput, endTimeInput, phoneNumberInput]
                             .filter(Boolean)
                             .forEach((inputEl) => {
@@ -328,17 +411,26 @@
                             const startTime = startTimeInput?.value;
                             const endTime = endTimeInput?.value;
                             const phoneNumber = phoneNumberInput?.value.trim();
+=======
+                                                        setTimeout(() => {
+                                                            toast.classList.remove('show');
+                                                        }, 4000);
+                                                    }
+>>>>>>> origin/development
 
-                            if (!startDate || !endDate || !startTime || !endTime) {
-                                showNotification('Please select both start and end dates and times.');
-                                return;
-                            }
+                                                    document.getElementById('confirmBookingBtn')?.addEventListener('click', async () => {
+                                                        const startDate = document.getElementById('startDate').value;
+                                                        const endDate = document.getElementById('endDate').value;
+                                                        const startTime = document.getElementById('startTime').value;
+                                                        const endTime = document.getElementById('endTime').value;
+                                                        const phoneNumber = document.getElementById('phoneNumber').value.trim();
 
-                            if (startDate < todayStr) {
-                                showNotification('Cannot book a date in the past.');
-                                return;
-                            }
+                                                        if (!startDate || !endDate || !startTime || !endTime) {
+                                                            showNotification('Please select both start and end dates and times.');
+                                                            return;
+                                                        }
 
+<<<<<<< HEAD
                             if (startDate > endDate) {
                                 showNotification('Start date cannot be after end date.');
                                 return;
@@ -405,6 +497,66 @@
                             }
                         });
                     </script>
+=======
+                                                        if (startDate > endDate) {
+                                                            showNotification('Start date cannot be after end date.');
+                                                            return;
+                                                        }
+
+                                                        const startDateTime = new Date(`${startDate}T${startTime}`);
+                                                        const endDateTime = new Date(`${endDate}T${endTime}`);
+                                                        const timeDiffMs = endDateTime.getTime() - startDateTime.getTime();
+                                                        const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+
+                                                        if (hoursDiff < 2) {
+                                                            showNotification('Minimum booking duration is 2 hours.');
+                                                            return;
+                                                        }
+
+                                                        if (!phoneNumber) {
+                                                            showNotification('Please enter your phone number.');
+                                                            return;
+                                                        }
+                                                        const normalizedPhone = phoneNumber.replace(/[^\d]/g, '');
+                                                        const validPhone = /^(?:977)?98\d{8}$/.test(normalizedPhone);
+                                                        if (!validPhone) {
+                                                            showNotification('Please enter a valid mobile number.');
+                                                            return;
+                                                        }
+                                                        if (startDate < todayStr) {
+                                                            showNotification('Cannot book a date in the past.');
+                                                            return;
+                                                        }
+
+                                                        if (startDate > endDate) {
+                                                            showNotification('Start date cannot be after end date.');
+                                                            return;
+                                                        }
+                                                        if (!phoneNumber) {
+                                                            showNotification('Please enter your phone number.');
+                                                            return;
+                                                        }
+                                                        const normalizedPhone = phoneNumber.replace(/[^\d]/g, '');
+                                                        const validPhone = /^(?:977)?98\d{8}$/.test(normalizedPhone);
+                                                        if (!validPhone) {
+                                                            showNotification('Please enter a valid mobile number.');
+                                                            return;
+                                                        }
+
+                                                        try {
+                                                            const response = await fetch('/venue/book', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({
+                                                                    venueId: '<%= venue._id %>',
+                                                                    startDate,
+                                                                    endDate,
+                                                                    startTime,
+                                                                    endTime,
+                                                                    phoneNumber
+                                                                })
+                                                            });
+>>>>>>> origin/development
 
                     <div class="contact-box">
                         <p class="contact-title">DIRECT CONTACT</p>
@@ -412,6 +564,43 @@
                     </div>
                     
                     <p class="secure-note">Dedicated support for your venue needs</p>
+                                                            const data = await response.json();
+                                                            if (data.success) {
+                                                                if (!data.payment_url || !data.form_fields) {
+                                                                    showNotification('Unable to start eSewa payment.');
+                                                                    return;
+                                                                }
+                                                                const form = document.createElement('form');
+                                                                form.method = 'POST';
+                                                                form.action = data.payment_url;
+                                                                form.style.display = 'none';
+                                                                Object.entries(data.form_fields).forEach(([key, value]) => {
+                                                                    const input = document.createElement('input');
+                                                                    input.type = 'hidden';
+                                                                    input.name = key;
+                                                                    input.value = String(value ?? '');
+                                                                    form.appendChild(input);
+                                                                });
+                                                                document.body.appendChild(form);
+                                                                form.submit();
+                                                            } else {
+                                                                showNotification(data.message || 'Booking failed.');
+                                                            }
+                                                        } catch (err) {
+                                                            console.error(err);
+                                                            showNotification('An error occurred. Please try again.');
+                                                        }
+                                                    });
+                                                </script>
+
+                                                <div class="contact-box">
+                                                    <p class="contact-title">DIRECT CONTACT</p>
+                                                    <p class="contact-info">
+                                                        <%= venue.contactInfo || 'contact@ems-venues.com' %>
+                                                    </p>
+                                                </div>
+
+                                                <p class="secure-note">Dedicated support for your venue needs</p>
                 </div>
             </div>
         </div>
@@ -419,64 +608,76 @@
     </main>
 
     <% if (locals.user) { %>
-    <%
-      const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
-      const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
-      const formatNotifTime = (date) => {
-        if (!date) return "Just now";
-        const d = new Date(date);
-        if (Number.isNaN(d.getTime())) return "Just now";
-        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-      };
-    %>
-    <div class="notif-dropdown" id="notifDropdown">
-      <p class="notif-title">NOTIFICATIONS</p>
-      <% if (notifications.length === 0) { %>
-        <p class="notif-empty">No new notifications</p>
-      <% } else { %>
-        <% notifications.forEach(function(note) { 
-            const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
-            const eventTitle = note.eventName || 'Event';
-            const countLabel = formatTicketCount(note.ticketCount || 1);
-            const timeLabel = formatNotifTime(note.createdAt);
-        %>
-          <div class="notif-item">
-            <p class="notif-item-title"><%= title %></p>
-            <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
-            <p class="notif-time"><%= timeLabel %></p>
-          </div>
-        <% }) %>
-      <% } %>
-    </div>
+        <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
+            formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
+            const formatNotifTime = (date) => {
+            if (!date) return "Just now";
+            const d = new Date(date);
+            if (Number.isNaN(d.getTime())) return "Just now";
+            return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+            };
+            %>
+            <div class="notif-dropdown" id="notifDropdown">
+                <p class="notif-title">NOTIFICATIONS</p>
+                <% if (notifications.length===0) { %>
+                    <p class="notif-empty">No new notifications</p>
+                    <% } else { %>
+                        <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled'
+                            ? 'Booking Cancelled' : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ;
+                            const countLabel=formatTicketCount(note.ticketCount || 1); const
+                            timeLabel=formatNotifTime(note.createdAt); %>
+                            <div class="notif-item">
+                                <p class="notif-item-title">
+                                    <%= title %>
+                                </p>
+                                <p class="notif-item-sub">
+                                    <%= eventTitle %> · <%= countLabel %>
+                                </p>
+                                <p class="notif-time">
+                                    <%= timeLabel %>
+                                </p>
+                            </div>
+                            <% }) %>
+                                <% } %>
+            </div>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="avatar-sidebar" id="avatarSidebar">
-      <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest' %>
-      </div>
-      <div class="sidebar-divider"></div>
-      <a href="/profile" class="sidebar-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-        My Profile
-      </a>
-      <div class="sidebar-divider"></div>
-      <a href="/logout" class="sidebar-logout" id="logoutBtn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-        Log Out
-      </a>
-    </aside>
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+            <aside class="avatar-sidebar" id="avatarSidebar">
+                <div class="sidebar-user-info">
+                    Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() +
+                        user.username.slice(1) : 'Guest' %>
+                </div>
+                <div class="sidebar-divider"></div>
+                <a href="/profile" class="sidebar-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    My Profile
+                </a>
+                <div class="sidebar-divider"></div>
+                <a href="/logout" class="sidebar-logout" id="logoutBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Log Out
+                </a>
+            </aside>
 
-    <script src="/js/user.js"></script>
-    <% } %>
+            <script src="/js/user.js"></script>
+            <% } %>
 
-    <footer class="footer">
-        <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
-        <div class="footer-links">
-            <a href="/privacy">PRIVACY POLICY</a>
-            <a href="/terms">TERMS OF SERVICE</a>
-            <a href="/contact">CONTACT</a>
-        </div>
-    </footer>
+                <footer class="footer">
+                    <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+                    <div class="footer-links">
+                        <a href="/privacy">PRIVACY POLICY</a>
+                        <a href="/terms">TERMS OF SERVICE</a>
+                        <a href="/contact">CONTACT</a>
+                    </div>
+                </footer>
 
 </body>
+
 </html>

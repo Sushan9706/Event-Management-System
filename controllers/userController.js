@@ -169,6 +169,9 @@ exports.postLogin = async (req, res) => {
 
 exports.getUserDashboard = async (req, res) => {
     try {
+        const { syncDatabase } = require("../utils/bookingStatus");
+        await syncDatabase();
+
         const now = new Date();
         const user = await userModel.findById(req.user.userId);
 
@@ -245,6 +248,12 @@ exports.getUserDashboard = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(3);
   
+      const Venue = require("../models/venueModel");
+      const latestVenues = await Venue
+        .find({ status: "available" })
+        .sort({ createdAt: -1 })
+        .limit(3);
+  
       console.log("latestEvents found:", latestEvents.length, latestEvents.map(e => e.eventName));
   
       const notifications = Array.isArray(user.notifications) ? user.notifications : [];
@@ -256,6 +265,7 @@ exports.getUserDashboard = async (req, res) => {
         totalBookings,
         upcomingEvents,
         latestEvents,
+        latestVenues,
         notifications,
       });
     } catch (err) {
@@ -810,9 +820,50 @@ exports.cancelBookingById = async (req, res) => {
 };
 
 
+exports.markNotificationsRead = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (Array.isArray(user.notifications)) {
+      user.notifications.forEach(n => {
+        n.read = true;
+      });
+      await user.save();
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error marking notifications as read:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.getNotificationsList = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const notifications = Array.isArray(user.notifications) ? user.notifications : [];
+    res.json({
+      success: true,
+      notifications: notifications,
+      hasUnread: notifications.some(n => !n.read)
+    });
+  } catch (err) {
+    console.error("Error fetching user notifications:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+
 exports.getGuestDashboard = async (req, res) => {
     try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
+        const { hasEventEnded, syncDatabase } = require("../utils/bookingStatus");
+        await syncDatabase();
         const Venue = require("../models/venueModel");
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -821,12 +872,12 @@ exports.getGuestDashboard = async (req, res) => {
         let events = await eventModel.find({ 
             endDate: { $gte: today },
             status: { $ne: 'cancelled' }
-        }).populate('categoryId').lean();
+        }).sort({ createdAt: -1 }).populate('categoryId').lean();
 
-        events = events.filter(event => !hasEventEnded(event));
+        events = events.filter(event => !hasEventEnded(event)).slice(0, 6);
 
         // Fetch active venues
-        const venues = await Venue.find({ status: 'available' }).lean();
+        const venues = await Venue.find({ status: 'available' }).sort({ createdAt: -1 }).limit(6).lean();
 
         res.render("index", { events, venues, user: null });
     } catch (err) {
@@ -837,18 +888,29 @@ exports.getGuestDashboard = async (req, res) => {
 
 exports.getCatalog = async (req, res) => {
     try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
+        const { hasEventEnded, syncDatabase } = require("../utils/bookingStatus");
+        await syncDatabase();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Fetch events where endDate is today or in the future
-        let events = await eventModel.find({ 
-            endDate: { $gte: today },
-            status: { $ne: 'cancelled' }
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
+
+        // Fetch active events AND completed events that ended within 3 days
+        let events = await eventModel.find({
+            $or: [
+                { status: { $in: ['upcoming', 'ongoing'] }, endDate: { $gte: cutoff } },
+                { status: { $in: ['completed', 'expired'] }, endDate: { $gte: cutoff } }
+            ]
         }).populate('categoryId').lean();
 
-        // Filter out events that have already ended precisely (date + time)
-        events = events.filter(event => !hasEventEnded(event));
+        // Mark hasEnded and status dynamically for completed events
+        events.forEach(event => {
+            if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
+                event.status = 'completed';
+                event.hasEnded = true;
+            }
+        });
 
     // Fetch the full user document if logged in; otherwise allow guest view
     let fullUser = null;
@@ -880,10 +942,11 @@ exports.getCatalog = async (req, res) => {
 
 exports.searchEvents = async (req, res) => {
     try {
-        const { hasEventEnded } = require("../utils/bookingStatus");
+        const { hasEventEnded, syncDatabase } = require("../utils/bookingStatus");
+        await syncDatabase();
         let { q, date, category } = req.query;
         let queryObj = {
-            status: { $ne: 'cancelled' }
+            status: { $in: ['upcoming', 'ongoing'] }
         };
 
         // 1. Text Search (Title + Category)
@@ -938,13 +1001,13 @@ exports.searchEvents = async (req, res) => {
 
         // 4. Future Events Filter
         if (!date) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
             queryObj.$and = queryObj.$and || [];
             queryObj.$and.push({
                 $or: [
-                    { endDate: { $gte: today } },
-                    { date: { $gte: today } }
+                    { endDate: { $gte: cutoff } },
+                    { date: { $gte: cutoff } }
                 ]
             });
             
@@ -959,8 +1022,13 @@ exports.searchEvents = async (req, res) => {
         // Fetch events from DB and populate categoryId
         let events = await eventModel.find(queryObj).populate('categoryId').lean();
 
-        // Filter out events that have precisely ended (date + time)
-        events = events.filter(event => !hasEventEnded(event));
+        // Mark hasEnded and status dynamically for completed events
+        events.forEach(event => {
+            if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
+                event.status = 'completed';
+                event.hasEnded = true;
+            }
+        });
 
         // Render the page with the found events
         res.render("index", { events: events });
@@ -1056,8 +1124,8 @@ exports.updateProfileInfo = async (req, res) => {
 
     // 1. Handle Image logic
     if (removeProfileImage === "true") {
-      // Set back to your DB default or an empty string
-      updateData.profileImage = "https://tinyurl.com/3jjyxzj6";
+      // Set back to empty string to fallback to default initials avatar
+      updateData.profileImage = "";
     } else if (req.file) {
       // req.file is populated by upload.single('avatar')
       updateData.profileImage = `/images/uploads/${req.file.filename}`;

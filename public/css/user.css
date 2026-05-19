@@ -457,10 +457,12 @@ svg {
 
 /* --- FOOTER --- */
 .site-footer {
-  padding: 40px 32px;
+  padding: 24px 32px;
   border-top: 1px solid var(--border);
+  background: var(--white);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 10px;
   color: var(--text-light);
   letter-spacing: 0.05em;

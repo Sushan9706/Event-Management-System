@@ -9,14 +9,18 @@
   <link rel="stylesheet" href="/css/common-nav.css?v=3" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+    rel="stylesheet" />
 </head>
 
 <body>
   <header class="navbar">
     <div class="nav-inner">
-      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
-      
+      <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
+        class="nav-logo"
+        style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+
       <nav class="nav-center">
         <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
         <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
@@ -27,173 +31,262 @@
       <div class="nav-right">
         <button class="icon-btn" id="notifBtn" aria-label="Notifications">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          <% if (Array.isArray(locals.notifications) && locals.notifications.some(n => !n.isRead)) { %>
+          <% if (Array.isArray(locals.notifications) && locals.notifications.some(n=> !n.isRead)) { %>
             <span class="notif-dot"></span>
           <% } %>
         </button>
-        <img src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>" 
-             alt="User avatar" class="avatar-circle" id="profileTrigger" />
+        <img
+          src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+          alt="User avatar" class="avatar-circle" id="profileTrigger" />
       </div>
     </div>
   </header>
 
-  <%
-    const notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
-    const formatTicketCount = (count) => `${count} ticket${count === 1 ? '' : 's'}`;
+  <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
+    formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
     const formatNotifTime = (date) => {
-      if (!date) return "Just now";
-      const d = new Date(date);
-      if (Number.isNaN(d.getTime())) return "Just now";
-      return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    if (!date) return "Just now";
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return "Just now";
+    return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     };
-  %>
-  <div class="notif-dropdown" id="notifDropdown">
-    <p class="notif-title">NOTIFICATIONS</p>
-    <% if (notifications.length === 0) { %>
-      <p class="notif-empty">No new notifications</p>
-    <% } else { %>
-      <% notifications.forEach(function(note) { 
-          const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
-          const eventTitle = note.eventName || 'Event';
-          const countLabel = formatTicketCount(note.ticketCount || 1);
-          const timeLabel = formatNotifTime(note.createdAt);
-      %>
-        <div class="notif-item">
-          <p class="notif-item-title"><%= title %></p>
-          <p class="notif-item-sub"><%= eventTitle %> · <%= countLabel %></p>
-          <p class="notif-time"><%= timeLabel %></p>
-        </div>
-      <% }) %>
-    <% } %>
-  </div>
-
-  <main class="page-main">
-    <section class="hero">
-      <p class="hero-eyebrow">DASHBOARD</p>
-      <h1 class="hero-title">
-        Welcome, <span class="hero-name"><%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Guest' %></span>.
-      </h1>
-      <p class="hero-sub">Your curated events and management hub for the 2026 season is ready for exploration.</p>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg></div>
-          <p class="stat-label">TOTAL BOOKINGS</p>
-          <p class="stat-num"><%= locals.totalBookings || 0 %></p>
-        </div>
-        <div class="stat-card">
-          <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg></div>
-          <p class="stat-label">UPCOMING EVENTS</p>
-          <p class="stat-num"><%= locals.upcomingEvents || 0 %></p>
-        </div>
-        
-      </div>
-    </section>
-
-    <section class="recommended">
-      <div class="sec-header">
-        <h2 class="sec-title">Latest Events</h2>
-        <a href="/catalog" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg></a>
-      </div>
-      <div class="cards-grid">
-        <% if (locals.latestEvents && latestEvents.length > 0) { %>
-          <% latestEvents.forEach(function(event, i) { %>
-            <a href="/event/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>" style="text-decoration:none; color:inherit;">
-              <div class="ecard-img-wrap">
-                <img src="<%= event.image || event.imagePath || '/images/default-event.png' %>" 
-                     class="ecard-img" 
-                     onerror="this.src='/images/default-event.png'" />
-              </div>
-              <div class="ecard-body">
-                <h3 class="ecard-title">
-                  <%= event.eventName || event.title %>
-                </h3>
-                <p class="ecard-meta">
-                  <%= new Date(event.startDate || event.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
-                  <% if (event.location) { %> • <%= event.location %><% } %>
-                </p>
-              </div>
-            </a>
-          <% }) %>
+    %>
+    <div class="notif-dropdown" id="notifDropdown">
+      <p class="notif-title">NOTIFICATIONS</p>
+      <% if (notifications.length===0) { %>
+        <p class="notif-empty">No new notifications</p>
         <% } else { %>
-          <p style="color: var(--text-mid); padding: 20px 0; grid-column: 1/-1;">No events available at the moment.</p>
-        <% } %>
-      </div>
-    </section>
-    
+          <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled' ? 'Booking Cancelled'
+            : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
+            countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
+            <div class="notif-item">
+              <p class="notif-item-title">
+                <%= title %>
+              </p>
+              <p class="notif-item-sub">
+                <%= eventTitle %> · <%= countLabel %>
+              </p>
+              <p class="notif-time">
+                <%= timeLabel %>
+              </p>
+            </div>
+            <% }) %>
+              <% } %>
+    </div>
 
-    <section class="bookings-wrap">
-      <div class="bookings-box">
-        <div class="bk-header">
-          <h2 class="sec-title">Recent Bookings</h2>
-        </div>
-        <div class="tbl">
-          <div class="tbl-head">
-            <span class="th">EVENT AND VENUE NAME</span>
-            <span class="th">STATUS</span>
-            <span class="th">DATE</span>
-            <span class="th">ACTION</span>
+    <main class="page-main">
+      <section class="hero">
+        <p class="hero-eyebrow">DASHBOARD</p>
+        <h1 class="hero-title">
+          Welcome, <span class="hero-name">
+            <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
+              : 'Guest' %>
+          </span>.
+        </h1>
+        <p class="hero-sub">Your curated events and management hub for the 2026 season is ready for exploration.</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg></div>
+            <p class="stat-label">TOTAL BOOKINGS</p>
+            <p class="stat-num">
+              <%= locals.totalBookings || 0 %>
+            </p>
           </div>
-          <% if (locals.recentBookings && recentBookings.length > 0) { %>
-            <% recentBookings.forEach(booking => { %>
-              <div class="tbl-row">
-                <div class="td td-event">
-                  <div class="ri"><img src="<%= booking.image %>" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
-                  <div>
-                    <p class="rn"><%= booking.name %></p>
-                    <p class="rid"><%= booking.location %></p>
-                    <small style="color: #999; font-size: 0.7rem;"><%= booking.type.toUpperCase() %></small>
+          <div class="stat-card">
+            <div class="stat-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg></div>
+            <p class="stat-label">UPCOMING EVENTS</p>
+            <p class="stat-num">
+              <%= locals.upcomingEvents || 0 %>
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="recommended">
+        <div class="sec-header">
+          <h2 class="sec-title">Latest Events</h2>
+          <a href="/catalog" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg></a>
+        </div>
+        <div class="cards-grid">
+          <% if (locals.latestEvents && latestEvents.length> 0) { %>
+            <% latestEvents.forEach(function(event, i) { %>
+              <a href="/event/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>"
+                style="text-decoration:none; color:inherit;">
+                <div class="ecard-img-wrap">
+                  <img src="<%= event.image || event.imagePath || '/images/default-event.png' %>" class="ecard-img"
+                    onerror="this.src='/images/default-event.png'" />
+                </div>
+                <div class="ecard-body">
+                  <h3 class="ecard-title">
+                    <%= event.eventName || event.title %>
+                  </h3>
+                  <p class="ecard-meta">
+                    <%= new Date(event.startDate || event.date).toLocaleDateString('en-US', { month: 'short' ,
+                      day: '2-digit' , year: 'numeric' }) %>
+                      <% if (event.location) { %> • <%= event.location %>
+                          <% } %>
+                            <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%=
+                                event.ticketPrice || 0 %></span>
+                  </p>
+                </div>
+              </a>
+              <% }) %>
+                <% } else { %>
+                  <p style="color: var(--text-mid); padding: 20px 0; grid-column: 1/-1;">No events available at the
+                    moment.</p>
+                  <% } %>
+        </div>
+      </section>
+
+      <section class="recommended" style="margin-top: 40px;">
+        <div class="sec-header">
+          <h2 class="sec-title">Latest Venues</h2>
+          <a href="/venue" class="explore-all">EXPLORE ALL <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg></a>
+        </div>
+        <div class="cards-grid">
+          <% if (locals.latestVenues && latestVenues.length> 0) { %>
+            <% latestVenues.forEach(function(venue, i) { %>
+              <a href="/venue/<%= venue._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>"
+                style="text-decoration:none; color:inherit;">
+                <div class="ecard-img-wrap">
+                  <img src="<%= venue.image || venue.imagePath || '/images/default-venue.png' %>" class="ecard-img"
+                    onerror="this.src='/images/default-venue.png'" />
+                </div>
+                <div class="ecard-body">
+                  <h3 class="ecard-title">
+                    <%= venue.name %>
+                  </h3>
+                  <p class="ecard-meta">
+                    Available
+                    <% if (venue.location) { %> • <%= venue.location %>
+                        <% } %>
+                          <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%=
+                              venue.dailyRate || venue.hourlyRate || 0 %> / day</span>
+                  </p>
+                </div>
+              </a>
+              <% }) %>
+                <% } else { %>
+                  <p style="color: var(--text-mid); padding: 20px 0; grid-column: 1/-1;">No venues available at the
+                    moment.</p>
+                  <% } %>
+        </div>
+      </section>
+
+      <section class="bookings-wrap">
+        <div class="bookings-box">
+          <div class="bk-header">
+            <h2 class="sec-title">Recent Bookings</h2>
+          </div>
+          <div class="tbl">
+            <div class="tbl-head">
+              <span class="th">EVENT AND VENUE NAME</span>
+              <span class="th">STATUS</span>
+              <span class="th">DATE</span>
+              <span class="th">ACTION</span>
+            </div>
+            <% if (locals.recentBookings && recentBookings.length> 0) { %>
+              <% recentBookings.forEach(booking=> { %>
+                <div class="tbl-row">
+                  <div class="td td-event">
+                    <div class="ri"><img src="<%= booking.image %>" class="ri-img"
+                        onerror="this.parentElement.style.background='#eee'"></div>
+                    <div>
+                      <p class="rn">
+                        <%= booking.name %>
+                      </p>
+                      <p class="rid">
+                        <%= booking.location %>
+                      </p>
+                      <small style="color: #999; font-size: 0.7rem;">
+                        <%= booking.type.toUpperCase() %>
+                      </small>
+                    </div>
+                  </div>
+                  <div class="td"><span class="pill pill--ok" <%=(booking.status==='cancelled' )
+                      ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status==='expired' )
+                      ? 'style="background: #f0f0f0; color: #666;"' : '' ) %>><%= (booking.status || 'confirmed'
+                        ).toUpperCase() %></span></div>
+                  <div class="td">
+                    <%= new Date(booking.date).toLocaleDateString() %>
+                  </div>
+                  <div class="td">
+                    <% const actionHref = booking.type === 'event' ? '/bookings/manage/' + booking.targetId : '/venue/' + booking.targetId; %>
+                    <a href="<%= actionHref %>" class="act-btn"
+                      style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                      </svg>
+                    </a>
                   </div>
                 </div>
-                <div class="td"><span class="pill pill--ok" <%= (booking.status === 'cancelled') ? 'style="background: #fde8e8; color: #c0392b;"' : ((booking.status === 'expired') ? 'style="background: #f0f0f0; color: #666;"' : '') %>><%= (booking.status || 'confirmed').toUpperCase() %></span></div>
-                <div class="td"><%= new Date(booking.date).toLocaleDateString() %></div>
-                <div class="td">
-                   <% const actionHref = '/bookings/manage/' + booking.targetId; %>
-                   <a href="<%= actionHref %>" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                   </a>
-                </div>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p style="padding: 20px; color: #999; text-align: center;">No recent bookings found.</p>
-          <% } %>
-        </div>
-        <% if (locals.hasMore) { %>
-          <div style="text-align: center; margin-top: 20px;">
-            <button id="loadMoreBtn" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-page); color: var(--text-dark); cursor: pointer; font-family: var(--sans);">Load More Bookings</button>
+                <% }) %>
+                  <% } else { %>
+                    <p style="padding: 20px; color: #999; text-align: center;">No recent bookings found.</p>
+                    <% } %>
           </div>
-        <% } %>
-      </div>
-    </section>
-  </main>
+          <% if (locals.hasMore) { %>
+            <div style="text-align: center; margin-top: 20px;">
+              <button id="loadMoreBtn"
+                style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-page); color: var(--text-dark); cursor: pointer; font-family: var(--sans);">Load
+                More Bookings</button>
+            </div>
+            <% } %>
+        </div>
+      </section>
+    </main>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    let skipCount = 3;
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    if (loadMoreBtn) {
-      loadMoreBtn.addEventListener('click', async () => {
-        try {
-          loadMoreBtn.textContent = "Loading...";
-          loadMoreBtn.disabled = true;
-          const res = await fetch(`/bookings/load-more?skip=${skipCount}`);
-          const data = await res.json();
-          if (data.success && data.bookings.length > 0) {
-            const tbl = document.querySelector('.tbl');
-            data.bookings.forEach(b => {
-              const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
-              const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
-              const actionHref = `/bookings/manage/${b.targetId}`;
-              const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        let skipCount = 3;
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+          loadMoreBtn.addEventListener('click', async () => {
+            try {
+              loadMoreBtn.textContent = "Loading...";
+              loadMoreBtn.disabled = true;
+              const res = await fetch(`/bookings/load-more?skip=${skipCount}`);
+              const data = await res.json();
+              if (data.success && data.bookings.length > 0) {
+                const tbl = document.querySelector('.tbl');
+                data.bookings.forEach(b => {
+                  const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
+                  const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
+                  const actionHref = b.type === 'event' ? `/bookings/manage/${b.targetId}` : `/venue/${b.targetId}`;
+                  const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                                   </a>`;
 
-              const row = document.createElement('div');
-              row.className = 'tbl-row';
-              row.innerHTML = `
+                  const row = document.createElement('div');
+                  row.className = 'tbl-row';
+                  row.innerHTML = `
                 <div class="td td-event">
                   <div class="ri"><img src="${b.image}" class="ri-img" onerror="this.parentElement.style.background='#eee'"></div>
                   <div>
@@ -206,59 +299,68 @@
                 <div class="td">${dateStr}</div>
                 <div class="td">${actionHtml}</div>
               `;
-              tbl.appendChild(row);
-            });
-            skipCount += data.bookings.length;
-            if (data.bookings.length < 5) {
-              loadMoreBtn.style.display = 'none';
-            } else {
+                  tbl.appendChild(row);
+                });
+                skipCount += data.bookings.length;
+                if (data.bookings.length < 5) {
+                  loadMoreBtn.style.display = 'none';
+                } else {
+                  loadMoreBtn.textContent = "Load More Bookings";
+                  loadMoreBtn.disabled = false;
+                }
+              } else {
+                loadMoreBtn.style.display = 'none';
+              }
+            } catch (err) {
+              console.error(err);
               loadMoreBtn.textContent = "Load More Bookings";
               loadMoreBtn.disabled = false;
             }
-          } else {
-            loadMoreBtn.style.display = 'none';
-          }
-        } catch (err) {
-          console.error(err);
-          loadMoreBtn.textContent = "Load More Bookings";
-          loadMoreBtn.disabled = false;
+          });
         }
       });
-    }
-  });
-  </script>
+    </script>
 
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<aside class="avatar-sidebar" id="avatarSidebar">
-    <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
-    </div>
-    
-    <div class="sidebar-divider"></div>
+    <aside class="avatar-sidebar" id="avatarSidebar">
+      <div class="sidebar-user-info">
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User'
+          %>
+      </div>
 
-    <a href="/profile" class="sidebar-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <div class="sidebar-divider"></div>
+
+      <a href="/profile" class="sidebar-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
         My Profile
-    </a>
+      </a>
 
-    <div class="sidebar-divider"></div>
+      <div class="sidebar-divider"></div>
 
-    <a href="/logout" class="sidebar-logout" id="logoutBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      <a href="/logout" class="sidebar-logout" id="logoutBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
         Log Out
-    </a>
-</aside>
+      </a>
+    </aside>
 
-  <footer class="site-footer">
-    <span>COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
-    <div class="footer-links">
-      <a href="/privacy">PRIVACY POLICY</a>
-      <a href="/terms">TERMS OF SERVICE</a>
-      <a href="/contact">CONTACT</a>
-    </div>
-  </footer>
+    <footer class="site-footer">
+      <span>COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+      <div class="footer-links">
+        <a href="/privacy">PRIVACY POLICY</a>
+        <a href="/terms">TERMS OF SERVICE</a>
+        <a href="/contact">CONTACT</a>
+      </div>
+    </footer>
 
-  <script src="/js/user.js"></script>
+    <script src="/js/user.js"></script>
 </body>
+
 </html>
