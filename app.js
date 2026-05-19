@@ -32,7 +32,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   const originalRender = res.render.bind(res);
   const fontOverrideStyle =
-    '<style id="global-font-override">*,*::before,*::after{font-family:sans-serif !important;}</style>';
+    '<style id="global-font-override">*,*::before,*::after{font-family:sans-serif !important;}.fa,.fa-solid,.fa-regular,.fa-brands,.fas,.far,.fab,[class*="fa-"]::before,[class*="fa-"]::after{font-family:"Font Awesome 6 Free","Font Awesome 6 Brands","FontAwesome" !important;}</style>';
 
   res.render = (view, options, callback) => {
     let renderOptions = options;
