@@ -130,7 +130,7 @@
               ref = booking.referenceNumber || '-';
               const tCount = booking.ticketCount || 1;
               const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (booking.unitPrice || 0) * tCount;
-              const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `$${totalAmount.toFixed(2)}`;
+              const totalDisplay = (booking.unitPrice === 0 || totalAmount === 0) ? 'Free' : `NPR. ${totalAmount.toFixed(2)}`;
               countLabel = `${tCount} ticket${tCount > 1 ? 's' : ''} · ${totalDisplay}`;
               manageUrl = `/bookings/manage/${booking._id}`;
               typeLabel = 'EVENT NAME';

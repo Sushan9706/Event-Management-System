@@ -875,7 +875,7 @@ exports.getTicketDetails = async (req, res) => {
             date: eventDate,
             time: eventTime,
             location: event.location || booking.eventLocation || "TBA",
-            price: unitPrice === 0 ? "Free" : `$${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`,
+            price: unitPrice === 0 ? "Free" : `NPR. ${unitPrice % 1 === 0 ? unitPrice.toFixed(0) : unitPrice.toFixed(2)}`,
             reference: booking.referenceNumber || "-",
             bookedOn: booking.createdAt
                 ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
