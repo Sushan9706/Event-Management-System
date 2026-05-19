@@ -73,7 +73,7 @@ exports.getCreateVenue = (req, res) => {
 
 exports.postCreateVenue = async (req, res) => {
     try {
-        const { name, description, location, category, capacity, hourlyRate, dailyRate } = req.body;
+        const { name, description, location, category, capacity, hourlyRate, dailyRate, status } = req.body;
         
         // Validation (done in model, but we can do extra here if needed)
         const imagePath = req.file ? `/images/events/${req.file.filename}` : '/images/default-venue.png';
@@ -86,6 +86,7 @@ exports.postCreateVenue = async (req, res) => {
             capacity: parseInt(capacity),
             hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
             dailyRate: dailyRate ? parseFloat(dailyRate) : undefined,
+            status: status || 'available',
             imagePath
         });
 
@@ -123,7 +124,7 @@ exports.getEditVenue = async (req, res) => {
 
 exports.postEditVenue = async (req, res) => {
     try {
-        const { name, description, location, category, capacity, hourlyRate, dailyRate, removeImage } = req.body;
+        const { name, description, location, category, capacity, hourlyRate, dailyRate, removeImage, status } = req.body;
         const venue = await Venue.findById(req.params.id);
         
         if (!venue) {
@@ -138,6 +139,7 @@ exports.postEditVenue = async (req, res) => {
         venue.capacity = parseInt(capacity);
         venue.hourlyRate = hourlyRate ? parseFloat(hourlyRate) : undefined;
         venue.dailyRate = dailyRate ? parseFloat(dailyRate) : undefined;
+        venue.status = status || 'available';
 
         if (removeImage === 'true') {
             venue.imagePath = '/images/default-venue.png';

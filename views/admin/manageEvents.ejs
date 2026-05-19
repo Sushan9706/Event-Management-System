@@ -24,30 +24,36 @@
                 <a href="/admin/venues" class="nav-link">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
                 
-                <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                    </svg>
-                    <span class="notif-dot" id="notifDot" style="display: none;"></span>
-                </button>
+                <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
+                    <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span class="notif-dot" id="notifDot" style="display: none;"></span>
+                    </button>
 
-                <div class="notif-dropdown" id="notifDropdown">
-                    <p class="notif-title">RECENT BOOKINGS</p>
-                    <div id="notifList">
-                        <!-- Notifications populate here -->
-                        <p class="notif-empty">Loading notifications...</p>
+                    <div class="notif-dropdown" id="notifDropdown" style="position: absolute; top: calc(100% + 12px); right: 0; width: 320px; padding: 0; overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 1000; display: none;">
+                        <p class="notif-title">RECENT BOOKINGS</p>
+                        <div id="notifList">
+                            <!-- Notifications populate here -->
+                            <p class="notif-empty">Loading notifications...</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Replace Register button with User Symbol Dropdown -->
                 <div class="user-menu-container">
                     <button class="user-trigger" id="userTrigger" title="User Account">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
+                        <% if (locals.user && user.profileImage) { %>
+                            <img src="<%= user.profileImage %>" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+                        <% } else { %>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        <% } %>
                     </button>
                     <div class="user-dropdown" id="userDropdown">
                         <a href="/profile" class="dropdown-link">
@@ -201,10 +207,10 @@
                                 <table class="events-table">
                                     <thead>
                                         <tr>
-                                            <th>Event Details</th>
-                                            <th>Date</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th style="width: 35%;">Event Details</th>
+                                            <th style="width: 25%;">Date</th>
+                                            <th style="width: 15%;">Status</th>
+                                            <th style="width: 25%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -235,7 +241,13 @@
                                                         </td>
                                                         <td>
                                                             <p style="font-weight: 500;">
-                                                                <%= new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %> - <%= new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                                                <%= new
+                                                                    Date(event.startDate).toLocaleDateString('en-US', {
+                                                                    month: 'short' , day: 'numeric' , year: 'numeric' })
+                                                                    %> - <%= new
+                                                                        Date(event.endDate).toLocaleDateString('en-US',
+                                                                        { month: 'short' , day: 'numeric' ,
+                                                                        year: 'numeric' }) %>
                                                             </p>
                                                             <p style="font-size: 12px; color: var(--text-light);">
                                                                 <%= event.startTime %> - <%= event.endTime %>
@@ -248,31 +260,33 @@
                                                             </span>
                                                         </td>
                                                         <td class="actions-cell">
-                                                            <a href="/admin/events/<%= event._id %>/bookings"
-                                                                class="btn-view">VIEW</a>
-                                                            <a href="/admin/events/edit/<%= event._id %>"
-                                                                class="btn-icon" title="Edit">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24"
-                                                                    fill="none" stroke="currentColor" stroke-width="2">
-                                                                    <path
-                                                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
-                                                                    </path>
-                                                                    <path
-                                                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
-                                                                    </path>
-                                                                </svg>
-                                                            </a>
-                                                            <button type="button" class="btn-icon delete delete-trigger"
-                                                                title="Delete" data-id="<%= event._id %>"
-                                                                data-name="<%= event.eventName %>">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24"
-                                                                    fill="none" stroke="currentColor" stroke-width="2">
-                                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                                    <path
-                                                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                                                    </path>
-                                                                </svg>
-                                                            </button>
+                                                            <div class="actions-wrapper">
+                                                                <a href="/admin/events/<%= event._id %>/bookings"
+                                                                    class="btn-view">VIEW</a>
+                                                                <a href="/admin/events/edit/<%= event._id %>"
+                                                                    class="btn-icon" title="Edit">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <path
+                                                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
+                                                                        </path>
+                                                                        <path
+                                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
+                                                                        </path>
+                                                                    </svg>
+                                                                </a>
+                                                                <button type="button" class="btn-icon delete delete-trigger"
+                                                                    title="Delete" data-id="<%= event._id %>"
+                                                                    data-name="<%= event.eventName %>">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                                        <path
+                                                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                                        </path>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                     <% }) %>
@@ -307,76 +321,10 @@
                         </div>
     </main>
 
+    <!-- Unified Notifications System -->
+    <script src="/js/admin-notif.js"></script>
+
     <script>
-        // ─── Navbar Elements ───
-        const userTrigger = document.getElementById('userTrigger');
-        const userDropdown = document.getElementById('userDropdown');
-        const notifBtn = document.getElementById('notifBtn');
-        const notifDropdown = document.getElementById('notifDropdown');
-        const notifList = document.getElementById('notifList');
-        const notifDot = document.getElementById('notifDot');
-
-        // ─── Dropdown Toggles ───
-        userTrigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('show');
-            notifDropdown.classList.remove('show');
-        });
-
-        notifBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifDropdown.classList.toggle('show');
-            userDropdown.classList.remove('show');
-            if (notifDropdown.classList.contains('show')) {
-                fetchNotifications();
-            }
-        });
-
-        document.addEventListener('click', () => {
-            userDropdown.classList.remove('show');
-            notifDropdown.classList.remove('show');
-        });
-
-        // ─── Notifications Fetch ───
-
-        async function fetchNotifications() {
-            try {
-                const response = await fetch('/admin/notifications');
-                const data = await response.json();
-                renderNotifications(data);
-            } catch (err) {
-                console.error('Error fetching notifications:', err);
-                notifList.innerHTML = '<p class="notif-empty">Failed to load</p>';
-            }
-        }
-
-        function renderNotifications(notifications) {
-            if (!notifications || notifications.length === 0) {
-                notifList.innerHTML = '<p class="notif-empty">No new bookings</p>';
-                notifDot.style.display = 'none';
-                return;
-            }
-
-            // Show dot if there are notifications (simplified logic)
-            notifDot.style.display = 'block';
-
-            notifList.innerHTML = notifications.map(n => {
-                const date = new Date(n.createdAt).toLocaleString('en-US', { 
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                });
-                return `
-                    <div class="notif-item">
-                        <p class="notif-item-title">${n.userName} booked a ${n.type}</p>
-                        <p class="notif-item-sub">${n.name} · ${n.countLabel}</p>
-                        <p class="notif-time">${date}</p>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Fetch once on load to show dot if needed
-        fetchNotifications();
-
         // ─── Real-time Search & Filter (AJAX) ───
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
@@ -432,19 +380,21 @@
                         <span class="status-pill status-${event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status}">${event.status}</span>
                     </td>
                     <td class="actions-cell">
-                        <a href="/admin/events/${event._id}/bookings" class="btn-view">VIEW</a>
-                        <a href="/admin/events/edit/${event._id}" class="btn-icon" title="Edit">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </a>
-                        <button type="button" class="btn-icon delete delete-trigger" title="Delete" data-id="${event._id}" data-name="${event.eventName || event.title}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
+                        <div class="actions-wrapper">
+                            <a href="/admin/events/${event._id}/bookings" class="btn-view">VIEW</a>
+                            <a href="/admin/events/edit/${event._id}" class="btn-icon" title="Edit">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+                            <button type="button" class="btn-icon delete delete-trigger" title="Delete" data-id="${event._id}" data-name="${event.eventName || event.title}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');

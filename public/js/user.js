@@ -1,10 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // If logged in as admin, let admin-notif.js handle navbar/dropdown to avoid script collision
+    if (document.body.getAttribute("data-role") === "admin") {
+        return;
+    }
+
     // --- 1. GLOBAL ELEMENTS ---
     const profileTrigger = document.getElementById("profileTrigger") || document.querySelector(".avatar-circle");
     const avatarSidebar = document.getElementById("avatarSidebar");
     const sidebarOverlay = document.getElementById("sidebarOverlay");
     const notifBtn = document.getElementById("notifBtn") || document.getElementById("bellBtn");
     const notifDropdown = document.getElementById("notifDropdown") || document.getElementById("bellDropdown");
+
+    // Fix default/broken avatar image fallback dynamically and gracefully
+    if (profileTrigger && profileTrigger.tagName === "IMG") {
+        const currentSrc = profileTrigger.getAttribute("src");
+        if (!currentSrc || currentSrc.includes("tinyurl.com") || currentSrc.includes("ui-avatars.com")) {
+            profileTrigger.setAttribute("src", `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background:%23f1f5f9;width:100%;height:100%;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`);
+        }
+    }
 
     // --- 2. SIDEBAR TOGGLE ---
     const toggleSidebar = (state) => {
@@ -32,24 +45,112 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 3. NOTIFICATION DROPDOWN ---
     if (notifBtn && notifDropdown) {
-        notifBtn.addEventListener("click", async (e) => {
+        let hasUnreadNotifications = false;
+
+        // Initialize basic structure
+        notifDropdown.innerHTML = `
+            <div class="notif-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <span class="notif-title" style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #64748b; text-transform: uppercase;">Notifications</span>
+                <button id="markAllReadBtn" class="mark-all-read-btn" style="background: none; border: none; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s;">Mark all as Read</button>
+            </div>
+            <div id="notifList" style="max-height: 320px; overflow-y: auto;">
+                <p class="notif-empty" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px; margin: 0;">Loading notifications...</p>
+            </div>
+        `;
+
+        const notifList = document.getElementById("notifList");
+        const markBtn = document.getElementById("markAllReadBtn");
+
+        const renderNotificationsList = (notifications) => {
+            if (!notifications || notifications.length === 0) {
+                notifList.innerHTML = `<p class="notif-empty" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px; margin: 0;">No new notifications</p>`;
+                return;
+            }
+
+            if (markBtn) {
+                markBtn.style.color = hasUnreadNotifications ? "#64748b" : "#3b82f6";
+            }
+
+            notifList.innerHTML = notifications.map(note => {
+                const isCancelled = note.type === 'booking_cancelled';
+                const title = isCancelled ? 'Booking Cancelled' : 'Booking Confirmed';
+                const eventTitle = note.eventName || 'Event';
+                const countLabel = `${note.ticketCount || 1} ticket${note.ticketCount === 1 ? '' : 's'}`;
+                const dateObj = new Date(note.createdAt);
+                const timeLabel = isNaN(dateObj.getTime()) ? "Just now" : dateObj.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+                return `
+                    <div class="notif-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; cursor: pointer; gap: 12px;">
+                        <div style="flex-grow: 1; text-align: left;">
+                            <p class="notif-item-title" style="margin: 0 0 2px 0; font-size: 13px; font-weight: 600; color: ${isCancelled ? '#ef4444' : '#10b981'};">${title}</p>
+                            <p class="notif-item-sub" style="margin: 0 0 4px 0; font-size: 12px; color: #475569; font-weight: 500;">${eventTitle} · ${countLabel}</p>
+                            <p class="notif-time" style="margin: 0; font-size: 10px; color: #94a3b8;">${timeLabel}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const loadNotifications = async () => {
+            try {
+                const res = await fetch("/notifications/list");
+                const data = await res.json();
+                if (data.success) {
+                    hasUnreadNotifications = data.hasUnread;
+                    let notifDot = notifBtn.querySelector(".notif-dot");
+                    if (data.hasUnread) {
+                        if (!notifDot) {
+                            notifDot = document.createElement("span");
+                            notifDot.className = "notif-dot";
+                            notifBtn.appendChild(notifDot);
+                        }
+                    } else {
+                        if (notifDot) notifDot.remove();
+                    }
+                    renderNotificationsList(data.notifications);
+                }
+            } catch (err) {
+                console.error("Error loading notifications:", err);
+            }
+        };
+
+        // Load initially on DOM load
+        loadNotifications();
+
+        // Refresh periodically (every 10s)
+        setInterval(loadNotifications, 10000);
+
+        notifBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             notifDropdown.classList.toggle("open");
-            // Also close sidebar if open
             toggleSidebar(false);
-            
-            const dot = notifBtn.querySelector(".notif-dot");
-            if (dot && notifDropdown.classList.contains("open")) {
-                try {
-                    const res = await fetch("/api/notifications/read", { method: "POST" });
-                    if (res.ok) dot.remove();
-                } catch(err) { console.error(err); }
+            if (notifDropdown.classList.contains("open")) {
+                loadNotifications();
             }
         });
 
         document.addEventListener("click", (e) => {
             if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
                 notifDropdown.classList.remove("open");
+            }
+        });
+
+        // Click handler for Mark all as Read button
+        document.addEventListener("click", async (e) => {
+            if (e.target && e.target.id === "markAllReadBtn") {
+                e.stopPropagation();
+                try {
+                    const res = await fetch("/notifications/mark-read", { method: "POST" });
+                    const data = await res.json();
+                    if (data.success) {
+                        hasUnreadNotifications = false;
+                        const notifDot = notifBtn.querySelector(".notif-dot");
+                        if (notifDot) notifDot.remove();
+                        e.target.style.color = "#3b82f6";
+                    }
+                } catch (err) {
+                    console.error("Error marking all read:", err);
+                }
             }
         });
     }

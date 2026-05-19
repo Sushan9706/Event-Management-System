@@ -13,7 +13,7 @@ const navAvatar = document.getElementById('navAvatar');
 const usernameVal = document.getElementById('username').value;
 
 // Default avatar logic (matching your EJS logic)
-const defaultAvatar = `https://ui-avatars.com/api/?name=${usernameVal}&background=e74c3c&color=fff`;
+const defaultAvatar = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3R5bGU9ImJhY2tncm91bmQ6I2YxZjVmOTt3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIC8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiAvPjwvc3ZnPg==`;
 
 /**
  * 2. PREVIEW LOGIC
@@ -48,13 +48,45 @@ function handleAvatarUpload(event) {
  * Triggered when user clicks "Remove Photo".
  * Only updates the UI to show the default avatar.
  */
-function removePhoto() {
-    selectedFile = null;
-    isRemovalPending = true;
+async function removePhoto() {
+    try {
+        const formData = new FormData();
+        formData.append('removeProfileImage', 'true');
 
-    // Show the placeholder in the UI
-    profileAvatar.src = defaultAvatar;
-    if (navAvatar) navAvatar.src = defaultAvatar;
+        const response = await fetch('/profile/update-info', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            selectedFile = null;
+            isRemovalPending = false;
+
+            // Show the placeholder in the UI
+            if (profileAvatar) profileAvatar.src = defaultAvatar;
+            
+            // Replace navbar image with SVG silhouette immediately
+            const triggerImg = document.querySelector('#userTrigger img');
+            if (triggerImg) {
+                const btn = document.getElementById('userTrigger');
+                if (btn) {
+                    btn.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    `;
+                }
+            }
+            showToast("Avatar removed successfully!");
+        } else {
+            showToast("Failed to remove avatar", "error");
+        }
+    } catch (err) {
+        console.error("Remove Error:", err);
+        showToast("Server connection failed.", "error");
+    }
 }
 
 /**

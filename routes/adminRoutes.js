@@ -30,6 +30,7 @@ router.get('/events/:id/bookings', adminEventController.getBookingDetails);
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────
 router.get('/notifications', adminEventController.getNotifications);
+router.post('/notifications/mark-read', adminEventController.markAllNotificationsRead);
 
 // ─── EXPORT CSV ──────────────────────────────────────────────
 router.get('/events/:id/bookings/export', adminEventController.exportBookingsCsv);

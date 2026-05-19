@@ -36,7 +36,7 @@
           </svg>
           <% if (Array.isArray(locals.notifications) && locals.notifications.some(n=> !n.isRead)) { %>
             <span class="notif-dot"></span>
-            <% } %>
+          <% } %>
         </button>
         <img
           src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
@@ -236,15 +236,15 @@
                     <%= new Date(booking.date).toLocaleDateString() %>
                   </div>
                   <div class="td">
-                    <% const actionHref='/bookings/manage/' + booking.targetId; %>
-                      <a href="<%= actionHref %>" class="act-btn"
-                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <path d="M5 12h14"></path>
-                          <path d="m12 5 7 7-7 7"></path>
-                        </svg>
-                      </a>
+                    <% const actionHref = booking.type === 'event' ? '/bookings/manage/' + booking.targetId : '/venue/' + booking.targetId; %>
+                    <a href="<%= actionHref %>" class="act-btn"
+                      style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                      </svg>
+                    </a>
                   </div>
                 </div>
                 <% }) %>
@@ -279,7 +279,7 @@
                 data.bookings.forEach(b => {
                   const dateStr = b.date ? new Date(b.date).toLocaleDateString() : 'N/A';
                   const statusColor = b.status === 'cancelled' ? 'background: #fde8e8; color: #c0392b;' : (b.status === 'expired' ? 'background: #f0f0f0; color: #666;' : '');
-                  const actionHref = `/bookings/manage/${b.targetId}`;
+                  const actionHref = b.type === 'event' ? `/bookings/manage/${b.targetId}` : `/venue/${b.targetId}`;
                   const actionHtml = `<a href="${actionHref}" class="act-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                                   </a>`;

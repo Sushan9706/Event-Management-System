@@ -173,7 +173,7 @@ body {
     padding: 8px;
     border-radius: 50%;
     color: var(--text-muted);
-    border: 1px solid var(--border-soft);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -184,8 +184,8 @@ body {
 
 .icon-btn:hover {
     color: var(--accent-indigo);
-    background: var(--accent-indigo-glow);
-    border-color: var(--accent-indigo);
+    background: none;
+    border-color: transparent;
 }
 
 .notif-dot {
@@ -563,7 +563,12 @@ body {
 }
 
 .actions-cell {
+    /* Kept as standard table cell to maintain row alignment */
+}
+
+.actions-wrapper {
     display: flex;
+    align-items: center;
     gap: 12px;
 }
 

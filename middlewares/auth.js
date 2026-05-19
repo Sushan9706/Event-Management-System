@@ -9,48 +9,49 @@ const isApiRequest = (req) => {
 };
 
 exports.isLoggedIn = (req, res, next) => {
-    if (req.user && req.user.userId) {
-        return next();
-    }
+    let user = req.user;
 
-    const authHeader = String(req.headers.authorization || "");
-    const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
-        ? authHeader.slice(7).trim()
-        : "";
-    const token = bearerToken || (req.cookies && (req.cookies[AUTH_COOKIE_NAME] || req.cookies.token));
+    if (!user || !user.userId) {
+        const authHeader = String(req.headers.authorization || "");
+        const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+            ? authHeader.slice(7).trim()
+            : "";
+        const token = bearerToken || (req.cookies && (req.cookies[AUTH_COOKIE_NAME] || req.cookies.token));
 
-    if (!token) {
-        if (isApiRequest(req)) {
-            return res.status(401).json({ success: false, message: "Unauthorized. Please login again." });
-        }
-        return res.redirect("/login");
-    }
-
-    try {
-        const user = jwt.verify(token, "shhhhhhhhh");
-        req.user = user;
-        res.locals.user = user;
-
-        // Allow admins to access /admin, /logout, and /profile routes
-        if (
-            user.role === 'admin' && 
-            !req.originalUrl.startsWith('/api/') &&
-            !req.originalUrl.startsWith('/admin') && 
-            !req.originalUrl.startsWith('/logout') &&
-            !req.originalUrl.startsWith('/profile')
-        ) {
-            return res.redirect('/admin/dashboard');
+        if (!token) {
+            if (isApiRequest(req)) {
+                return res.status(401).json({ success: false, message: "Unauthorized. Please login again." });
+            }
+            return res.redirect("/login");
         }
 
-        next();
-    } catch (err) {
-        res.clearCookie(AUTH_COOKIE_NAME);
-        res.clearCookie("token");
-        if (isApiRequest(req)) {
-            return res.status(401).json({ success: false, message: "Session expired. Please login again." });
+        try {
+            user = jwt.verify(token, "shhhhhhhhh");
+            req.user = user;
+            res.locals.user = user;
+        } catch (err) {
+            res.clearCookie(AUTH_COOKIE_NAME);
+            res.clearCookie("token");
+            if (isApiRequest(req)) {
+                return res.status(401).json({ success: false, message: "Session expired. Please login again." });
+            }
+            return res.redirect("/login");
         }
-        return res.redirect("/login");
     }
+
+    // Now, run the role-based path authorization check for the authenticated user
+    if (
+        user &&
+        user.role === 'admin' && 
+        !req.originalUrl.startsWith('/api/') &&
+        !req.originalUrl.startsWith('/admin') && 
+        !req.originalUrl.startsWith('/logout') &&
+        !req.originalUrl.startsWith('/profile')
+    ) {
+        return res.redirect('/admin/dashboard');
+    }
+
+    next();
 };
 
 // NEW: Check if the logged-in user is an admin

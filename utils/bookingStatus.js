@@ -87,6 +87,55 @@ const syncBookingsExpiry = async (bookings, now = new Date()) => {
     return bookings;
 };
 
+const syncDatabase = async () => {
+    try {
+        const Event = require('../models/event');
+        const Booking = require('../models/bookingModel');
+        const VenueBooking = require('../models/venueBookingModel');
+        const now = new Date();
+
+        // 1. Sync Event Statuses
+        await Event.updateMany(
+            { endDate: { $lt: now }, status: { $in: ['upcoming', 'ongoing'] } },
+            { $set: { status: 'completed' } }
+        );
+        await Event.updateMany(
+            { startDate: { $lte: now }, endDate: { $gte: now }, status: 'upcoming' },
+            { $set: { status: 'ongoing' } }
+        );
+
+        // 2. Sync Event Bookings Expiry
+        const activeBookings = await Booking.find({ status: { $in: ['confirmed', 'pending'] } }).populate('eventId');
+        const saves = [];
+        for (const booking of activeBookings) {
+            if (booking.eventId && now > new Date(booking.eventId.endDate)) {
+                booking.status = 'expired';
+                saves.push(booking.save());
+            }
+        }
+        if (saves.length > 0) {
+            await Promise.all(saves);
+        }
+
+        // 3. Sync Venue Bookings Expiry
+        const activeVenueBookings = await VenueBooking.find({ status: { $in: ['confirmed', 'pending'] } });
+        const venueSaves = [];
+        for (const booking of activeVenueBookings) {
+            const bookingEnd = new Date(booking.endDate);
+            bookingEnd.setHours(23, 59, 59, 999);
+            if (now > bookingEnd) {
+                booking.status = 'expired';
+                venueSaves.push(booking.save());
+            }
+        }
+        if (venueSaves.length > 0) {
+            await Promise.all(venueSaves);
+        }
+    } catch (err) {
+        console.error("Error in syncDatabase:", err);
+    }
+};
+
 module.exports = {
     ACTIVE_BOOKING_STATUSES,
     getEventExpiryCutoff,
@@ -94,5 +143,6 @@ module.exports = {
     hasEventEnded,
     shouldExpireBooking,
     syncBookingExpiry,
-    syncBookingsExpiry
+    syncBookingsExpiry,
+    syncDatabase
 };

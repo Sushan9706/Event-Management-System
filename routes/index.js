@@ -80,6 +80,8 @@ router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSu
 router.get('/payments/esewa/success/:transactionUuid?', isLoggedIn, bookingController.getEsewaSuccessPage);
 router.post('/bookings/cancel/:eventId', isLoggedIn, userController.cancelBooking);
 router.post('/bookings/cancel-booking/:bookingId', isLoggedIn, userController.cancelBookingById);
+router.post('/notifications/mark-read', isLoggedIn, userController.markNotificationsRead);
+router.get('/notifications/list', isLoggedIn, userController.getNotificationsList);
 router.get('/events/search', userController.searchEvents);
 router.post('/api/notifications/read', isLoggedIn, userController.markNotificationsRead);
 

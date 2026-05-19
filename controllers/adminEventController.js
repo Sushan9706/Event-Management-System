@@ -30,6 +30,9 @@ const seedCategories = async () => {
 // ─── MANAGE EVENTS PAGE ──────────────────────────────────────
 exports.getManageEvents = async (req, res) => {
     try {
+        const { syncDatabase } = require("../utils/bookingStatus");
+        await syncDatabase();
+
         await seedCategories();
 
         const page = parseInt(req.query.page) || 1;
@@ -37,12 +40,33 @@ exports.getManageEvents = async (req, res) => {
         const search = req.query.search || '';
         const status = req.query.status || 'all';
 
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
+
         let query = {};
         if (search) {
             query.eventName = { $regex: search, $options: 'i' };
         }
-        if (status !== 'all') {
+        if (status === 'all') {
+            // Keep the dashboard clean: hide completed/cancelled/expired events older than 3 days
+            query.$or = [
+                { status: { $in: ['upcoming', 'ongoing'] } },
+                { 
+                    status: { $in: ['completed', 'cancelled', 'expired'] }, 
+                    $or: [
+                        { endDate: { $gte: cutoff } },
+                        { updatedAt: { $gte: cutoff } }
+                    ]
+                }
+            ];
+        } else {
             query.status = status;
+            if (['completed', 'cancelled', 'expired'].includes(status)) {
+                query.$or = [
+                    { endDate: { $gte: cutoff } },
+                    { updatedAt: { $gte: cutoff } }
+                ];
+            }
         }
 
         const totalItems = await Event.countDocuments(query);
@@ -418,6 +442,9 @@ exports.exportBookingsCsv = async (req, res) => {
 // ─── GET NOTIFICATIONS (AJAX) ────────────────────────────────
 exports.getNotifications = async (req, res) => {
     try {
+        const adminUser = await User.findById(req.user.userId);
+        const lastRead = (adminUser && adminUser.adminLastReadNotifications) ? adminUser.adminLastReadNotifications : new Date(0);
+
         // Fetch last 10 event bookings
         const eventBookings = await Booking.find()
             .populate('eventId')
@@ -453,7 +480,18 @@ exports.getNotifications = async (req, res) => {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 10);
 
-        res.json(merged);
+        // Add isRead flag based on lastRead timestamp
+        const enriched = merged.map(n => ({
+            ...n,
+            isRead: n.createdAt <= lastRead
+        }));
+
+        const hasUnread = enriched.some(n => !n.isRead);
+
+        res.json({
+            notifications: enriched,
+            hasUnread: hasUnread
+        });
     } catch (err) {
         console.error('Error fetching notifications:', err);
         res.status(500).json({ error: 'Failed to fetch notifications' });
@@ -511,5 +549,18 @@ exports.resolveMessage = async (req, res) => {
         console.error('Error resolving message:', err);
         req.flash('error', 'Failed to update message');
         res.redirect('/admin/messages');
+    }
+};
+
+// ─── MARK ALL NOTIFICATIONS READ (ADMIN) ───────────────────
+exports.markAllNotificationsRead = async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user.userId, {
+            adminLastReadNotifications: new Date()
+        });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error marking admin notifications as read:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 };

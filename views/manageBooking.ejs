@@ -97,62 +97,75 @@
               </svg>
             </button>
             <div class="bell-dropdown" id="bellDropdown">
-              <% if (notifications.length === 0) { %>
+              <% if (notifications.length===0) { %>
                 No new notifications
-              <% } else { %>
-                <% notifications.forEach(function(note) { 
-                    const title = note.type === 'booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed';
-                    const eventTitle = note.eventName || 'Event';
-                    const countLabel = formatTicketCount(note.ticketCount || 1);
-                    const timeLabel = formatNotifTime(note.createdAt);
-                %>
-                  <div class="notif-item">
-                    <p class="notif-title"><%= title %></p>
-                    <p class="notif-sub"><%= eventTitle %> · <%= countLabel %></p>
-                    <p class="notif-time"><%= timeLabel %></p>
-                  </div>
-                <% }) %>
-              <% } %>
+                <% } else { %>
+                  <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled'
+                    ? 'Booking Cancelled' : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
+                    countLabel=formatTicketCount(note.ticketCount || 1); const
+                    timeLabel=formatNotifTime(note.createdAt); %>
+                    <div class="notif-item">
+                      <p class="notif-title">
+                        <%= title %>
+                      </p>
+                      <p class="notif-sub">
+                        <%= eventTitle %> · <%= countLabel %>
+                      </p>
+                      <p class="notif-time">
+                        <%= timeLabel %>
+                      </p>
+                    </div>
+                    <% }) %>
+                      <% } %>
             </div>
           </div>
           <img
             src="<%= (locals.user && user.profileImage) ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-            alt="User avatar"
-            class="avatar-circle"
-            id="profileTrigger"
-          />
+            alt="User avatar" class="avatar-circle" id="profileTrigger" />
         </div>
       </div>
     </header>
 
     <main class="page-shell">
-      <a href="<%= backHref %>" class="back-link"><%= backLabel %></a>
+      <a href="<%= backHref %>" class="back-link">
+        <%= backLabel %>
+      </a>
 
       <div class="manage-layout">
         <section class="manage-content">
           <article class="hero-card">
             <div class="hero-image" style="background-image: url('<%= eventImage %>')">
-              <span class="status-pill <%= normalizedStatus %>"><%= bookingStatus %></span>
+              <span class="status-pill <%= normalizedStatus %>">
+                <%= bookingStatus %>
+              </span>
             </div>
             <div class="hero-grid">
               <div class="info-block">
                 <p class="label">EVENT NAME</p>
-                <h2><%= eventName %></h2>
+                <h2>
+                  <%= eventName %>
+                </h2>
               </div>
               <div class="info-block">
                 <p class="label">LOCATION</p>
-                <p class="value"><%= eventLocation %> <span class="link">View on map</span></p>
+                <p class="value">
+                  <%= eventLocation %> <span class="link">View on map</span>
+                </p>
               </div>
               <div class="info-block">
                 <p class="label">DATE &amp; TIME</p>
-                <p class="value"><%= eventDate %></p>
-                <p class="muted"><%= eventTime %></p>
+                <p class="value">
+                  <%= eventDate %>
+                </p>
+                <p class="muted">
+                  <%= eventTime %>
+                </p>
               </div>
               <div class="info-block">
                 <p class="label">BOOKING TIER</p>
                 <p class="value">
                   <%= bookingTier %>
-                  <span class="tier-icon">✓</span>
+                    <span class="tier-icon">✓</span>
                 </p>
               </div>
             </div>
@@ -163,11 +176,15 @@
             <div class="attendee-grid">
               <div>
                 <p class="meta-label">Full Names</p>
-                <p class="meta-value"><%= attendeeNamesDisplay %></p>
+                <p class="meta-value">
+                  <%= attendeeNamesDisplay %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Email Address</p>
-                <p class="meta-value"><%= attendeeEmail %></p>
+                <p class="meta-value">
+                  <%= attendeeEmail %>
+                </p>
               </div>
             </div>
           </article>
@@ -180,60 +197,88 @@
               </div>
               <div class="ticket-ref">
                 <span>REFERENCE</span>
-                <strong><%= booking.referenceNumber || '-' %></strong>
+                <strong>
+                  <%= booking.referenceNumber || '-' %>
+                </strong>
               </div>
             </div>
             <div class="ticket-grid">
               <div>
                 <p class="meta-label">Event</p>
-                <p class="meta-value"><%= eventName %></p>
+                <p class="meta-value">
+                  <%= eventName %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Date</p>
-                <p class="meta-value"><%= eventDate %></p>
+                <p class="meta-value">
+                  <%= eventDate %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Time</p>
-                <p class="meta-value"><%= eventTime %></p>
+                <p class="meta-value">
+                  <%= eventTime %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Location</p>
-                <p class="meta-value"><%= eventLocation %></p>
+                <p class="meta-value">
+                  <%= eventLocation %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Tickets</p>
-                <p class="meta-value"><%= ticketCount %></p>
+                <p class="meta-value">
+                  <%= ticketCount %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Price / Ticket</p>
-                <p class="meta-value"><%= unitPriceDisplay %></p>
+                <p class="meta-value">
+                  <%= unitPriceDisplay %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Total</p>
-                <p class="meta-value"><%= totalDisplay %></p>
+                <p class="meta-value">
+                  <%= totalDisplay %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Booked On</p>
-                <p class="meta-value"><%= bookingDate %></p>
+                <p class="meta-value">
+                  <%= bookingDate %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Attendees</p>
-                <p class="meta-value"><%= attendeeNamesDisplay %></p>
+                <p class="meta-value">
+                  <%= attendeeNamesDisplay %>
+                </p>
               </div>
               <div>
                 <p class="meta-label">Email</p>
-                <p class="meta-value"><%= attendeeEmail %></p>
+                <p class="meta-value">
+                  <%= attendeeEmail %>
+                </p>
               </div>
               <div class="ticket-codes">
-                <p class="meta-label"><%= ticketIdLabel %></p>
-                <p class="meta-value"><%= ticketCodesDisplay %></p>
+                <p class="meta-label">
+                  <%= ticketIdLabel %>
+                </p>
+                <p class="meta-value">
+                  <%= ticketCodesDisplay %>
+                </p>
               </div>
             </div>
           </article>
 
           <section class="about-section">
             <p class="label">ABOUT THE EVENT</p>
-            <p class="about-text"><%= (event && event.description) ? event.description : 'Event details will be announced soon.' %></p>
+            <p class="about-text">
+              <%= (event && event.description) ? event.description : 'Event details will be announced soon.' %>
+            </p>
             <a href="<%= eventDetailsLink %>" class="inline-link">View Full Event Details →</a>
           </section>
 
@@ -245,7 +290,9 @@
               <div class="map-pin"></div>
             </div>
             <div class="map-footer">
-              <span class="map-location"><%= eventLocation %></span>
+              <span class="map-location">
+                <%= eventLocation %>
+              </span>
             </div>
           </article>
         </section>
@@ -253,7 +300,7 @@
         <aside class="manage-sidebar">
           <div class="side-card">
             <h3>Manage Booking</h3>
-            <button class="download-btn" type="button" id="downloadBtn" <%= isInactive ? 'disabled' : '' %>>
+            <button class="download-btn" type="button" id="downloadBtn" <%=isInactive ? 'disabled' : '' %>>
               Download Confirmation
             </button>
             <button
@@ -282,20 +329,28 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="avatar-sidebar" id="avatarSidebar">
       <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User' %>
+        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User'
+          %>
       </div>
-      
+
       <div class="sidebar-divider"></div>
 
       <a href="/profile" class="sidebar-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
         My Profile
       </a>
 
       <div class="sidebar-divider"></div>
 
       <a href="/logout" class="sidebar-logout" id="logoutBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
         Log Out
       </a>
     </aside>
@@ -311,32 +366,39 @@
 
     <div class="print-tickets" aria-hidden="true">
       <% ticketList.forEach(function(ticketCode, index) { %>
-        <%
-          const ticketDetailsUrl = `${printBaseUrl}/tickets/${encodeURIComponent(ticketCode)}`;
-          const ticketQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1100x1100&margin=28&ecc=M&data=${encodeURIComponent(ticketDetailsUrl)}`;
-        %>
-        <section class="print-ticket" data-ticket-index="<%= index %>" data-ticket-code="<%= ticketCode %>">
-          <div class="print-ticket-header">
-            <div class="print-ticket-qr-wrap">
-              <img class="print-ticket-qr" src="<%= ticketQrUrl %>" alt="Ticket QR code" />
-              <p class="print-ticket-scan">Scan QR code for full ticket details</p>
+        <% const ticketDetailsUrl=`${printBaseUrl}/tickets/${encodeURIComponent(ticketCode)}`; const
+          ticketQrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=1100x1100&margin=28&ecc=M&data=${encodeURIComponent(ticketDetailsUrl)}`;
+          %>
+          <section class="print-ticket" data-ticket-index="<%= index %>" data-ticket-code="<%= ticketCode %>">
+            <div class="print-ticket-header">
+              <div class="print-ticket-qr-wrap">
+                <img class="print-ticket-qr" src="<%= ticketQrUrl %>" alt="Ticket QR code" />
+                <p class="print-ticket-scan">Scan QR code for full ticket details</p>
+              </div>
+              <div class="print-ticket-main">
+                <p class="print-ticket-label">TICKET</p>
+                <h2 class="print-ticket-title">
+                  <%= eventName %>
+                </h2>
+                <p class="print-ticket-meta">
+                  <%= eventDate %>
+                </p>
+                <p class="print-ticket-meta">
+                  <%= eventTime %>
+                </p>
+                <p class="print-ticket-meta">Attendee: <%= attendeeNames[index] || (index===0 ? booking.userName : '-' )
+                    || '-' %>
+                </p>
+              </div>
+              <div class="print-ticket-id">
+                <span>Ticket <%= index + 1 %> of <%= ticketList.length %></span>
+              </div>
             </div>
-            <div class="print-ticket-main">
-              <p class="print-ticket-label">TICKET</p>
-              <h2 class="print-ticket-title"><%= eventName %></h2>
-              <p class="print-ticket-meta"><%= eventDate %></p>
-              <p class="print-ticket-meta"><%= eventTime %></p>
-              <p class="print-ticket-meta">Attendee: <%= attendeeNames[index] || (index === 0 ? booking.userName : '-') || '-' %></p>
+            <div class="print-ticket-banner">
+              <img src="<%= eventImage %>" alt="<%= eventName %> event banner" />
             </div>
-            <div class="print-ticket-id">
-              <span>Ticket <%= index + 1 %> of <%= ticketList.length %></span>
-            </div>
-          </div>
-          <div class="print-ticket-banner">
-            <img src="<%= eventImage %>" alt="<%= eventName %> event banner" />
-          </div>
-        </section>
-      <% }); %>
+          </section>
+          <% }); %>
     </div>
 
     <div class="confirm-modal" id="confirmModal" aria-hidden="true">
@@ -344,53 +406,79 @@
       <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
         <h3 id="confirmTitle">Download Confirmation</h3>
         <p class="confirm-subtitle">
-          Review the ticket details for <strong><%= eventName %></strong> before saving.
+          Review the ticket details for <strong>
+            <%= eventName %>
+          </strong> before saving.
         </p>
         <div class="confirm-details">
           <div class="detail-row">
             <span>Event</span>
-            <strong><%= eventName %></strong>
+            <strong>
+              <%= eventName %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Date</span>
-            <strong><%= eventDate %></strong>
+            <strong>
+              <%= eventDate %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Time</span>
-            <strong><%= eventTime %></strong>
+            <strong>
+              <%= eventTime %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Location</span>
-            <strong><%= eventLocation %></strong>
+            <strong>
+              <%= eventLocation %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Tickets</span>
-            <strong><%= ticketCount %></strong>
+            <strong>
+              <%= ticketCount %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Price / Ticket</span>
-            <strong><%= unitPriceDisplay %></strong>
+            <strong>
+              <%= unitPriceDisplay %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Total</span>
-            <strong><%= totalDisplay %></strong>
+            <strong>
+              <%= totalDisplay %>
+            </strong>
           </div>
           <div class="detail-divider"></div>
           <div class="detail-row">
             <span>Attendees</span>
-            <strong><%= attendeeNamesDisplay %></strong>
+            <strong>
+              <%= attendeeNamesDisplay %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Email</span>
-            <strong><%= attendeeEmail %></strong>
+            <strong>
+              <%= attendeeEmail %>
+            </strong>
           </div>
           <div class="detail-row detail-full">
-            <span><%= ticketIdLabel %></span>
-            <strong class="detail-codes"><%= ticketCodesDisplay %></strong>
+            <span>
+              <%= ticketIdLabel %>
+            </span>
+            <strong class="detail-codes">
+              <%= ticketCodesDisplay %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Reference</span>
-            <strong><%= booking.referenceNumber || '-' %></strong>
+            <strong>
+              <%= booking.referenceNumber || '-' %>
+            </strong>
           </div>
         </div>
         <div class="confirm-actions">
@@ -410,7 +498,9 @@
         <div class="confirm-details">
           <div class="detail-row">
             <span>Tickets booked</span>
-            <strong id="cancelTotalTickets"><%= ticketCount %></strong>
+            <strong id="cancelTotalTickets">
+              <%= ticketCount %>
+            </strong>
           </div>
           <div class="detail-row">
             <span>Cancel tickets</span>
@@ -660,5 +750,6 @@
         });
       }
     </script>
-  </body>
+</body>
+
 </html>

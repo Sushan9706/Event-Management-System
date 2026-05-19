@@ -111,7 +111,7 @@ const calculateVenueAmount = ({ venue, startDate, endDate, startTime, endTime })
 
 exports.getVenues = async (req, res) => {
     try {
-        const venues = await Venue.find({ status: { $ne: 'maintenance' } }).lean();
+        const venues = await Venue.find({ status: 'available' }).lean();
         
         let fullUser = null;
         if (req.user && req.user.userId) {
@@ -170,7 +170,7 @@ exports.getVenueById = async (req, res) => {
 exports.searchVenues = async (req, res) => {
     try {
         let { q, location, capacity } = req.query;
-        let queryObj = { status: { $ne: 'maintenance' } };
+        let queryObj = { status: 'available' };
 
         if (q) {
             queryObj.name = { $regex: q, $options: "i" };
