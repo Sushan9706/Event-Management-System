@@ -81,7 +81,9 @@ exports.getManageEvents = async (req, res) => {
         // Stats for cards - based on ALL events not just filtered ones for accurate dashboard
         const totalEventsCount = await Event.countDocuments();
         const activeEventsCount = await Event.countDocuments({ status: { $nin: ['completed', 'cancelled'] } });
-        const totalAttendees = await Booking.countDocuments({ status: 'confirmed' });
+        
+        const confirmedBookingsForStats = await Booking.find({ status: 'confirmed' });
+        const totalAttendees = confirmedBookingsForStats.reduce((sum, b) => sum + (b.ticketCount || 0), 0);
 
         // Avg Attendance (Mocked or calculated if possible)
         const allEvents = await Event.find();
@@ -380,7 +382,8 @@ exports.getBookingDetails = async (req, res) => {
             .skip((page - 1) * limit)
             .limit(limit);
 
-        const totalBookings = await Booking.countDocuments({ eventId: req.params.id, status: { $ne: 'cancelled' } });
+        const bookingsForStats = await Booking.find({ eventId: req.params.id, status: { $ne: 'cancelled' } });
+        const totalBookings = bookingsForStats.reduce((sum, b) => sum + (b.ticketCount || 0), 0);
         const capacityPercent = event.maxCapacity > 0 ? Math.round((totalBookings / event.maxCapacity) * 100) : 0;
 
         // If AJAX request
@@ -427,7 +430,8 @@ exports.exportBookingsCsv = async (req, res) => {
 
         let csv = 'Name,Email,Reference,Status,Booking Date\n';
         bookings.forEach(b => {
-            csv += `"${b.userName}","${b.userEmail}","${b.referenceNumber}","${b.status}","${b.createdAt}"\n`;
+            const names = (Array.isArray(b.attendeeNames) && b.attendeeNames.length > 0) ? b.attendeeNames.join(', ') : b.userName;
+            csv += `"${names.replace(/"/g, '""')}","${b.userEmail}","${b.referenceNumber}","${b.status}","${b.createdAt}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');

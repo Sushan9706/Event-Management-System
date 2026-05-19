@@ -11,10 +11,30 @@
       <link rel="stylesheet" href="/css/admin-manage.css" />
       <style>
         /* Override some admin-manage.css styles that conflict with profile page */
-        body { display: flex; flex-direction: column; }
-        .page-main, main { padding: 44px 40px 72px 60px; flex: 1; }
+        body {
+          background-color: var(--bg-main) !important;
+          background: var(--bg-main) !important;
+          display: flex;
+          flex-direction: column;
+          font-family: var(--font-body) !important;
+        }
         .navbar { position: sticky; top: 0; width: 100%; z-index: 1000; }
         .nav-inner { max-width: 1200px; margin: 0 auto; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
+
+        /* Prevent common-nav.css from polluting the admin notification dropdown */
+        .admin-notif-wrapper .notif-dropdown {
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
+        .admin-notif-wrapper .notif-title {
+          padding: 0 !important;
+          border-bottom: none !important;
+          margin: 0 !important;
+        }
+        .admin-notif-wrapper .notif-item {
+          padding: 12px 16px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+        }
       </style>
     <% } %>
 </head>
@@ -24,69 +44,72 @@
     <!-- ── Admin Navbar ── -->
     <header class="navbar">
       <div class="nav-inner">
-        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
-        <nav class="nav-center">
-          <a href="/user" class="nav-link">Home</a>
-          <a href="/catalog" class="nav-link">Events</a>
-          <a href="/venue" class="nav-link">Venues</a>
-          <a href="/bookings" class="nav-link">My Bookings</a>
-        </nav>
-        <div class="nav-right">
-          <% if (locals.user) { %>
-            <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+        <div class="nav-brand">
+          <a href="/admin/dashboard" class="logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+        </div>
+        <nav class="nav-links">
+          <a href="/admin/dashboard" class="nav-link">Events</a>
+          <a href="/admin/venues" class="nav-link">Venues</a>
+          <a href="/admin/messages" class="nav-link">Messages</a>
+
+          <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
+            <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              <% if (locals.notifications && locals.notifications.some(n => !n.isRead)) { %>
-                <span class="notif-dot"></span>
+              <span class="notif-dot" id="notifDot" style="display: none;"></span>
+            </button>
+
+            <div class="notif-dropdown" id="notifDropdown" style="position: absolute; top: calc(100% + 12px); right: 0; width: 320px; padding: 0; overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 1000; display: none;">
+              <p class="notif-title">RECENT BOOKINGS</p>
+              <div id="notifList">
+                <p class="notif-empty">Loading notifications...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-menu-container">
+            <button class="user-trigger" id="userTrigger" title="User Account">
+              <% if (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') { %>
+                <img id="navAvatar" src="<%= user.profileImage %>" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+              <% } else { %>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
               <% } %>
             </button>
-            <img
-              src="<%= (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3R5bGU9ImJhY2tncm91bmQ6I2YxZjVmOTt3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIC8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiAvPjwvc3ZnPg==' %>"
-              alt="User avatar" class="avatar-circle" id="profileTrigger" />
-          <% } else { %>
-            <a href="/login" class="nav-link">Login</a>
-          <% } %>
-        </div>
+            <div class="user-dropdown" id="userDropdown">
+              <a href="/profile" class="dropdown-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Profile
+              </a>
+              <a href="/logout" class="dropdown-link logout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+              </a>
+            </div>
+          </div>
+        </nav>
       </div>
     </header>
-
-    <div class="notif-dropdown" id="notifDropdown">
-      <p class="notif-title">NOTIFICATIONS</p>
-      <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
-        formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
-        const formatNotifTime = (date) => {
-        if (!date) return "Just now";
-        const d = new Date(date);
-        if (Number.isNaN(d.getTime())) return "Just now";
-        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-        };
-        %>
-        <% if (notifications.length===0) { %>
-          <p class="notif-empty">No new notifications</p>
-          <% } else { %>
-            <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled' ? 'Booking Cancelled'
-              : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
-              countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
-              <div class="notif-item">
-                <p class="notif-item-title">
-                  <%= title %>
-                </p>
-                <p class="notif-item-sub">
-                  <%= eventTitle %> · <%= countLabel %>
-                </p>
-                <p class="notif-time">
-                  <%= timeLabel %>
-                </p>
-              </div>
-              <% }) %>
-                <% } %>
-    </div>
   <% } %>
 
-  <div class="profile-shell">
-    <main>
+  <% if (locals.user && user.role === 'admin') { %>
+    <main class="page-main">
+  <% } else { %>
+    <div class="profile-shell">
+      <main>
+  <% } %>
       <div class="page-title">
         <span class="t1">Account</span>
         <span class="t2">Settings</span>
@@ -199,9 +222,13 @@
             <button class="btn-save" onclick="saveChanges()">Save Changes</button>
           </div>
         </div>
-      </div>
+    </div>
+  <% if (locals.user && user.role === 'admin') { %>
     </main>
-  </div>
+  <% } else { %>
+      </main>
+    </div>
+  <% } %>
 
   <footer class="footer">
     <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
