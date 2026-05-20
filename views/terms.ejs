@@ -15,9 +15,11 @@
       <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>" class="nav-logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
       
       <nav class="nav-center">
-        <a href="/user" class="nav-link">Home</a>
-        <a href="/catalog" class="nav-link">Events</a>
-        <a href="/venue" class="nav-link">Venues</a>
+<% if (locals.user) { %>
+    <a href="/user" class="nav-link">Home</a>
+    <a href="/catalog" class="nav-link">Events</a>
+    <a href="/venue" class="nav-link">Venues</a>
+<% } %>
         <% if (locals.user) { %>
         <a href="/bookings" class="nav-link">My Bookings</a>
         <% } %>
