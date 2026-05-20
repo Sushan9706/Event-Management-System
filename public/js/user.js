@@ -299,12 +299,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const modal = document.createElement("div");
                 modal.className = "logout-modal";
                 
+                const isAdmin = window.location.pathname.startsWith('/admin') || !!document.querySelector('a[href*="/admin/"]');
+                const titleText = isAdmin ? "Confirm Admin Logout" : "Are you sure you want to log out?";
+                const descText = isAdmin 
+                    ? "You will need to sign in again to access the admin console, manage events, venues, and review user bookings."
+                    : "You will need to sign in again to book premium venues, register for events, and manage your ticket history.";
+
                 modal.innerHTML = `
                     <div class="logout-modal-icon">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </div>
-                    <h3>Are you sure you want to log out?</h3>
-                    <p>You will need to sign in again to access your dashboard and manage your bookings.</p>
+                    <h3>${titleText}</h3>
+                    <p>${descText}</p>
                     <div class="logout-modal-actions">
                         <button class="logout-btn-cancel">Cancel</button>
                         <button class="logout-btn-confirm">Yes, Log Out</button>

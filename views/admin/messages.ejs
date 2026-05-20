@@ -159,9 +159,9 @@
                                         <%= msg.status %>
                                     </span>
                                 </td>
-                                <td>
+                                <td style="white-space: nowrap;">
                                     <form action="/admin/messages/resolve/<%= msg._id %>" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn-view" style="font-size: 10px; padding: 6px 12px; background: <%= msg.status === 'pending' ? '#2563eb' : '#64748b' %>; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; text-transform: uppercase;">
+                                        <button type="submit" class="btn-view" style="font-size: 10px; padding: 6px 12px; background: <%= msg.status === 'pending' ? '#2563eb' : '#64748b' %>; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; text-transform: uppercase; white-space: nowrap; display: inline-block;">
                                             <%= msg.status === 'pending' ? 'RESOLVE' : 'RE-OPEN' %>
                                         </button>
                                     </form>
@@ -266,9 +266,9 @@
                                 ${msg.status}
                             </span>
                         </td>
-                        <td>
+                        <td style="white-space: nowrap;">
                             <form action="/admin/messages/resolve/${msg._id}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn-view" style="font-size: 10px; padding: 6px 12px; background: ${actionBg}; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; text-transform: uppercase;">
+                                <button type="submit" class="btn-view" style="font-size: 10px; padding: 6px 12px; background: ${actionBg}; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; text-transform: uppercase; white-space: nowrap; display: inline-block;">
                                     ${actionText}
                                 </button>
                             </form>
