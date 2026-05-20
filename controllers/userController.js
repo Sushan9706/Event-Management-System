@@ -249,9 +249,17 @@ exports.getUserDashboard = async (req, res) => {
   
         const upcomingEvents = allMergedBookings.filter(b => new Date(b.date) >= now).length;
   
-      // Latest events - no date filter, just newest added
+      // Latest events - no date filter, just newest added (including recently cancelled ones within 3 days)
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
       const latestEvents = await eventModel
-        .find({ status: { $ne: "cancelled" } })
+        .find({
+            $or: [
+                { status: { $ne: "cancelled" } },
+                { status: "cancelled", updatedAt: { $gte: cutoff } }
+            ]
+        })
+        .populate('categoryId')
         .sort({ createdAt: -1 })
         .limit(3);
   
@@ -883,13 +891,25 @@ exports.getGuestDashboard = async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Fetch upcoming events
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
+
+        // Fetch upcoming events and recently cancelled ones (within 3 days)
         let events = await eventModel.find({ 
-            endDate: { $gte: today },
-            status: { $ne: 'cancelled' }
+            $or: [
+                { 
+                    status: { $ne: 'cancelled' },
+                    endDate: { $gte: today }
+                },
+                {
+                    status: 'cancelled',
+                    updatedAt: { $gte: cutoff }
+                }
+            ]
         }).sort({ createdAt: -1 }).populate('categoryId').lean();
 
-        events = events.filter(event => !hasEventEnded(event)).slice(0, 6);
+        // Keep recently cancelled ones and events that haven't ended yet
+        events = events.filter(event => event.status === 'cancelled' || !hasEventEnded(event)).slice(0, 6);
 
         // Fetch active venues
         const venues = await Venue.find({ status: 'available' }).sort({ createdAt: -1 }).limit(6).lean();
@@ -911,17 +931,25 @@ exports.getCatalog = async (req, res) => {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
 
-        // Fetch active events AND completed events that ended within 3 days
+        // Fetch active events AND completed/cancelled/expired events that ended or were cancelled within 3 days
         let events = await eventModel.find({
             $or: [
-                { status: { $in: ['upcoming', 'ongoing'] }, endDate: { $gte: cutoff } },
-                { status: { $in: ['completed', 'expired'] }, endDate: { $gte: cutoff } }
+                { status: { $in: ['upcoming', 'ongoing'] } },
+                {
+                    status: { $in: ['completed', 'expired', 'cancelled'] },
+                    $or: [
+                        { endDate: { $gte: cutoff } },
+                        { updatedAt: { $gte: cutoff } }
+                    ]
+                }
             ]
         }).populate('categoryId').lean();
 
-        // Mark hasEnded and status dynamically for completed events
+        // Mark hasEnded and status dynamically
         events.forEach(event => {
-            if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
+            if (event.status === 'cancelled') {
+                event.isCancelled = true;
+            } else if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
                 event.status = 'completed';
                 event.hasEnded = true;
             }
@@ -960,9 +988,7 @@ exports.searchEvents = async (req, res) => {
         const { hasEventEnded, syncDatabase } = require("../utils/bookingStatus");
         await syncDatabase();
         let { q, date, category } = req.query;
-        let queryObj = {
-            status: { $in: ['upcoming', 'ongoing'] }
-        };
+        let queryObj = {};
 
         // 1. Text Search (Title + Category)
         if (q) {
@@ -1014,15 +1040,22 @@ exports.searchEvents = async (req, res) => {
             }
         }
 
-        // 4. Future Events Filter
+        // 4. Future Events Filter & 3-day cleanup logic for completed/expired/cancelled events
         if (!date) {
             const cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
             queryObj.$and = queryObj.$and || [];
             queryObj.$and.push({
                 $or: [
-                    { endDate: { $gte: cutoff } },
-                    { date: { $gte: cutoff } }
+                    { status: { $in: ['upcoming', 'ongoing'] } },
+                    {
+                        status: { $in: ['completed', 'expired', 'cancelled'] },
+                        $or: [
+                            { endDate: { $gte: cutoff } },
+                            { date: { $gte: cutoff } },
+                            { updatedAt: { $gte: cutoff } }
+                        ]
+                    }
                 ]
             });
             
@@ -1032,14 +1065,27 @@ exports.searchEvents = async (req, res) => {
                 delete queryObj.$and;
                 Object.assign(queryObj, singleFilter);
             }
+        } else {
+            // If date is requested, still make sure we don't display cancelled events that were cancelled more than 3 days ago
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
+            queryObj.$and = queryObj.$and || [];
+            queryObj.$and.push({
+                $or: [
+                    { status: { $ne: 'cancelled' } },
+                    { status: 'cancelled', updatedAt: { $gte: cutoff } }
+                ]
+            });
         }
 
         // Fetch events from DB and populate categoryId
         let events = await eventModel.find(queryObj).populate('categoryId').lean();
 
-        // Mark hasEnded and status dynamically for completed events
+        // Mark hasEnded and status dynamically
         events.forEach(event => {
-            if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
+            if (event.status === 'cancelled') {
+                event.isCancelled = true;
+            } else if (event.status === 'completed' || event.status === 'expired' || hasEventEnded(event)) {
                 event.status = 'completed';
                 event.hasEnded = true;
             }
