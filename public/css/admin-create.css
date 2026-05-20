@@ -679,9 +679,64 @@ body {
 }
 
 @media (max-width: 768px) {
+    .nav-links {
+        gap: 16px;
+    }
 
     .form-row,
     .form-row.three-col {
         grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 640px) {
+    .nav-inner {
+        padding: 0 16px;
+    }
+
+    .nav-links {
+        gap: 12px;
+    }
+
+    .nav-link {
+        font-size: 12px;
+    }
+
+    .logo {
+        font-size: 1.1rem !important;
+    }
+
+    .left-panel {
+        padding: 32px 16px;
+    }
+
+    .left-heading {
+        font-size: 26px;
+    }
+
+    .left-caption {
+        font-size: 14px;
+        margin-bottom: 32px;
+    }
+
+    .right-panel {
+        padding: 32px 16px;
+    }
+
+    .form-section {
+        margin-bottom: 32px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
     }
 }

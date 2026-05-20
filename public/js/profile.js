@@ -10,10 +10,12 @@ let isRemovalPending = false;
 // Grab elements for frequent use
 const profileAvatar = document.getElementById('profileAvatar');
 const navAvatar = document.getElementById('navAvatar');
-const usernameVal = document.getElementById('username').value;
+const usernameVal = document.getElementById('username') ? document.getElementById('username').value : '';
 
 // Default avatar logic (matching your EJS logic)
 const defaultAvatar = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3R5bGU9ImJhY2tncm91bmQ6I2YxZjVmOTt3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIC8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiAvPjwvc3ZnPg==`;
+
+const originalAvatarSrc = profileAvatar ? profileAvatar.src : '';
 
 /**
  * 2. PREVIEW LOGIC
@@ -44,6 +46,16 @@ function handleAvatarUpload(event) {
 }
 
 function removePhoto() {
+    const isFallback = !originalAvatarSrc || 
+                       originalAvatarSrc.startsWith('data:image/svg+xml') || 
+                       originalAvatarSrc.includes('tinyurl.com') || 
+                       originalAvatarSrc.includes('ui-avatars.com');
+
+    if (isFallback) {
+        showToast("No avatar is currently set.", "info");
+        return;
+    }
+
     selectedFile = null;
     isRemovalPending = true;
 
@@ -125,6 +137,21 @@ async function saveChanges() {
  * 5. DISCARD / MODAL LOGIC
  */
 function openDiscardModal() {
+    const currentPw = document.getElementById('currentPw') ? document.getElementById('currentPw').value.trim() : '';
+    const newPw = document.getElementById('newPw') ? document.getElementById('newPw').value.trim() : '';
+    const confirmPw = document.getElementById('confirmPw') ? document.getElementById('confirmPw').value.trim() : '';
+
+    const hasChanges = (selectedFile !== null) || 
+                       isRemovalPending || 
+                       (currentPw !== '') || 
+                       (newPw !== '') || 
+                       (confirmPw !== '');
+
+    if (!hasChanges) {
+        showToast("No changes to discard.", "info");
+        return;
+    }
+
     document.getElementById('discardModal').classList.add('open');
 }
 

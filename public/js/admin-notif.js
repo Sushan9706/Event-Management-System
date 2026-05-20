@@ -5,6 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const notifDropdown = document.getElementById('notifDropdown');
     const notifDot = document.getElementById('notifDot');
 
+    let burger = null;
+    let mobileMenu = null;
+
     // Store unread status globally in this script
     let hasUnreadNotifications = false;
 
@@ -25,6 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (notifBtn) {
         notifBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (mobileMenu && burger) {
+                mobileMenu.classList.remove('active');
+                burger.classList.remove('open');
+            }
             if (notifDropdown) {
                 const isHidden = notifDropdown.style.display === 'none' || notifDropdown.style.display === '';
                 notifDropdown.style.display = isHidden ? 'block' : 'none';
@@ -133,4 +140,179 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial call to check for unread notifications on load
     fetchNotifications();
+
+    // ── Hamburger Toggle for Admin mobile navigation ──
+    const navInner = document.querySelector('.nav-inner');
+    const navLinks = document.querySelector('.nav-links');
+    if (navInner && navLinks) {
+        // Create styles
+        const style = document.createElement('style');
+        style.id = 'admin-hamburger-styles';
+        style.textContent = `
+            .hamburger-btn {
+                display: none;
+                background: none;
+                border: 1px solid var(--border-soft, #e2e8f0);
+                color: var(--text-rich, #0f172a);
+                cursor: pointer;
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                order: 3;
+                margin-left: 12px;
+            }
+            .hamburger-btn:hover {
+                background: #f8fafc;
+                border-color: var(--accent-indigo, #4f46e5);
+            }
+            .admin-mobile-menu {
+                display: none;
+            }
+            @media (max-width: 768px) {
+                .hamburger-btn {
+                    display: flex;
+                }
+                .nav-inner {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                }
+                .nav-brand {
+                    order: 1;
+                }
+                .nav-links {
+                    order: 2;
+                    margin-left: auto;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 12px !important;
+                }
+                .nav-links > .nav-link {
+                    display: none !important;
+                }
+                .user-menu-container {
+                    display: none !important;
+                }
+                .admin-mobile-menu {
+                    display: flex;
+                    flex-direction: column;
+                    position: fixed;
+                    top: 60px;
+                    left: 0;
+                    right: 0;
+                    background: #ffffff;
+                    border-bottom: 1.5px solid var(--border-soft, #e2e8f0);
+                    padding: 16px 24px 24px;
+                    box-shadow: 0 15px 30px -5px rgba(15, 23, 42, 0.08);
+                    z-index: 999;
+                    transform: translateY(-20px);
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .admin-mobile-menu.active {
+                    transform: translateY(0);
+                    opacity: 1;
+                    visibility: visible;
+                }
+                .admin-mobile-menu .nav-link {
+                    font-size: 15px !important;
+                    font-weight: 600 !important;
+                    color: var(--text-rich, #0f172a) !important;
+                    padding: 12px 0;
+                    border-bottom: 1px solid var(--border-soft, #f1f5f9);
+                    text-decoration: none;
+                    transition: color 0.2s;
+                }
+                .admin-mobile-menu .nav-link:hover {
+                    color: var(--accent-indigo, #4f46e5) !important;
+                }
+                .admin-mobile-menu .nav-link:last-child {
+                    border-bottom: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create the mobile menu drawer container
+        mobileMenu = document.createElement('div');
+        mobileMenu.className = 'admin-mobile-menu';
+        
+        // Clone page navigation links
+        const links = navLinks.querySelectorAll('.nav-link');
+        links.forEach(link => {
+            const clone = link.cloneNode(true);
+            clone.classList.remove('active');
+            mobileMenu.appendChild(clone);
+        });
+
+        // Add Profile & Logout directly to mobile menu for clean mobile UX
+        const profileLink = document.createElement('a');
+        profileLink.href = '/profile';
+        profileLink.className = 'nav-link mobile-only-link';
+        profileLink.textContent = 'Account Settings';
+        
+        const logoutLink = document.createElement('a');
+        logoutLink.href = '/logout';
+        logoutLink.className = 'nav-link mobile-only-link logout-trigger-mobile';
+        logoutLink.textContent = 'Logout';
+        logoutLink.style.color = '#ef4444';
+        
+        mobileMenu.appendChild(profileLink);
+        mobileMenu.appendChild(logoutLink);
+
+        // Create hamburger button
+        burger = document.createElement('button');
+        burger.className = 'hamburger-btn';
+        burger.setAttribute('aria-label', 'Toggle navigation');
+        burger.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" class="line-1"></line>
+                <line x1="3" y1="6" x2="21" y2="6" class="line-2"></line>
+                <line x1="3" y1="18" x2="21" y2="18" class="line-3"></line>
+            </svg>
+        `;
+        
+        // Append burger button next to notifications in nav-inner
+        navInner.appendChild(burger);
+        document.body.appendChild(mobileMenu);
+
+        // Toggle state
+        burger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (notifDropdown) {
+                notifDropdown.style.display = 'none';
+                notifDropdown.classList.remove('show');
+                notifDropdown.classList.remove('open');
+            }
+            burger.classList.toggle('open');
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close on tap outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !burger.contains(e.target)) {
+                burger.classList.remove('open');
+                mobileMenu.classList.remove('active');
+            }
+        });
+
+        // Re-use current logout modal for the mobile logout link
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            burger.classList.remove('open');
+            mobileMenu.classList.remove('active');
+            
+            // Check if standard logout modal is loaded
+            const standardLogout = document.querySelector('.dropdown-link.logout');
+            if (standardLogout) {
+                standardLogout.click();
+            } else {
+                window.location.href = '/logout';
+            }
+        });
+    }
 });
