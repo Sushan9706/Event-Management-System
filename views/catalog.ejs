@@ -197,6 +197,9 @@
                   <%= (event.categoryId && event.categoryId.name) ? event.categoryId.name : (event.category || 'Other' )
                     %>
                 </span>
+                <span class="status-tag status-<%= event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status %>">
+                  <%= event.status %>
+                </span>
               </div>
               <div class="card-body">
                 <p class="card-name">

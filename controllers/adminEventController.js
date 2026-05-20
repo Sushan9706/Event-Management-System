@@ -85,19 +85,14 @@ exports.getManageEvents = async (req, res) => {
         const confirmedBookingsForStats = await Booking.find({ status: 'confirmed' });
         const totalAttendees = confirmedBookingsForStats.reduce((sum, b) => sum + (b.ticketCount || 0), 0);
 
-        // Avg Attendance (Mocked or calculated if possible)
-        const allEvents = await Event.find();
-        let avgAttendance = 0;
-        if (totalEventsCount > 0) {
-            const totalCapacity = allEvents.reduce((sum, e) => sum + (e.maxCapacity || 0), 0);
-            avgAttendance = totalCapacity > 0 ? Math.round((totalAttendees / totalCapacity) * 100) : 0;
-        }
+        // Registered Users count (excluding admin users)
+        const registeredUsersCount = await User.countDocuments({ role: 'user' });
 
         const stats = {
             totalEvents: totalEventsCount,
             activeEvents: activeEventsCount,
             totalAttendees: totalAttendees,
-            avgAttendance: avgAttendance
+            registeredUsers: registeredUsersCount
         };
 
         // If AJAX request, return JSON
@@ -143,6 +138,27 @@ exports.postCreateEvent = async (req, res) => {
     try {
         const { eventName, description, categoryId, startDate, startTime, endDate, endTime, location, maxCapacity, ticketPrice, status } = req.body;
  
+        // --- Ticket Price and Capacity Validations (NPR context) ---
+        const parsedPrice = parseFloat(ticketPrice) || 0;
+        if (parsedPrice < 0 || parsedPrice > 100000) {
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'Ticket price must be between NPR 0 and NPR 100,000',
+                event: req.body,
+                categories
+            });
+        }
+
+        const parsedCapacity = parseInt(maxCapacity) || 0;
+        if (parsedCapacity < 1 || parsedCapacity > 100000) {
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'Event capacity must be between 1 and 100,000 attendees',
+                event: req.body,
+                categories
+            });
+        }
+
         // --- Date Validation: Cannot go past today ---
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -150,8 +166,12 @@ exports.postCreateEvent = async (req, res) => {
         today.setHours(0, 0, 0, 0);
  
         if (start < today) {
-            req.flash('error', 'Start date cannot be in the past');
-            return res.redirect('/admin/events/create');
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'Start date cannot be in the past',
+                event: req.body,
+                categories
+            });
         }
 
         // Check if start time is in the past for today
@@ -160,18 +180,30 @@ exports.postCreateEvent = async (req, res) => {
         const minDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
         if (startDate === minDateStr && startTime < currentTime) {
-            req.flash('error', 'Start time cannot be in the past for events starting today');
-            return res.redirect('/admin/events/create');
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'Start time cannot be in the past for events starting today',
+                event: req.body,
+                categories
+            });
         }
  
         if (end < start) {
-            req.flash('error', 'End date cannot be before start date');
-            return res.redirect('/admin/events/create');
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'End date cannot be before start date',
+                event: req.body,
+                categories
+            });
         }
 
         if (startDate === endDate && startTime >= endTime) {
-            req.flash('error', 'End time must be after start time for same-day events');
-            return res.redirect('/admin/events/create');
+            const categories = await Category.find();
+            return res.render('admin/createEvent', {
+                error: 'End time must be after start time for same-day events',
+                event: req.body,
+                categories
+            });
         }
  
         // Sync category for legacy support if needed
@@ -190,8 +222,8 @@ exports.postCreateEvent = async (req, res) => {
             endDate,
             endTime,
             location,
-            maxCapacity: Math.max(0, parseInt(maxCapacity) || 0),
-            ticketPrice: Math.max(0, parseFloat(ticketPrice) || 0),
+            maxCapacity: parsedCapacity,
+            ticketPrice: parsedPrice,
             status: status || 'upcoming',
             createdBy: req.user ? req.user.userId : null
         };
@@ -205,12 +237,23 @@ exports.postCreateEvent = async (req, res) => {
 
         await Event.create(eventData);
 
+        try {
+            const { syncDatabase } = require('../utils/bookingStatus');
+            await syncDatabase();
+        } catch (syncErr) {
+            console.error('Error syncing database after event creation:', syncErr);
+        }
+
         req.flash('success', 'Event created successfully!');
         res.redirect('/admin/dashboard');
     } catch (err) {
         console.error('Error creating event:', err);
-        req.flash('error', 'Failed to create event');
-        res.redirect('/admin/events/create');
+        const categories = await Category.find();
+        res.render('admin/createEvent', {
+            error: err.message || 'Failed to create event',
+            event: req.body,
+            categories
+        });
     }
 };
 
@@ -242,14 +285,39 @@ exports.postEditEvent = async (req, res) => {
         }
  
         // --- Date Validation ---
+        // --- Ticket Price and Capacity Validations (NPR context) ---
+        const parsedPrice = parseFloat(ticketPrice) || 0;
+        if (parsedPrice < 0 || parsedPrice > 100000) {
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'Ticket price must be between NPR 0 and NPR 100,000',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
+        }
+
+        const parsedCapacity = parseInt(maxCapacity) || 0;
+        if (parsedCapacity < 1 || parsedCapacity > 100000) {
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'Event capacity must be between 1 and 100,000 attendees',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
+        }
+
         const start = new Date(startDate);
         const end = new Date(endDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
  
         if (start < today) {
-            req.flash('error', 'Start date cannot be in the past');
-            return res.redirect(`/admin/events/edit/${req.params.id}`);
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'Start date cannot be in the past',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
         }
 
         // Check if start time is in the past for today
@@ -258,18 +326,30 @@ exports.postEditEvent = async (req, res) => {
         const minDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
         if (startDate === minDateStr && startTime < currentTime) {
-            req.flash('error', 'Start time cannot be in the past for events starting today');
-            return res.redirect(`/admin/events/edit/${req.params.id}`);
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'Start time cannot be in the past for events starting today',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
         }
  
         if (end < start) {
-            req.flash('error', 'End date cannot be before start date');
-            return res.redirect(`/admin/events/edit/${req.params.id}`);
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'End date cannot be before start date',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
         }
 
         if (startDate === endDate && startTime >= endTime) {
-            req.flash('error', 'End time must be after start time for same-day events');
-            return res.redirect(`/admin/events/edit/${req.params.id}`);
+            const categories = await Category.find();
+            return res.render('admin/editEvent', {
+                error: 'End time must be after start time for same-day events',
+                event: { ...req.body, _id: req.params.id, imagePath: event.imagePath },
+                categories
+            });
         }
  
         event.eventName = eventName;
@@ -280,8 +360,8 @@ exports.postEditEvent = async (req, res) => {
         event.endDate = endDate;
         event.endTime = endTime;
         event.location = location;
-        event.maxCapacity = Math.max(0, parseInt(maxCapacity) || 0);
-        event.ticketPrice = Math.max(0, parseFloat(ticketPrice) || 0);
+        event.maxCapacity = parsedCapacity;
+        event.ticketPrice = parsedPrice;
         event.status = status || 'upcoming';
 
         if (req.file) {
@@ -296,6 +376,13 @@ exports.postEditEvent = async (req, res) => {
         }
 
         await event.save();
+
+        try {
+            const { syncDatabase } = require('../utils/bookingStatus');
+            await syncDatabase();
+        } catch (syncErr) {
+            console.error('Error syncing database after event update:', syncErr);
+        }
 
         req.flash('success', 'Event updated successfully!');
         res.redirect('/admin/dashboard');
@@ -590,5 +677,143 @@ exports.markAllNotificationsRead = async (req, res) => {
     } catch (err) {
         console.error('Error marking admin notifications as read:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// ─── REGISTERED USERS MANAGEMENT ──────────────────────────────
+exports.getRegisteredUsers = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const search = req.query.search || '';
+
+        let query = { role: 'user' };
+        if (search) {
+            query.$or = [
+                { username: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const totalItems = await User.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const usersList = await User.find(query)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        // Fetch bookings count for each user
+        const enrichedUsers = await Promise.all(usersList.map(async (user) => {
+            const bookingsCount = await Booking.countDocuments({ userEmail: user.email.toLowerCase() });
+            const venueBookingsCount = await VenueBooking.countDocuments({ userId: user._id });
+            return {
+                ...user.toObject(),
+                bookingsCount,
+                venueBookingsCount,
+                eventBookings: bookingsCount,
+                venueBookings: venueBookingsCount
+            };
+        }));
+
+        // Stats for Users dashboard
+        const totalUsers = await User.countDocuments({ role: 'user' });
+        const newUsersThisMonth = await User.countDocuments({
+            role: 'user',
+            createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } // current month 1st
+        });
+        
+        // Count active bookers among standard users
+        const allStandardUsers = await User.find({ role: 'user' });
+        let activeBookersCount = 0;
+        for (const u of allStandardUsers) {
+            const hasEventBooking = await Booking.exists({ userEmail: u.email.toLowerCase() });
+            const hasVenueBooking = await VenueBooking.exists({ userId: u._id });
+            if (hasEventBooking || hasVenueBooking) {
+                activeBookersCount++;
+            }
+        }
+
+        const stats = {
+            totalUsers,
+            joinedThisMonth: newUsersThisMonth,
+            activeBookers: activeBookersCount
+        };
+
+        // If AJAX request
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            return res.json({
+                users: enrichedUsers,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems
+                }
+            });
+        }
+
+        res.render('admin/manageUsers', {
+            users: enrichedUsers,
+            stats,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems
+            },
+            filters: {
+                search
+            }
+        });
+    } catch (err) {
+        console.error('Error loading registered users:', err);
+        req.flash('error', 'Failed to load registered users');
+        res.redirect('/admin/dashboard');
+    }
+};
+
+// Delete a registered user
+exports.deleteRegisteredUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/admin/users');
+        }
+
+        if (user.role === 'admin') {
+            req.flash('error', 'Cannot delete an administrator');
+            return res.redirect('/admin/users');
+        }
+
+        await User.findByIdAndDelete(req.params.id);
+
+        req.flash('success', 'Registered user deleted successfully');
+        res.redirect('/admin/users');
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        req.flash('error', 'Failed to delete user');
+        res.redirect('/admin/users');
+    }
+};
+
+// Export users as CSV
+exports.exportUsersCsv = async (req, res) => {
+    try {
+        const users = await User.find({ role: 'user' }).sort({ createdAt: -1 });
+
+        let csv = 'Username,Email,Date Joined,Total Event Bookings,Total Venue Bookings\n';
+        for (const u of users) {
+            const bookingsCount = await Booking.countDocuments({ userEmail: u.email });
+            const venueBookingsCount = await VenueBooking.countDocuments({ userId: u._id });
+            const dateJoined = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A';
+            csv += `"${u.username}","${u.email}","${dateJoined}",${bookingsCount},${venueBookingsCount}\n`;
+        }
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="registered_users.csv"');
+        res.send(csv);
+    } catch (err) {
+        console.error('Error exporting users CSV:', err);
+        res.status(500).send('Failed to export CSV');
     }
 };

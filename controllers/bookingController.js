@@ -252,6 +252,9 @@ const prepareBookingCheckout = async ({ userId, eventId, email, ticketCountRaw, 
     if (!event) {
         throw createHttpError(404, 'Event not found');
     }
+    if (event.status !== 'upcoming') {
+        throw createHttpError(400, `Booking is only available for upcoming events. Current status is ${event.status || 'closed'}.`);
+    }
     if (isEventDatePassed(event)) {
         throw createHttpError(400, 'Booking closed. This event date has passed.');
     }

@@ -170,13 +170,19 @@
           Digital Certification of Attendance
         </li>
       </ul>
-      <% if (hasEnded) { %>
+      <% if (event.status === 'ongoing') { %>
+        <button class="book-btn" type="button" disabled>Event Ongoing</button>
+      <% } else if (event.status === 'completed') { %>
+        <button class="book-btn" type="button" disabled>Event Completed</button>
+      <% } else if (event.status === 'cancelled') { %>
+        <button class="book-btn" type="button" disabled>Event Cancelled</button>
+      <% } else if (event.status !== 'upcoming' || hasEnded) { %>
         <button class="book-btn" type="button" disabled>Event Closed</button>
-        <% } else if (isSoldOut) { %>
-          <button class="book-btn" type="button" disabled>Sold Out</button>
-          <% } else { %>
-            <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
-            <% } %>
+      <% } else if (isSoldOut) { %>
+        <button class="book-btn" type="button" disabled>Sold Out</button>
+      <% } else { %>
+        <button class="book-btn" type="button" onclick="handleBooking()">Book Now</button>
+      <% } %>
               <p class="secure-note">
                 SECURE CHECKOUT POWERED BY EMS GLOBAL<br />NO HIDDEN PROCESSING FEES.
               </p>
@@ -312,6 +318,7 @@
     data-event-location="<%= eventLocation %>" data-event-price="<%= eventPrice %>"
     data-available-tickets="<%= hasCapacityLimit ? availableTickets : "" %>"
     data-has-capacity-limit="<%= hasCapacityLimit %>" data-has-ended="<%= hasEnded %>"
+    data-event-status="<%= event.status %>"
     data-api-token="<%= locals.apiToken || '' %>"
     data-authenticated="<%= isAuthenticated %>" data-already-booked="<%= alreadyBookedTickets %>">
     <div class="booking-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
@@ -499,6 +506,7 @@
     const searchOverlay = document.getElementById("searchOverlay");
     const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
     const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
+    const eventStatus = bookingModal?.dataset?.eventStatus || "upcoming";
     const maxTicketsPerBooking = 5;
     const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
     let esewaRequestInFlight = false;
@@ -839,7 +847,7 @@
     }
 
     function handleBooking() {
-      if (bookingClosed) {
+      if (bookingClosed || eventStatus !== 'upcoming') {
         return;
       }
 

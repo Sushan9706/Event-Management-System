@@ -259,6 +259,9 @@
                         <%= event.categoryId.name %>
                       </span>
                       <% } %>
+                      <span class="status-tag status-<%= event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status %>">
+                        <%= event.status %>
+                      </span>
                 </div>
                 <div class="card-body">
                   <h3 class="card-title" style="font-weight: bold; margin-bottom: 4px;">

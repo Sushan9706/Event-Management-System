@@ -43,50 +43,38 @@ function handleAvatarUpload(event) {
     }
 }
 
-/**
- * 3. REMOVE LOGIC
- * Triggered when user clicks "Remove Photo".
- * Only updates the UI to show the default avatar.
- */
-async function removePhoto() {
-    try {
-        const formData = new FormData();
-        formData.append('removeProfileImage', 'true');
+function removePhoto() {
+    selectedFile = null;
+    isRemovalPending = true;
 
-        const response = await fetch('/profile/update-info', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (response.ok) {
-            selectedFile = null;
-            isRemovalPending = false;
-
-            // Show the placeholder in the UI
-            if (profileAvatar) profileAvatar.src = defaultAvatar;
-            
-            // Replace navbar image with SVG silhouette immediately
-            const triggerImg = document.querySelector('#userTrigger img');
-            if (triggerImg) {
-                const btn = document.getElementById('userTrigger');
-                if (btn) {
-                    btn.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    `;
-                }
-            }
-            showToast("Avatar removed successfully!");
-        } else {
-            showToast("Failed to remove avatar", "error");
-        }
-    } catch (err) {
-        console.error("Remove Error:", err);
-        showToast("Server connection failed.", "error");
+    // Show the placeholder in the UI
+    if (profileAvatar) {
+        profileAvatar.src = defaultAvatar;
     }
+    
+    // Replace navbar image with SVG silhouette immediately in preview
+    const triggerImg = document.querySelector('#userTrigger img');
+    if (triggerImg) {
+        const btn = document.getElementById('userTrigger');
+        if (btn) {
+            btn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            `;
+        }
+    }
+    if (navAvatar) {
+        navAvatar.src = defaultAvatar;
+    }
+    const profileTrigger = document.getElementById('profileTrigger');
+    if (profileTrigger && profileTrigger.tagName === 'IMG') {
+        profileTrigger.src = defaultAvatar;
+    }
+
+    showToast("Avatar removal pending. Click 'Save Changes' to apply.", "info");
 }
 
 /**

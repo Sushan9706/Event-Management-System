@@ -22,6 +22,7 @@
                 <a href="/admin/dashboard" class="nav-link">Events</a>
                 <a href="/admin/venues" class="nav-link active">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
+                <a href="/admin/users" class="nav-link">Users</a>
 
                 <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
@@ -179,31 +180,34 @@
                             <div class="form-group">
                                 <label for="name">Venue Name</label>
                                 <input type="text" id="name" name="name" placeholder="e.g., Grand Ballroom A"
-                                    required />
+                                    value="<%= locals.formData ? formData.name : '' %>" required />
+                                <div class="error-msg" id="name-error"></div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="category">Category</label>
                                     <select id="category" name="category" required>
-                                        <option value="" disabled selected>Select Category</option>
+                                        <option value="" disabled <%= !locals.formData ? 'selected' : '' %>>Select Category</option>
                                         <% categories.forEach(cat=> { %>
-                                            <option value="<%= cat %>">
+                                            <option value="<%= cat %>" <%= locals.formData && formData.category === cat ? 'selected' : '' %>>
                                                 <%= cat %>
                                             </option>
                                             <% }) %>
                                     </select>
+                                    <div class="error-msg" id="category-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="capacity">Capacity (Persons)</label>
                                     <input type="number" id="capacity" name="capacity" placeholder="e.g., 200" required
-                                        min="1" />
+                                        min="1" max="50000" value="<%= locals.formData ? formData.capacity : '' %>" />
+                                    <div class="error-msg" id="capacity-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="status">Status</label>
                                     <select id="status" name="status" required>
-                                        <option value="available" selected>Available</option>
-                                        <option value="maintenance">Maintenance</option>
+                                        <option value="available" <%= locals.formData && formData.status === 'available' ? 'selected' : '' %>>Available</option>
+                                        <option value="maintenance" <%= locals.formData && formData.status === 'maintenance' ? 'selected' : '' %>>Maintenance</option>
                                     </select>
                                 </div>
                             </div>
@@ -211,13 +215,15 @@
                             <div class="form-group">
                                 <label for="location">Location / Address</label>
                                 <input type="text" id="location" name="location" placeholder="e.g., 123 Event St, City"
-                                    required />
+                                    value="<%= locals.formData ? formData.location : '' %>" required />
+                                <div class="error-msg" id="location-error"></div>
                             </div>
 
                             <div class="form-group">
                                 <label for="description">Venue Description</label>
                                 <textarea id="description" name="description" rows="6"
-                                    placeholder="Describe the ambiance and facilities..." required></textarea>
+                                    placeholder="Describe the ambiance and facilities..." required><%= locals.formData ? formData.description : '' %></textarea>
+                                <div class="error-msg" id="description-error"></div>
                             </div>
                         </div>
 
@@ -229,13 +235,15 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="hourlyRate">Hourly Rate (NPR)</label>
-                                    <input type="number" id="hourlyRate" name="hourlyRate" placeholder="0.00" min="0"
-                                        step="0.01" />
+                                    <input type="number" id="hourlyRate" name="hourlyRate" placeholder="0.00" min="0" max="100000"
+                                        step="0.01" value="<%= locals.formData ? formData.hourlyRate : '' %>" />
+                                    <div class="error-msg" id="hourlyRate-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="dailyRate">Daily Rate (NPR)</label>
-                                    <input type="number" id="dailyRate" name="dailyRate" placeholder="0.00" min="0"
-                                        step="0.01" />
+                                    <input type="number" id="dailyRate" name="dailyRate" placeholder="0.00" min="0" max="2000000"
+                                        step="0.01" value="<%= locals.formData ? formData.dailyRate : '' %>" />
+                                    <div class="error-msg" id="dailyRate-error"></div>
                                 </div>
                             </div>
                         </div>
@@ -297,14 +305,166 @@
             placeholder.style.display = 'block';
         });
 
-        // Form validation for rates
-        document.getElementById('createVenueForm').addEventListener('submit', function (e) {
-            const hourly = document.getElementById('hourlyRate').value;
-            const daily = document.getElementById('dailyRate').value;
+        // Form validation
+        const nameInput = document.getElementById('name');
+        const categoryInput = document.getElementById('category');
+        const capacityInput = document.getElementById('capacity');
+        const locationInput = document.getElementById('location');
+        const descriptionInput = document.getElementById('description');
+        const hourlyRateInput = document.getElementById('hourlyRate');
+        const dailyRateInput = document.getElementById('dailyRate');
 
-            if (!hourly && !daily) {
+        const nameError = document.getElementById('name-error');
+        const categoryError = document.getElementById('category-error');
+        const capacityError = document.getElementById('capacity-error');
+        const locationError = document.getElementById('location-error');
+        const descriptionError = document.getElementById('description-error');
+        const hourlyRateError = document.getElementById('hourlyRate-error');
+        const dailyRateError = document.getElementById('dailyRate-error');
+
+        function showError(element, errorElement, message) {
+            element.closest('.form-group').classList.add('has-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function clearError(element, errorElement) {
+            element.closest('.form-group').classList.remove('has-error');
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+
+        const touchedFields = new Set();
+
+        function validateField(input, errorElement, checkFn, isSubmit) {
+            if (!isSubmit && !touchedFields.has(input.id)) return true;
+            const message = checkFn();
+            if (message) {
+                showError(input, errorElement, message);
+                return false;
+            } else {
+                clearError(input, errorElement);
+                return true;
+            }
+        }
+
+        function validateName(isSubmit = false) {
+            return validateField(nameInput, nameError, () => {
+                if (!nameInput.value.trim()) return 'Venue Name is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateCategory(isSubmit = false) {
+            return validateField(categoryInput, categoryError, () => {
+                if (!categoryInput.value) return 'Please select a venue category.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateCapacity(isSubmit = false) {
+            return validateField(capacityInput, capacityError, () => {
+                if (!isSubmit && capacityInput.value === '') {
+                    return null;
+                }
+                const cap = parseInt(capacityInput.value);
+                if (isNaN(cap) || cap < 1 || cap > 50000) {
+                    return 'Venue capacity must be between 1 and 50,000 persons.';
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        function validateLocation(isSubmit = false) {
+            return validateField(locationInput, locationError, () => {
+                if (!locationInput.value.trim()) return 'Venue location/address is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateDescription(isSubmit = false) {
+            return validateField(descriptionInput, descriptionError, () => {
+                if (!descriptionInput.value.trim()) return 'Venue description is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateHourlyRate(isSubmit = false) {
+            return validateField(hourlyRateInput, hourlyRateError, () => {
+                if (!isSubmit && hourlyRateInput.value === '') {
+                    return null;
+                }
+                const hourly = parseFloat(hourlyRateInput.value);
+                if (hourlyRateInput.value && (isNaN(hourly) || hourly <= 0 || hourly > 50000)) {
+                    return 'Hourly rate must be between NPR 1 and NPR 50,000.';
+                }
+                if (!hourlyRateInput.value && !dailyRateInput.value) {
+                    return 'At least one rate (hourly or daily) must be provided.';
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        function validateDailyRate(isSubmit = false) {
+            return validateField(dailyRateInput, dailyRateError, () => {
+                if (!isSubmit && dailyRateInput.value === '') {
+                    return null;
+                }
+                const daily = parseFloat(dailyRateInput.value);
+                if (dailyRateInput.value && (isNaN(daily) || daily <= 0 || daily > 500000)) {
+                    return 'Daily rate must be between NPR 1 and NPR 500,000.';
+                }
+                if (!hourlyRateInput.value && !dailyRateInput.value) {
+                    return 'At least one rate (hourly or daily) must be provided.';
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        const allInputs = [
+            { input: nameInput, validate: validateName },
+            { input: categoryInput, validate: validateCategory },
+            { input: capacityInput, validate: validateCapacity },
+            { input: locationInput, validate: validateLocation },
+            { input: descriptionInput, validate: validateDescription },
+            { input: hourlyRateInput, validate: validateHourlyRate },
+            { input: dailyRateInput, validate: validateDailyRate }
+        ];
+
+        allInputs.forEach(({ input, validate }) => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                touchedFields.add(input.id);
+                validate(false);
+                if (input.id === 'hourlyRate') {
+                    if (hourlyRateInput.value === '' || dailyRateInput.value) {
+                        clearError(dailyRateInput, dailyRateError);
+                    }
+                }
+                if (input.id === 'dailyRate') {
+                    if (dailyRateInput.value === '' || hourlyRateInput.value) {
+                        clearError(hourlyRateInput, hourlyRateError);
+                    }
+                }
+            });
+        });
+
+        function validateAll() {
+            let isValid = true;
+            allInputs.forEach(({ validate }) => {
+                const res = validate(true);
+                if (!res) isValid = false;
+            });
+            return isValid;
+        }
+
+        document.getElementById('createVenueForm').addEventListener('submit', function (e) {
+            if (!validateAll()) {
                 e.preventDefault();
-                alert('At least one rate (hourly or daily) must be provided.');
+                const firstError = document.querySelector('.has-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         });
 

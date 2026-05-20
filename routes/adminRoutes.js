@@ -57,4 +57,9 @@ router.get('/venues/export-csv/:id', adminVenueController.exportVenueBookingsCsv
 router.get('/messages', adminEventController.getMessages);
 router.post('/messages/resolve/:id', adminEventController.resolveMessage);
 
+// ─── REGISTERED USERS ─────────────────────────────────────────
+router.get('/users', adminEventController.getRegisteredUsers);
+router.post('/users/delete/:id', adminEventController.deleteRegisteredUser);
+router.get('/users/export', adminEventController.exportUsersCsv);
+
 module.exports = router;

@@ -75,7 +75,42 @@ exports.postCreateVenue = async (req, res) => {
     try {
         const { name, description, location, category, capacity, hourlyRate, dailyRate, status } = req.body;
         
-        // Validation (done in model, but we can do extra here if needed)
+        // --- Venue Validations (NPR context) ---
+        const parsedCapacity = parseInt(capacity) || 0;
+        if (parsedCapacity < 1 || parsedCapacity > 50000) {
+            return res.render('admin/createVenue', {
+                error: 'Venue capacity must be between 1 and 50,000 persons',
+                formData: req.body,
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        const hourly = hourlyRate ? parseFloat(hourlyRate) : 0;
+        if (hourlyRate && (hourly <= 0 || hourly > 50000)) {
+            return res.render('admin/createVenue', {
+                error: 'Hourly rate must be between NPR 1 and NPR 50,000',
+                formData: req.body,
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        const daily = dailyRate ? parseFloat(dailyRate) : 0;
+        if (dailyRate && (daily <= 0 || daily > 500000)) {
+            return res.render('admin/createVenue', {
+                error: 'Daily rate must be between NPR 1 and NPR 500,000',
+                formData: req.body,
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        if (!hourlyRate && !dailyRate) {
+            return res.render('admin/createVenue', {
+                error: 'At least one rate (hourly or daily) must be provided',
+                formData: req.body,
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
         const imagePath = req.file ? `/images/events/${req.file.filename}` : '/images/default-venue.png';
 
         const venue = new Venue({
@@ -83,7 +118,7 @@ exports.postCreateVenue = async (req, res) => {
             description,
             location,
             category,
-            capacity: parseInt(capacity),
+            capacity: parsedCapacity,
             hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
             dailyRate: dailyRate ? parseFloat(dailyRate) : undefined,
             status: status || 'available',
@@ -132,11 +167,47 @@ exports.postEditVenue = async (req, res) => {
             return res.redirect('/admin/venues');
         }
 
+        // --- Venue Validations (NPR context) ---
+        const parsedCapacity = parseInt(capacity) || 0;
+        if (parsedCapacity < 1 || parsedCapacity > 50000) {
+            return res.render('admin/editVenue', {
+                error: 'Venue capacity must be between 1 and 50,000 persons',
+                venue: { ...req.body, _id: req.params.id, imagePath: venue.imagePath },
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        const hourly = hourlyRate ? parseFloat(hourlyRate) : 0;
+        if (hourlyRate && (hourly <= 0 || hourly > 50000)) {
+            return res.render('admin/editVenue', {
+                error: 'Hourly rate must be between NPR 1 and NPR 50,000',
+                venue: { ...req.body, _id: req.params.id, imagePath: venue.imagePath },
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        const daily = dailyRate ? parseFloat(dailyRate) : 0;
+        if (dailyRate && (daily <= 0 || daily > 500000)) {
+            return res.render('admin/editVenue', {
+                error: 'Daily rate must be between NPR 1 and NPR 500,000',
+                venue: { ...req.body, _id: req.params.id, imagePath: venue.imagePath },
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
+        if (!hourlyRate && !dailyRate) {
+            return res.render('admin/editVenue', {
+                error: 'At least one rate (hourly or daily) must be provided',
+                venue: { ...req.body, _id: req.params.id, imagePath: venue.imagePath },
+                categories: Venue.schema.path('category').enumValues
+            });
+        }
+
         venue.name = name;
         venue.description = description;
         venue.location = location;
         venue.category = category;
-        venue.capacity = parseInt(capacity);
+        venue.capacity = parsedCapacity;
         venue.hourlyRate = hourlyRate ? parseFloat(hourlyRate) : undefined;
         venue.dailyRate = dailyRate ? parseFloat(dailyRate) : undefined;
         venue.status = status || 'available';
@@ -152,9 +223,10 @@ exports.postEditVenue = async (req, res) => {
         res.redirect('/admin/venues');
     } catch (err) {
         console.error('Error in postEditVenue:', err);
+        const venueImagePath = req.params.id ? (await Venue.findById(req.params.id))?.imagePath : '';
         res.render('admin/editVenue', {
             error: err.message,
-            venue: { ...req.body, _id: req.params.id, imagePath: (await Venue.findById(req.params.id)).imagePath },
+            venue: { ...req.body, _id: req.params.id, imagePath: venueImagePath },
             categories: Venue.schema.path('category').enumValues
         });
     }

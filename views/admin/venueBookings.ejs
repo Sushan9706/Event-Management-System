@@ -223,6 +223,7 @@
                 <a href="/admin/dashboard" class="nav-link">Events</a>
                 <a href="/admin/venues" class="nav-link active">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
+                <a href="/admin/users" class="nav-link">Users</a>
 
                 <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
@@ -344,17 +345,14 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
                             </svg>
-                            BOOKING SUMMARY
+                            EVENTS SUMMARY
                         </div>
                         <p style="font-size: 13px; font-weight: 700; margin-bottom: 4px;">
-                            <%= totalConfirmed %> Active Bookings
+                            <%= totalConfirmed %> / <%= venue.capacity %> Booked
                         </p>
                         <div class="velocity-bar">
-                            <div class="velocity-fill" style="width: <%= totalConfirmed > 0 ? Math.min(100, totalConfirmed * 10) : 0 %>%"></div>
+                            <div class="velocity-fill" style="width: <%= venue.capacity > 0 ? Math.min(100, Math.round((totalConfirmed / venue.capacity) * 100)) : 0 %>%"></div>
                         </div>
-                        <p class="velocity-text">
-                            <strong>Status:</strong> <%= venue.status === 'available' ? 'Venue is active and available for bookings.' : 'Venue is currently under maintenance.' %>
-                        </p>
                     </div>
 
                     <a href="/admin/venues/edit/<%= venue._id %>"

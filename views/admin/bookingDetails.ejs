@@ -22,6 +22,7 @@
                 <a href="/admin/dashboard" class="nav-link">Events</a>
                 <a href="/admin/venues" class="nav-link">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
+                <a href="/admin/users" class="nav-link">Users</a>
 
                 <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
@@ -162,28 +163,14 @@
                                             stroke="currentColor" stroke-width="2">
                                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
                                         </svg>
-                                        REGISTRATION VELOCITY
+                                        EVENTS SUMMARY
                                     </div>
                                     <p style="font-size: 13px; font-weight: 700; margin-bottom: 4px;">
                                         <%= totalBookings %> / <%= event.maxCapacity %> Registered
                                     </p>
                                     <div class="velocity-bar">
-                                        <div class="velocity-fill" style="width: <%= capacityPercent %>%"></div>
+                                        <div class="velocity-fill" style="width: <%= Math.min(100, capacityPercent) %>%"></div>
                                     </div>
-                                    <p class="velocity-text">
-                                        <strong>Demand Insights:</strong>
-                                        <% if (capacityPercent >= 95) { %>
-                                            Registration is at critical capacity (<%= capacityPercent %>%). Event is nearly sold out. Recommended to close registrations or expand capacity.
-                                        <% } else if (capacityPercent >= 75) { %>
-                                            Strong demand! Registration is currently at high velocity (<%= capacityPercent %>%). Excellent momentum.
-                                        <% } else if (capacityPercent >= 40) { %>
-                                            Steady demand. Registration is currently at moderate velocity (<%= capacityPercent %>%). On track to meet capacity goals.
-                                        <% } else if (capacityPercent > 0) { %>
-                                            Registration velocity is currently gradual (<%= capacityPercent %>%). Steady engagement.
-                                        <% } else { %>
-                                            No registrations recorded yet. Event is open and waiting for first bookings.
-                                        <% } %>
-                                    </p>
                                 </div>
 
                                 <a href="/admin/events/edit/<%= event._id %>"

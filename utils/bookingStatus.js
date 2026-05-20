@@ -16,17 +16,39 @@ const getEventExpiryCutoff = (eventDateValue) => {
 
 const isEventDatePassed = (eventLike, now = new Date()) => {
     let eventDateValue = null;
+    let endTimeValue = null;
     if (eventLike && typeof eventLike === 'object') {
         eventDateValue = eventLike.endDate || eventLike.startDate || eventLike.date;
+        endTimeValue = eventLike.endTime;
     } else {
         eventDateValue = eventLike;
     }
-    const cutoff = getEventExpiryCutoff(eventDateValue);
-    if (!cutoff) {
+    
+    if (!eventDateValue) {
         return false;
     }
 
-    return now > cutoff;
+    const eventDate = new Date(eventDateValue);
+    if (Number.isNaN(eventDate.getTime())) {
+        return false;
+    }
+
+    // Combine date with time if endTime exists
+    if (endTimeValue && typeof endTimeValue === 'string' && endTimeValue.trim()) {
+        const parts = endTimeValue.trim().split(':');
+        if (parts.length >= 2) {
+            const hours = parseInt(parts[0], 10);
+            const minutes = parseInt(parts[1], 10);
+            if (!isNaN(hours) && !isNaN(minutes)) {
+                eventDate.setHours(hours, minutes, 0, 0);
+                return now > eventDate;
+            }
+        }
+    }
+
+    // Default fallback: end of the day
+    eventDate.setHours(23, 59, 59, 999);
+    return now > eventDate;
 };
 
 const hasEventEnded = (eventLike, now = new Date()) => isEventDatePassed(eventLike, now);
@@ -41,14 +63,9 @@ const shouldExpireBooking = (booking, now = new Date()) => {
         return false;
     }
 
-    // booking.eventId may be an ObjectId if not populated; only expire when a real date is available.
     const eventDoc = booking.eventId || booking.event || null;
     if (!eventDoc) return false;
-    const dateValue = (typeof eventDoc === 'object' && eventDoc !== null && 'date' in eventDoc)
-        ? eventDoc.date
-        : null;
-    if (!dateValue) return false;
-    return isEventDatePassed({ date: dateValue }, now);
+    return isEventDatePassed(eventDoc, now);
 };
 
 const syncBookingExpiry = async (booking, now = new Date()) => {
@@ -94,21 +111,48 @@ const syncDatabase = async () => {
         const VenueBooking = require('../models/venueBookingModel');
         const now = new Date();
 
-        // 1. Sync Event Statuses
-        await Event.updateMany(
-            { endDate: { $lt: now }, status: { $in: ['upcoming', 'ongoing'] } },
-            { $set: { status: 'completed' } }
-        );
-        await Event.updateMany(
-            { startDate: { $lte: now }, endDate: { $gte: now }, status: 'upcoming' },
-            { $set: { status: 'ongoing' } }
-        );
+        // 1. Sync Event Statuses dynamically using exact date/time
+        const activeEvents = await Event.find({ status: { $ne: 'cancelled' } });
+        for (const event of activeEvents) {
+            if (hasEventEnded(event, now)) {
+                if (event.status !== 'completed') {
+                    event.status = 'completed';
+                    await event.save();
+                }
+            } else {
+                let startDateTime = new Date(event.startDate);
+                if (event.startTime && typeof event.startTime === 'string' && event.startTime.trim()) {
+                    const parts = event.startTime.trim().split(':');
+                    if (parts.length >= 2) {
+                        const hours = parseInt(parts[0], 10);
+                        const minutes = parseInt(parts[1], 10);
+                        if (!isNaN(hours) && !isNaN(minutes)) {
+                            startDateTime.setHours(hours, minutes, 0, 0);
+                        }
+                    }
+                } else {
+                    startDateTime.setHours(0, 0, 0, 0);
+                }
+
+                if (now >= startDateTime) {
+                    if (event.status !== 'ongoing') {
+                        event.status = 'ongoing';
+                        await event.save();
+                    }
+                } else {
+                    if (event.status !== 'upcoming') {
+                        event.status = 'upcoming';
+                        await event.save();
+                    }
+                }
+            }
+        }
 
         // 2. Sync Event Bookings Expiry
         const activeBookings = await Booking.find({ status: { $in: ['confirmed', 'pending'] } }).populate('eventId');
         const saves = [];
         for (const booking of activeBookings) {
-            if (booking.eventId && now > new Date(booking.eventId.endDate)) {
+            if (booking.eventId && hasEventEnded(booking.eventId, now)) {
                 booking.status = 'expired';
                 saves.push(booking.save());
             }

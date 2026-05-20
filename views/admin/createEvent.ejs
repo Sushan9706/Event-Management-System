@@ -22,6 +22,7 @@
                 <a href="/admin/dashboard" class="nav-link">Events</a>
                 <a href="/admin/venues" class="nav-link">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
+                <a href="/admin/users" class="nav-link">Users</a>
 
                 <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
@@ -185,28 +186,30 @@
                             <div class="form-group">
                                 <label for="eventName">Event Name</label>
                                 <input type="text" id="eventName" name="eventName"
-                                    placeholder="e.g., Vernacular Summit 2026" required />
+                                    placeholder="e.g., Vernacular Summit 2026" value="<%= locals.event ? event.eventName : '' %>" required />
+                                <div class="error-msg" id="eventName-error"></div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="categoryId">Category</label>
                                     <select id="categoryId" name="categoryId" required>
-                                        <option value="" disabled selected>Select Genre</option>
+                                        <option value="" disabled <%= !locals.event ? 'selected' : '' %>>Select Genre</option>
                                         <% categories.forEach(cat=> { %>
-                                            <option value="<%= cat._id %>">
+                                            <option value="<%= cat._id %>" <%= locals.event && String(event.categoryId) === String(cat._id) ? 'selected' : '' %>>
                                                 <%= cat.name %>
                                             </option>
                                             <% }) %>
                                     </select>
+                                    <div class="error-msg" id="categoryId-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="status">Initial Status</label>
                                     <select id="status" name="status">
-                                        <option value="upcoming" selected>Upcoming</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="upcoming" <%= locals.event && event.status === 'upcoming' ? 'selected' : '' %>>Upcoming</option>
+                                        <option value="ongoing" <%= locals.event && event.status === 'ongoing' ? 'selected' : '' %>>Ongoing</option>
+                                        <option value="completed" <%= locals.event && event.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                                        <option value="cancelled" <%= locals.event && event.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                                     </select>
                                 </div>
                             </div>
@@ -214,7 +217,7 @@
                             <div class="form-group">
                                 <label for="description">Event Description</label>
                                 <textarea id="description" name="description" rows="6"
-                                    placeholder="Draft something magical..."></textarea>
+                                    placeholder="Draft something magical..."><%= locals.event ? event.description : '' %></textarea>
                             </div>
                         </div>
 
@@ -224,11 +227,12 @@
                             <div class="form-row" style="margin-top: 24px;">
                                 <div class="form-group">
                                     <label for="startDate">Start Date</label>
-                                    <input type="date" id="startDate" name="startDate" required />
+                                    <input type="date" id="startDate" name="startDate" value="<%= locals.event ? event.startDate : '' %>" required />
+                                    <div class="error-msg" id="startDate-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="startTime">Start Time</label>
-                                    <input type="time" id="startTime" name="startTime" required />
+                                    <input type="time" id="startTime" name="startTime" value="<%= locals.event ? event.startTime : '' %>" required />
                                     <div class="error-msg" id="startTime-error"></div>
                                 </div>
                             </div>
@@ -236,11 +240,12 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="endDate">End Date</label>
-                                    <input type="date" id="endDate" name="endDate" required />
+                                    <input type="date" id="endDate" name="endDate" value="<%= locals.event ? event.endDate : '' %>" required />
+                                    <div class="error-msg" id="endDate-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="endTime">End Time</label>
-                                    <input type="time" id="endTime" name="endTime" required />
+                                    <input type="time" id="endTime" name="endTime" value="<%= locals.event ? event.endTime : '' %>" required />
                                     <div class="error-msg" id="endTime-error"></div>
                                 </div>
                             </div>
@@ -249,20 +254,23 @@
                                 <div class="form-group">
                                     <label for="maxCapacity">Max Capacity</label>
                                     <input type="number" id="maxCapacity" name="maxCapacity" placeholder="e.g., 500"
-                                        min="0" required />
+                                        min="1" max="100000" value="<%= locals.event ? event.maxCapacity : '' %>" required />
+                                    <div class="error-msg" id="maxCapacity-error"></div>
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="ticketPrice">Ticket Price (NPR)</label>
-                                    <input type="number" id="ticketPrice" name="ticketPrice" placeholder="0.00" min="0"
-                                        step="0.01" />
+                                    <input type="number" id="ticketPrice" name="ticketPrice" placeholder="0.00" min="0" max="100000"
+                                        step="0.01" value="<%= locals.event ? event.ticketPrice : '' %>" />
+                                    <div class="error-msg" id="ticketPrice-error"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="location">Location / Venue</label>
                                     <input type="text" id="location" name="location" placeholder="Venue or Address"
-                                        required />
+                                        value="<%= locals.event ? event.location : '' %>" required />
+                                    <div class="error-msg" id="location-error"></div>
                                 </div>
                             </div>
                         </div>
@@ -317,6 +325,19 @@
 
         const startTimeError = document.getElementById('startTime-error');
         const endTimeError = document.getElementById('endTime-error');
+        const eventNameInput = document.getElementById('eventName');
+        const categoryIdInput = document.getElementById('categoryId');
+        const maxCapacityInput = document.getElementById('maxCapacity');
+        const ticketPriceInput = document.getElementById('ticketPrice');
+        const locationInput = document.getElementById('location');
+
+        const eventNameError = document.getElementById('eventName-error');
+        const categoryIdError = document.getElementById('categoryId-error');
+        const maxCapacityError = document.getElementById('maxCapacity-error');
+        const ticketPriceError = document.getElementById('ticketPrice-error');
+        const locationError = document.getElementById('location-error');
+        const startDateError = document.getElementById('startDate-error');
+        const endDateError = document.getElementById('endDate-error');
 
         function showError(element, errorElement, message) {
             element.closest('.form-group').classList.add('has-error');
@@ -324,38 +345,131 @@
             errorElement.style.display = 'block';
         }
 
-        function clearErrors() {
-            document.querySelectorAll('.form-group').forEach(group => group.classList.remove('has-error'));
-            document.querySelectorAll('.error-msg').forEach(msg => {
-                msg.textContent = '';
-                msg.style.display = 'none';
-            });
+        function clearError(element, errorElement) {
+            element.closest('.form-group').classList.remove('has-error');
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
         }
 
-        function validateInputs() {
-            clearErrors();
-            const now = new Date();
-            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        const touchedFields = new Set();
 
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            let hasError = false;
-
-            if (startDate === minDate && startTime && startTime < currentTime) {
-                showError(startTimeInput, startTimeError, 'Start time cannot be in the past for today.');
-                hasError = true;
+        function validateField(input, errorElement, checkFn, isSubmit) {
+            if (!isSubmit && !touchedFields.has(input.id)) return true;
+            const message = checkFn();
+            if (message) {
+                showError(input, errorElement, message);
+                return false;
+            } else {
+                clearError(input, errorElement);
+                return true;
             }
+        }
 
-            if (startDate === endDate && startTime && endTime) {
-                if (startTime >= endTime) {
-                    showError(endTimeInput, endTimeError, 'End time must be after the start time.');
-                    hasError = true;
+        function validateEventName(isSubmit = false) {
+            return validateField(eventNameInput, eventNameError, () => {
+                if (!eventNameInput.value.trim()) return 'Event Name is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateCategory(isSubmit = false) {
+            return validateField(categoryIdInput, categoryIdError, () => {
+                if (!categoryIdInput.value) return 'Please select an event category.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateStartDate(isSubmit = false) {
+            return validateField(startDateInput, startDateError, () => {
+                if (!startDateInput.value) return 'Start Date is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateEndDate(isSubmit = false) {
+            return validateField(endDateInput, endDateError, () => {
+                if (!endDateInput.value) return 'End Date is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        function validateStartTime(isSubmit = false) {
+            return validateField(startTimeInput, startTimeError, () => {
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                const selectedStartDate = startDateInput.value;
+                if (!startTimeInput.value) return 'Start Time is required.';
+                if (selectedStartDate === minDate && startTimeInput.value < currentTime) {
+                    return 'Start time cannot be in the past for today.';
                 }
-            }
-            return !hasError;
+                return null;
+            }, isSubmit);
         }
+
+        function validateEndTime(isSubmit = false) {
+            return validateField(endTimeInput, endTimeError, () => {
+                const selectedStartDate = startDateInput.value;
+                const selectedEndDate = endDateInput.value;
+                if (!endTimeInput.value) return 'End Time is required.';
+                if (selectedStartDate && selectedEndDate && selectedStartDate === selectedEndDate) {
+                    if (startTimeInput.value && startTimeInput.value >= endTimeInput.value) {
+                        return 'End time must be after the start time.';
+                    }
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        function validateMaxCapacity(isSubmit = false) {
+            return validateField(maxCapacityInput, maxCapacityError, () => {
+                if (!isSubmit && maxCapacityInput.value === '') {
+                    return null;
+                }
+                const cap = parseInt(maxCapacityInput.value);
+                if (isNaN(cap) || cap < 1 || cap > 100000) {
+                    return 'Capacity must be between 1 and 100,000 attendees.';
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        function validateTicketPrice(isSubmit = false) {
+            return validateField(ticketPriceInput, ticketPriceError, () => {
+                if (ticketPriceInput.value === '') return null; // optional
+                const price = parseFloat(ticketPriceInput.value);
+                if (isNaN(price) || price < 0 || price > 100000) {
+                    return 'Ticket price must be between NPR 0 and NPR 100,000.';
+                }
+                return null;
+            }, isSubmit);
+        }
+
+        function validateLocation(isSubmit = false) {
+            return validateField(locationInput, locationError, () => {
+                if (!locationInput.value.trim()) return 'Location/Venue is required.';
+                return null;
+            }, isSubmit);
+        }
+
+        const allInputs = [
+            { input: eventNameInput, validate: validateEventName },
+            { input: categoryIdInput, validate: validateCategory },
+            { input: startDateInput, validate: validateStartDate },
+            { input: endDateInput, validate: validateEndDate },
+            { input: startTimeInput, validate: validateStartTime },
+            { input: endTimeInput, validate: validateEndTime },
+            { input: maxCapacityInput, validate: validateMaxCapacity },
+            { input: ticketPriceInput, validate: validateTicketPrice },
+            { input: locationInput, validate: validateLocation }
+        ];
+
+        allInputs.forEach(({ input, validate }) => {
+            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                touchedFields.add(input.id);
+                validate(false);
+            });
+        });
 
         startDateInput.addEventListener('change', () => {
             if (startDateInput.value) {
@@ -365,20 +479,31 @@
                 }
             }
             updateTimeConstraints();
-            validateInputs();
+            touchedFields.add(startDateInput.id);
+            validateStartDate(false);
+            validateStartTime(false);
+            validateEndTime(false);
         });
 
         endDateInput.addEventListener('change', () => {
             updateTimeConstraints();
-            validateInputs();
+            touchedFields.add(endDateInput.id);
+            validateEndDate(false);
+            validateEndTime(false);
         });
 
-        startTimeInput.addEventListener('input', validateInputs);
-        endTimeInput.addEventListener('input', validateInputs);
+        function validateAll() {
+            let isValid = true;
+            allInputs.forEach(({ validate }) => {
+                const res = validate(true);
+                if (!res) isValid = false;
+            });
+            return isValid;
+        }
 
         const eventForm = document.querySelector('form');
         eventForm.addEventListener('submit', (e) => {
-            if (!validateInputs()) {
+            if (!validateAll()) {
                 e.preventDefault();
                 const firstError = document.querySelector('.has-error');
                 if (firstError) {

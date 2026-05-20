@@ -920,3 +920,33 @@ body {
     transform: translateX(0);
   }
 }
+
+/* Event Status Tags */
+.status-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+.status-tag.status-upcoming, .status-tag.status-live {
+  background: #ecfdf5;
+  color: #10b981;
+}
+.status-tag.status-ongoing {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+.status-tag.status-completed {
+  background: #e2e8f0;
+  color: #475569;
+}
+.status-tag.status-cancelled, .status-tag.status-sold {
+  background: #fef2f2;
+  color: #ef4444;
+}

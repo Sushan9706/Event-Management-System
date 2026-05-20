@@ -23,6 +23,7 @@
                 <a href="/admin/dashboard" class="nav-link active">Events</a>
                 <a href="/admin/venues" class="nav-link">Venues</a>
                 <a href="/admin/messages" class="nav-link">Messages</a>
+                <a href="/admin/users" class="nav-link">Users</a>
                 
                 <div class="admin-notif-wrapper" style="position: relative; display: flex; align-items: center;">
                     <button class="icon-btn" id="notifBtn" aria-label="Notifications" title="Recent Bookings">
@@ -173,9 +174,9 @@
                                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                     </svg>
                                 </div>
-                                <p class="stat-label">Avg. Attendance</p>
+                                <p class="stat-label">Registered Users</p>
                                 <p class="stat-value">
-                                    <%= stats.avgAttendance %>%
+                                    <%= stats.registeredUsers %>
                                 </p>
                             </div>
                         </div>
