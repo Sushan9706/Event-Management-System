@@ -1,68 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EMS – Account Settings</title>
-    <link rel="stylesheet" href="/css/profile.css" />
-    <link rel="stylesheet" href="/css/common-nav.css" />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
-    <% if (user && user.role === 'admin') { %>
-      <link rel="stylesheet" href="/css/admin-manage.css" />
-      <style>
-        /* Override some admin-manage.css styles that conflict with profile page */
-        body {
-          background-color: var(--bg-main) !important;
-          background: var(--bg-main) !important;
-          display: flex;
-          flex-direction: column;
-          font-family: var(--font-body) !important;
-        }
-        .navbar { position: sticky; top: 0; width: 100%; z-index: 1000; }
-        .nav-inner { max-width: 1200px; margin: 0 auto; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
 
-        /* Prevent common-nav.css from polluting the admin notification dropdown */
-        .admin-notif-wrapper .notif-dropdown {
-          padding: 0 !important;
-          overflow: hidden !important;
-        }
-        .admin-notif-wrapper .notif-title {
-          padding: 0 !important;
-          border-bottom: none !important;
-          margin: 0 !important;
-        }
-        .admin-notif-wrapper .notif-item {
-          padding: 12px 16px !important;
-          border-bottom: 1px solid #f1f5f9 !important;
-        }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS – Account Settings</title>
+  <link rel="stylesheet" href="/css/profile.css" />
+  <link rel="stylesheet" href="/css/common-nav.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet" />
+  <% if (user && user.role==='admin' ) { %>
+    <link rel="stylesheet" href="/css/admin-manage.css" />
+    <style>
+      /* Override some admin-manage.css styles that conflict with profile page */
+      body {
+        background-color: var(--bg-main) !important;
+        background: var(--bg-main) !important;
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font-body) !important;
+      }
 
-        /* Standardize nav link overrides for admin theme */
-        .nav-link {
-          padding: 0 !important;
-          font-size: 14px !important;
-          font-weight: 700 !important;
-          color: var(--text-muted) !important;
-          line-height: 1 !important;
-        }
-        .nav-link:hover {
-          color: var(--accent-indigo) !important;
-        }
-        .nav-link::after {
-          bottom: -8px !important;
-          background: var(--accent-indigo) !important;
-          transition: transform 0.2s ease !important;
-        }
-      </style>
+      .navbar {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+      }
+
+      .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+      }
+
+      /* Prevent common-nav.css from polluting the admin notification dropdown */
+      .admin-notif-wrapper .notif-dropdown {
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .admin-notif-wrapper .notif-title {
+        padding: 0 !important;
+        border-bottom: none !important;
+        margin: 0 !important;
+      }
+
+      .admin-notif-wrapper .notif-item {
+        padding: 12px 16px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+      }
+
+      .nav-link {
+        padding: 0 !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: var(--text-muted) !important;
+      }
+
+      .nav-link:hover {
+        color: var(--accent-indigo) !important;
+      }
+
+      .nav-link::after {
+        bottom: -8px !important;
+        background: var(--accent-indigo) !important;
+        transition: transform 0.2s ease !important;
+      }
+    </style>
     <% } %>
 </head>
 
-<body <%= (locals.user && user.role === 'admin') ? 'data-role="admin"' : 'data-role="user"' %>>
-  <% if (locals.user && user.role === 'admin') { %>
+<body <%=(locals.user && user.role==='admin' ) ? 'data-role="admin"' : 'data-role="user"' %>>
+  <% if (locals.user && user.role==='admin' ) { %>
     <!-- ── Admin Navbar ── -->
     <header class="navbar">
       <div class="nav-inner">
         <div class="nav-brand">
-          <a href="/admin/dashboard" class="logo" style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+          <a href="/admin/dashboard" class="logo"
+            style="text-decoration: none; color: #1e293b !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
         </div>
         <nav class="nav-links">
           <a href="/admin/dashboard" class="nav-link">Events</a>
@@ -79,7 +100,8 @@
               <span class="notif-dot" id="notifDot" style="display: none;"></span>
             </button>
 
-            <div class="notif-dropdown" id="notifDropdown" style="position: absolute; top: calc(100% + 12px); right: 0; width: 320px; padding: 0; overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 1000; display: none;">
+            <div class="notif-dropdown" id="notifDropdown"
+              style="position: absolute; top: calc(100% + 12px); right: 0; width: 320px; padding: 0; overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 1000; display: none;">
               <p class="notif-title">RECENT BOOKINGS</p>
               <div id="notifList">
                 <p class="notif-empty">Loading notifications...</p>
@@ -89,21 +111,24 @@
 
           <div class="user-menu-container">
             <button class="user-trigger" id="userTrigger" title="User Account">
-              <% if (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') { %>
-                <img id="navAvatar" src="<%= user.profileImage %>" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
-              <% } else { %>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              <% } %>
+              <% if (locals.user && user.profileImage && user.profileImage !=='https://tinyurl.com/3jjyxzj6' ) { %>
+                <img id="navAvatar" src="<%= user.profileImage %>" alt="User avatar"
+                  style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+                <% } else { %>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <% } %>
             </button>
             <div class="user-dropdown" id="userDropdown">
               <a href="/profile" class="dropdown-link">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                  </path>
                 </svg>
                 Profile
               </a>
@@ -120,258 +145,276 @@
         </nav>
       </div>
     </header>
-  <% } else { %>
-    <!-- ── User Navbar ── -->
-    <header class="navbar">
-      <div class="nav-inner">
-        <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
-          class="nav-logo"
-          style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
+    <% } else { %>
+      <!-- ── User Navbar ── -->
+      <header class="navbar">
+        <div class="nav-inner">
+          <a href="<%= locals.user ? (locals.user.role === 'admin' ? '/admin/dashboard' : '/user') : '/guest' %>"
+            class="nav-logo"
+            style="text-decoration: none; color: #1e293b !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: normal !important; font-family: 'DM Sans', sans-serif !important;">EMS</a>
 
-        <nav class="nav-center">
-          <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
-          <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
-          <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
-          <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
-        </nav>
+          <nav class="nav-center">
+            <a href="/user" class="nav-link <%= path === '/user' ? 'active' : '' %>">Home</a>
+            <a href="/catalog" class="nav-link <%= path === '/catalog' ? 'active' : '' %>">Events</a>
+            <a href="/venue" class="nav-link <%= path === '/venue' ? 'active' : '' %>">Venues</a>
+            <a href="/bookings" class="nav-link <%= path === '/bookings' ? 'active' : '' %>">My Bookings</a>
+          </nav>
 
-        <div class="nav-right">
-          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <% if (Array.isArray(locals.notifications) && locals.notifications.some(n=> !n.isRead)) { %>
-              <span class="notif-dot"></span>
-            <% } %>
-          </button>
-          <img
-            src="<%= (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
-            alt="User avatar" class="avatar-circle" id="profileTrigger" />
+          <div class="nav-right">
+            <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <% if (Array.isArray(locals.notifications) && locals.notifications.some(n=> !n.isRead)) { %>
+                <span class="notif-dot"></span>
+                <% } %>
+            </button>
+            <img
+              src="<%= (locals.user && user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'https://ui-avatars.com/api/?name=' + (locals.user ? user.username : 'User') + '&background=e74c3c&color=fff' %>"
+              alt="User avatar" class="avatar-circle" id="profileTrigger" />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : [];
-       const formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
-       const formatNotifTime = (date) => {
-         if (!date) return "Just now";
-         const d = new Date(date);
-         if (Number.isNaN(d.getTime())) return "Just now";
-         return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-       };
-    %>
-    <div class="notif-dropdown" id="notifDropdown">
-      <p class="notif-title" style="padding: 0 !important; margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); margin-bottom: 12px;">NOTIFICATIONS</p>
-      <% if (notifications.length===0) { %>
-        <p class="notif-empty">No new notifications</p>
-      <% } else { %>
-        <% notifications.forEach(function(note) { 
-             const title=note.type==='booking_cancelled' ? 'Booking Cancelled' : 'Booking Confirmed'; 
-             const eventTitle=note.eventName || 'Event'; 
-             const countLabel=formatTicketCount(note.ticketCount || 1); 
-             const timeLabel=formatNotifTime(note.createdAt); 
+      <% const notifications=Array.isArray(locals.notifications) ? locals.notifications : []; const
+        formatTicketCount=(count)=> `${count} ticket${count === 1 ? '' : 's'}`;
+        const formatNotifTime = (date) => {
+        if (!date) return "Just now";
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+        };
         %>
-          <div class="notif-item">
-            <p class="notif-item-title">
-              <%= title %>
-            </p>
-            <p class="notif-item-sub">
-              <%= eventTitle %> · <%= countLabel %>
-            </p>
-            <p class="notif-time">
-              <%= timeLabel %>
-            </p>
-          </div>
-        <% }) %>
-      <% } %>
-    </div>
-  <% } %>
-
-  <% if (locals.user && user.role === 'admin') { %>
-    <main class="page-main">
-  <% } else { %>
-    <div class="profile-shell">
-      <main>
-  <% } %>
-      <div class="page-title">
-        <span class="t1">Account</span>
-        <span class="t2">Settings</span>
-      </div>
-
-      <div class="settings-grid">
-        <div class="left-col">
-          <div class="profile-card">
-            <div class="avatar-wrapper" onclick="document.getElementById('avatarInput').click()"
-              title="Click to change avatar">
-              <img id="profileAvatar"
-                src="<%= (user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3R5bGU9ImJhY2tncm91bmQ6I2YxZjVmOTt3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIC8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiAvPjwvc3ZnPg==' %>"
-                alt="Profile Avatar" />
-              <div class="avatar-overlay">
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <circle cx="12" cy="13" r="3" />
-                </svg>
-                Change
-              </div>
-            </div>
-            <input type="file" id="avatarInput" accept="image/*" style="display: none;"
-              onchange="handleAvatarUpload(event)" />
-
-            <div class="profile-name">
-              <%= user.username.charAt(0).toUpperCase() + user.username.slice(1) %>
-            </div>
-            <div class="profile-badge">Member since <%= new Date(user.createdAt).getFullYear() %>
-            </div>
-
-            <button class="btn-upload" onclick="document.getElementById('avatarInput').click()">Upload New
-              Avatar</button>
-            <button class="btn-remove" onclick="removePhoto()">Remove Avatar</button>
-          </div>
+        <div class="notif-dropdown" id="notifDropdown">
+          <p class="notif-title"
+            style="padding: 0 !important; margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); margin-bottom: 12px;">
+            NOTIFICATIONS</p>
+          <% if (notifications.length===0) { %>
+            <p class="notif-empty">No new notifications</p>
+            <% } else { %>
+              <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled'
+                ? 'Booking Cancelled' : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
+                countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
+                <div class="notif-item">
+                  <p class="notif-item-title">
+                    <%= title %>
+                  </p>
+                  <p class="notif-item-sub">
+                    <%= eventTitle %> · <%= countLabel %>
+                  </p>
+                  <p class="notif-time">
+                    <%= timeLabel %>
+                  </p>
+                </div>
+                <% }) %>
+                  <% } %>
         </div>
+        <% } %>
 
-        <div class="right-col">
-          <div class="section-title">Personal Info</div>
-          <div class="fields-row">
-            <div class="field-group">
-              <label for="username">Username</label>
-              <input type="text" id="username" value="<%= user.username %>" disabled />
+          <% if (locals.user && user.role==='admin' ) { %>
+            <main class="page-main">
+              <% } else { %>
+                <div class="profile-shell">
+                  <main>
+                    <% } %>
+                      <div class="page-title">
+                        <span class="t1">Account</span>
+                        <span class="t2">Settings</span>
+                      </div>
+
+                      <div class="settings-grid">
+                        <div class="left-col">
+                          <div class="profile-card">
+                            <div class="avatar-wrapper" onclick="document.getElementById('avatarInput').click()"
+                              title="Click to change avatar">
+                              <img id="profileAvatar"
+                                src="<%= (user.profileImage && user.profileImage !== 'https://tinyurl.com/3jjyxzj6') ? user.profileImage : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3R5bGU9ImJhY2tncm91bmQ6I2YxZjVmOTt3aWR0aDoxMDAlO2hlaWdodDoxMDAlOyI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIC8+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiAvPjwvc3ZnPg==' %>"
+                                alt="Profile Avatar" />
+                              <div class="avatar-overlay">
+                                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                  stroke-width="2">
+                                  <path
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                  <circle cx="12" cy="13" r="3" />
+                                </svg>
+                                Change
+                              </div>
+                            </div>
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;"
+                              onchange="handleAvatarUpload(event)" />
+
+                            <div class="profile-name">
+                              <%= user.username.charAt(0).toUpperCase() + user.username.slice(1) %>
+                            </div>
+                            <div class="profile-badge">Member since <%= new Date(user.createdAt).getFullYear() %>
+                            </div>
+
+                            <button class="btn-upload" onclick="document.getElementById('avatarInput').click()">Upload
+                              New
+                              Avatar</button>
+                            <button class="btn-remove" onclick="removePhoto()">Remove Avatar</button>
+                          </div>
+                        </div>
+
+                        <div class="right-col">
+                          <div class="section-title">Personal Info</div>
+                          <div class="fields-row">
+                            <div class="field-group">
+                              <label for="username">Username</label>
+                              <input type="text" id="username" value="<%= user.username %>" disabled />
+                            </div>
+                            <div class="field-group">
+                              <label for="email">Email Address</label>
+                              <input type="email" id="email" value="<%= user.email %>" disabled />
+                            </div>
+                          </div>
+
+                          <hr class="divider" />
+
+                          <div class="section-title">Security</div>
+
+                          <div class="field-group">
+                            <label for="currentPw">Current Password</label>
+                            <div class="password-wrapper">
+                              <input type="password" id="currentPw" placeholder="Enter your current password" />
+                              <button type="button" class="toggle-password"
+                                onclick="togglePasswordVisibility('currentPw', this)">
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                  stroke-width="2">
+                                  <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div class="fields-row" style="margin-top: 16px">
+                            <div class="field-group">
+                              <label for="newPw">New Password</label>
+                              <div class="password-wrapper">
+                                <input type="password" id="newPw" placeholder="At least 8 characters" />
+                                <button type="button" class="toggle-password"
+                                  onclick="togglePasswordVisibility('newPw', this)">
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="field-group">
+                              <label for="confirmPw">Confirm New Password</label>
+                              <div class="password-wrapper">
+                                <input type="password" id="confirmPw" placeholder="Repeat new password" />
+                                <button type="button" class="toggle-password"
+                                  onclick="togglePasswordVisibility('confirmPw', this)">
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="pw-bottom">
+                            <div class="hint">
+                              <span class="hint-icon">
+                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                  stroke-width="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M12 16v-4M12 8h.01" />
+                                </svg>
+                              </span>
+                              <span class="hint-text">Password must be at least 8 characters and include a mix of
+                                uppercase, numbers,
+                                and symbols.</span>
+                            </div>
+                            <button class="btn-update-pw" onclick="updatePassword()">Update Password</button>
+                          </div>
+                          <div class="bottom-actions">
+                            <button class="btn-discard" onclick="openDiscardModal()">Discard Changes</button>
+                            <button class="btn-save" onclick="saveChanges()">Save Changes</button>
+                          </div>
+                        </div>
+                      </div>
+                      <% if (locals.user && user.role==='admin' ) { %>
+                  </main>
+                  <% } else { %>
+            </main>
             </div>
-            <div class="field-group">
-              <label for="email">Email Address</label>
-              <input type="email" id="email" value="<%= user.email %>" disabled />
-            </div>
-          </div>
+            <% } %>
 
-          <hr class="divider" />
+              <% if (locals.user && user.role !=='admin' ) { %>
+                <footer class="footer">
+                  <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
+                  <div class="footer-links">
+                    <a href="/privacy">PRIVACY POLICY</a>
+                    <a href="/terms">TERMS OF SERVICE</a>
+                    <a href="/contact">CONTACT</a>
+                  </div>
+                </footer>
+                <% } %>
 
-          <div class="section-title">Security</div>
+                  <div id="toast"></div>
+                  <div class="modal-backdrop" id="discardModal">
+                    <div class="modal">
+                      <h3>Discard Changes?</h3>
+                      <p>All unsaved changes will be lost. This action cannot be undone.</p>
+                      <div class="modal-btns">
+                        <button class="btn-cancel-modal" onclick="closeDiscardModal()">Cancel</button>
+                        <button class="btn-confirm-discard" onclick="confirmDiscard()">Discard</button>
+                      </div>
+                    </div>
+                  </div>
 
-          <div class="field-group">
-            <label for="currentPw">Current Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="currentPw" placeholder="Enter your current password" />
-              <button type="button" class="toggle-password" onclick="togglePasswordVisibility('currentPw', this)">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </button>
-            </div>
-          </div>
+                  <% if (locals.user && user.role !=='admin' ) { %>
+                    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+                    <aside class="avatar-sidebar" id="avatarSidebar">
+                      <div class="sidebar-user-info">
+                        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() +
+                          user.username.slice(1) : 'User' %>
+                      </div>
+                      <div class="sidebar-divider"></div>
+                      <a href="/profile" class="sidebar-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        My Profile
+                      </a>
+                      <div class="sidebar-divider"></div>
+                      <a href="/logout" class="sidebar-logout" id="logoutBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                          <polyline points="16 17 21 12 16 7" />
+                          <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Log Out
+                      </a>
+                    </aside>
+                    <% } %>
 
-          <div class="fields-row" style="margin-top: 16px">
-            <div class="field-group">
-              <label for="newPw">New Password</label>
-              <div class="password-wrapper">
-                <input type="password" id="newPw" placeholder="At least 8 characters" />
-                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPw', this)">
-                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="field-group">
-              <label for="confirmPw">Confirm New Password</label>
-              <div class="password-wrapper">
-                <input type="password" id="confirmPw" placeholder="Repeat new password" />
-                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPw', this)">
-                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+                      <script>
+                        window.userRole = '<%= user ? user.role : "user" %>';
+                      </script>
+                      <script src="/js/profile.js"></script>
+                      <script src="/js/user.js"></script>
 
-          <div class="pw-bottom">
-            <div class="hint">
-              <span class="hint-icon">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 16v-4M12 8h.01" />
-                </svg>
-              </span>
-              <span class="hint-text">Password must be at least 8 characters and include a mix of uppercase, numbers,
-                and symbols.</span>
-            </div>
-            <button class="btn-update-pw" onclick="updatePassword()">Update Password</button>
-          </div>
-          <div class="bottom-actions">
-            <button class="btn-discard" onclick="openDiscardModal()">Discard Changes</button>
-            <button class="btn-save" onclick="saveChanges()">Save Changes</button>
-          </div>
-        </div>
-    </div>
-  <% if (locals.user && user.role === 'admin') { %>
-    </main>
-  <% } else { %>
-      </main>
-    </div>
-  <% } %>
-
-  <% if (locals.user && user.role !== 'admin') { %>
-  <footer class="footer">
-    <span class="footer-copy">COPYRIGHT © 2026 EMS. ALL RIGHTS RESERVED.</span>
-    <div class="footer-links">
-      <a href="/privacy">PRIVACY POLICY</a>
-      <a href="/terms">TERMS OF SERVICE</a>
-      <a href="/contact">CONTACT</a>
-    </div>
-  </footer>
-  <% } %>
-
-    <div id="toast"></div>
-    <div class="modal-backdrop" id="discardModal">
-      <div class="modal">
-        <h3>Discard Changes?</h3>
-        <p>All unsaved changes will be lost. This action cannot be undone.</p>
-        <div class="modal-btns">
-          <button class="btn-cancel-modal" onclick="closeDiscardModal()">Cancel</button>
-          <button class="btn-confirm-discard" onclick="confirmDiscard()">Discard</button>
-        </div>
-      </div>
-    </div>
-
-  <% if (locals.user && user.role !== 'admin') { %>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="avatar-sidebar" id="avatarSidebar">
-      <div class="sidebar-user-info">
-        Hi, <%= (locals.user && user.username) ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'User'
-          %>
-      </div>
-      <div class="sidebar-divider"></div>
-      <a href="/profile" class="sidebar-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-        My Profile
-      </a>
-      <div class="sidebar-divider"></div>
-      <a href="/logout" class="sidebar-logout" id="logoutBtn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
-        Log Out
-      </a>
-    </aside>
-    <% } %>
-
-      <script>
-        window.userRole = '<%= user ? user.role : "user" %>';
-      </script>
-      <script src="/js/profile.js"></script>
-      <script src="/js/user.js"></script>
-
-      <% if (locals.user && user.role === 'admin') { %>
-        <script src="/js/admin-notif.js"></script>
-      <% } %>
+                      <% if (locals.user && user.role==='admin' ) { %>
+                        <script src="/js/admin-notif.js"></script>
+                        <% } %>
 </body>
+
 </html>
