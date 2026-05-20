@@ -150,7 +150,18 @@
                                 <input type="tel" id="phoneNumber" placeholder="98XXXXXXXX" inputmode="numeric">
                             </div>
                         </div>
-                        <button class="book-btn" id="confirmBookingBtn">Continue Booking</button>
+                        <button class="book-btn" id="confirmBookingBtn">Book Now</button>
+
+                        <div id="paymentMethodModal" class="payment-method-modal" hidden>
+                            <div class="payment-method-backdrop" id="paymentMethodBackdrop"></div>
+                            <div class="payment-method-card" role="dialog" aria-modal="true" aria-labelledby="paymentMethodTitle">
+                                <h4 id="paymentMethodTitle">Choose Payment Method</h4>
+                                <p>Select one method to continue venue booking.</p>
+                                <button type="button" class="payment-method-btn" id="payVenueEsewaBtn">Pay with eSewa</button>
+                                <button type="button" class="payment-method-btn wallet" id="payVenueWalletBtn">Pay with EMS Wallet</button>
+                                <button type="button" class="payment-method-close" id="closePaymentMethodBtn">Cancel</button>
+                            </div>
+                        </div>
                     <% } else if (!user) { %>
                         <a href="/login" class="book-btn" style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
                     <% } else { %>
@@ -257,7 +268,30 @@
                             }, 4000);
                         }
 
-                        document.getElementById('confirmBookingBtn')?.addEventListener('click', async () => {
+                        const paymentMethodModal = document.getElementById('paymentMethodModal');
+                        const payVenueEsewaBtn = document.getElementById('payVenueEsewaBtn');
+                        const payVenueWalletBtn = document.getElementById('payVenueWalletBtn');
+                        const closePaymentMethodBtn = document.getElementById('closePaymentMethodBtn');
+                        let venueCheckoutInFlight = false;
+
+                        const setPaymentMethodBusy = (busy) => {
+                            venueCheckoutInFlight = busy;
+                            if (payVenueEsewaBtn) payVenueEsewaBtn.disabled = busy;
+                            if (payVenueWalletBtn) payVenueWalletBtn.disabled = busy;
+                            if (closePaymentMethodBtn) closePaymentMethodBtn.disabled = busy;
+                        };
+
+                        const openPaymentMethodModal = () => {
+                            if (!paymentMethodModal) return;
+                            paymentMethodModal.hidden = false;
+                        };
+
+                        const closePaymentMethodModal = () => {
+                            if (!paymentMethodModal || venueCheckoutInFlight) return;
+                            paymentMethodModal.hidden = true;
+                        };
+
+                        const validateVenueBookingFields = () => {
                             const startDate = document.getElementById('startDate').value;
                             const endDate = document.getElementById('endDate').value;
                             const startTime = document.getElementById('startTime').value;
@@ -266,28 +300,61 @@
 
                             if (!startDate || !endDate || !startTime || !endTime) {
                                 showNotification('Please select both start and end dates and times.');
-                                return;
+                                return null;
                             }
 
                             if (startDate < todayStr) {
                                 showNotification('Cannot book a date in the past.');
-                                return;
+                                return null;
                             }
 
                             if (startDate > endDate) {
                                 showNotification('Start date cannot be after end date.');
-                                return;
+                                return null;
+                            }
+                            const startDateTime = new Date(`${startDate}T${startTime}`);
+                            const endDateTime = new Date(`${endDate}T${endTime}`);
+                            if (Number.isNaN(startDateTime.getTime())) {
+                                showNotification('Please select valid start date and start time.');
+                                return null;
+                            }
+                            if (Number.isNaN(endDateTime.getTime())) {
+                                showNotification('Please select valid end date and end time.');
+                                return null;
+                            }
+                            const minAllowedStart = new Date(Date.now() + (2 * 60 * 60 * 1000));
+                            if (startDateTime < minAllowedStart) {
+                                showNotification('Venue booking start time must be at least 2 hours from now.');
+                                return null;
+                            }
+                            const diffMs = endDateTime.getTime() - startDateTime.getTime();
+                            if (diffMs < (1 * 60 * 60 * 1000)) {
+                                showNotification('Minimum booking duration is 1 hour.');
+                                return null;
+                            }
+                            if (diffMs > (30 * 24 * 60 * 60 * 1000)) {
+                                showNotification('Maximum booking duration is 30 days.');
+                                return null;
                             }
                             if (!phoneNumber) {
                                 showNotification('Please enter your phone number.');
-                                return;
+                                return null;
                             }
                             const normalizedPhone = phoneNumber.replace(/[^\d]/g, '');
                             const validPhone = /^(?:977)?98\d{8}$/.test(normalizedPhone);
                             if (!validPhone) {
                                 showNotification('Please enter a valid mobile number.');
-                                return;
+                                return null;
                             }
+
+                            return { startDate, endDate, startTime, endTime, phoneNumber };
+                        };
+
+                        const startVenueCheckout = async (paymentMethod) => {
+                            if (venueCheckoutInFlight) return;
+                            const payload = validateVenueBookingFields();
+                            if (!payload) return;
+                            setPaymentMethodBusy(true);
 
                             try {
                                 const response = await fetch('/venue/book', {
@@ -295,20 +362,30 @@
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         venueId: '<%= venue._id %>',
-                                        startDate,
-                                        endDate,
-                                        startTime,
-                                        endTime,
-                                        phoneNumber
+                                        startDate: payload.startDate,
+                                        endDate: payload.endDate,
+                                        startTime: payload.startTime,
+                                        endTime: payload.endTime,
+                                        phoneNumber: payload.phoneNumber,
+                                        paymentMethod
                                     })
                                 });
 
                                 const data = await response.json();
                                 if (data.success) {
+                                    if (paymentMethod === 'wallet') {
+                                        if (!data.redirect_url) {
+                                            showNotification('Unable to start EMS Wallet payment.');
+                                            return;
+                                        }
+                                        window.location.href = data.redirect_url;
+                                        return;
+                                    }
                                     if (!data.payment_url || !data.form_fields) {
                                         showNotification('Unable to start eSewa payment.');
                                         return;
                                     }
+                                    closePaymentMethodModal();
                                     const form = document.createElement('form');
                                     form.method = 'POST';
                                     form.action = data.payment_url;
@@ -328,8 +405,20 @@
                             } catch (err) {
                                 console.error(err);
                                 showNotification('An error occurred. Please try again.');
+                            } finally {
+                                setPaymentMethodBusy(false);
                             }
+                        };
+
+                        document.getElementById('confirmBookingBtn')?.addEventListener('click', () => {
+                            const payload = validateVenueBookingFields();
+                            if (!payload) return;
+                            openPaymentMethodModal();
                         });
+
+                        payVenueEsewaBtn?.addEventListener('click', () => startVenueCheckout('esewa'));
+                        payVenueWalletBtn?.addEventListener('click', () => startVenueCheckout('wallet'));
+                        closePaymentMethodBtn?.addEventListener('click', closePaymentMethodModal);
                     </script>
 
                     <div class="contact-box">

@@ -76,14 +76,22 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
     if (start < today) {
         return 'Cannot book a date in the past.';
     }
+    const minimumStart = new Date(Date.now() + (2 * 60 * 60 * 1000));
+    if (start < minimumStart) {
+        return 'Venue booking start time must be at least 2 hours from now.';
+    }
     if (start > end) {
         return 'Start date cannot be after end date.';
     }
     
     const timeDiffMs = end.getTime() - start.getTime();
     const hoursDiff = timeDiffMs / (1000 * 60 * 60);
-    if (hoursDiff < 2) {
-        return 'Minimum booking duration is 2 hours.';
+    if (hoursDiff < 1) {
+        return 'Minimum booking duration is 1 hour.';
+    }
+    const maxDurationMs = 30 * 24 * 60 * 60 * 1000;
+    if (timeDiffMs > maxDurationMs) {
+        return 'Maximum booking duration is 30 days.';
     }
 
     return null;
@@ -145,16 +153,23 @@ exports.getVenueById = async (req, res) => {
         }).select('startDate endDate').lean();
 
         // Expand ranges into individual days for the calendar
-        const bookedDates = [];
+        const bookedDateSet = new Set();
+        const toLocalDateKey = (date) => {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
         bookings.forEach(b => {
             let curr = new Date(b.startDate);
             const end = new Date(b.endDate);
-            // Ensure we include the end date by comparing properly
             while (curr <= end) {
-                bookedDates.push(new Date(curr).toISOString().split('T')[0]);
+                bookedDateSet.add(toLocalDateKey(curr));
                 curr.setDate(curr.getDate() + 1);
             }
         });
+        const bookedDates = Array.from(bookedDateSet);
 
         res.render('venueDetail', { 
             venue, 
@@ -194,9 +209,10 @@ exports.searchVenues = async (req, res) => {
 
 exports.bookVenue = async (req, res) => {
     try {
-        const { venueId, startDate, endDate, startTime, endTime, phoneNumber } = req.body;
+        const { venueId, startDate, endDate, startTime, endTime, phoneNumber, paymentMethod } = req.body;
         const userId = req.user.userId;
         const normalizedPhone = normalizePhoneNumber(phoneNumber);
+        const method = String(paymentMethod || 'esewa').trim().toLowerCase() === 'wallet' ? 'wallet' : 'esewa';
 
         const venue = await Venue.findById(venueId);
         if (!venue) return res.status(404).json({ success: false, message: "Venue not found" });
@@ -264,11 +280,23 @@ exports.bookVenue = async (req, res) => {
             venueId: venue._id.toString(),
             userId: userId.toString(),
             totalAmount,
+            paymentProvider: method,
             productCode: ESEWA_PRODUCT_CODE,
             createdAt: Date.now(),
             expiresAt
         };
         req.session.venuePaymentCheckouts = checkouts;
+
+        if (method === 'wallet') {
+            return req.session.save(() => res.json({
+                success: true,
+                paymentProvider: 'wallet',
+                transaction_uuid: transactionUuid,
+                redirect_url: `/payments/wallet/${encodeURIComponent(transactionUuid)}?bookingType=venue`,
+                expires_at: new Date(expiresAt).toISOString(),
+                expires_in: Math.max(Math.ceil((expiresAt - Date.now()) / 1000), 1)
+            }));
+        }
 
         const esewaPayload = buildEsewaPaymentPayload({
             amount: totalEsewaAmount,

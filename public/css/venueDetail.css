@@ -571,6 +571,81 @@ body {
     cursor: not-allowed;
 }
 
+.payment-method-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.payment-method-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 16, 30, 0.45);
+}
+
+.payment-method-card {
+    position: relative;
+    width: min(360px, 92vw);
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 24px 52px rgba(0, 0, 0, 0.22);
+    text-align: left;
+}
+
+.payment-method-card h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1f2a44;
+}
+
+.payment-method-card p {
+    margin: 8px 0 14px;
+    font-size: 0.9rem;
+    color: #5b667a;
+}
+
+.payment-method-btn {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    background: #2c3e50;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.payment-method-btn.wallet {
+    background: #1f2b4a;
+}
+
+.payment-method-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.payment-method-close {
+    width: 100%;
+    border: 1px solid #d9deea;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #384763;
+    background: #fff;
+    cursor: pointer;
+}
+
+.payment-method-modal[hidden] {
+    display: none !important;
+}
+
 .booking-countdown {
     margin: 10px 4px 0;
     font-size: 0.86rem;

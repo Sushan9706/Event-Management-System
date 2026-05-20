@@ -75,6 +75,10 @@ router.post('/profile/upload-avatar', isLoggedIn, upload.avatarUpload.single('av
 router.post('/bookings/create', isLoggedIn, bookingController.createBooking);
 router.post('/api/esewa/initiate', isLoggedIn, bookingController.initiateEsewaPayment);
 router.post('/api/esewa/verify', isLoggedIn, bookingController.verifyEsewaPayment);
+router.post('/api/wallet/initiate/event', isLoggedIn, bookingController.initiateWalletPayment);
+router.post('/api/wallet/precheck', isLoggedIn, bookingController.precheckWalletCredentials);
+router.post('/api/wallet/verify', isLoggedIn, bookingController.verifyWalletPayment);
+router.get('/payments/wallet/:transactionUuid?', isLoggedIn, bookingController.getWalletPaymentPage);
 router.get('/payments/success', isLoggedIn, bookingController.getPaymentSuccessPage);
 router.get('/payments/khalti/success', isLoggedIn, bookingController.getKhaltiSuccessPage);
 router.get('/payments/esewa/success/:transactionUuid?', isLoggedIn, bookingController.getEsewaSuccessPage);

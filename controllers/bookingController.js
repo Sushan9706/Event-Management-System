@@ -15,6 +15,9 @@ const {
 
 const MAX_TICKETS_PER_BOOKING = 5;
 const PAYMENT_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const EMS_WALLET_TEST_PHONE = '9876543210';
+const EMS_WALLET_TEST_PIN = '2324';
+const EMS_WALLET_TEST_OTP = '121314';
 const createHttpError = (status, message, payload) => {
     const error = new Error(message);
     error.status = status;
@@ -284,6 +287,56 @@ const getPaymentCheckouts = (req) => {
     return req.session.paymentCheckouts;
 };
 
+const getWalletPaymentCheckouts = (req) => {
+    if (!req.session.walletPaymentCheckouts) {
+        req.session.walletPaymentCheckouts = {};
+    }
+    return req.session.walletPaymentCheckouts;
+};
+
+const normalizeWalletPhone = (value) => {
+    const digits = String(value || '').replace(/[^\d]/g, '');
+    if (digits.startsWith('977') && digits.length === 12) {
+        return digits.slice(3);
+    }
+    return digits;
+};
+
+const findWalletCheckout = (req, transactionUuid) => {
+    const walletCheckouts = req.session.walletPaymentCheckouts || {};
+    if (walletCheckouts[transactionUuid]) {
+        return {
+            source: 'event',
+            checkout: walletCheckouts[transactionUuid]
+        };
+    }
+
+    const venueCheckouts = req.session.venuePaymentCheckouts || {};
+    const venueCheckout = venueCheckouts[transactionUuid];
+    if (venueCheckout && venueCheckout.paymentProvider === 'wallet') {
+        return {
+            source: 'venue',
+            checkout: venueCheckout
+        };
+    }
+
+    return null;
+};
+
+const removeWalletCheckout = (req, source, transactionUuid) => {
+    if (source === 'event') {
+        const walletCheckouts = req.session.walletPaymentCheckouts || {};
+        delete walletCheckouts[transactionUuid];
+        req.session.walletPaymentCheckouts = walletCheckouts;
+        return;
+    }
+    if (source === 'venue') {
+        const venueCheckouts = req.session.venuePaymentCheckouts || {};
+        delete venueCheckouts[transactionUuid];
+        req.session.venuePaymentCheckouts = venueCheckouts;
+    }
+};
+
 const decodeEsewaDataPayload = (encoded) => {
     const raw = String(encoded || '').trim();
     if (!raw) return null;
@@ -444,6 +497,303 @@ exports.initiateEsewaPayment = async (req, res) => {
             success: false,
             message,
             details: err.payload || undefined
+        });
+    }
+};
+
+exports.initiateWalletPayment = async (req, res) => {
+    try {
+        const checkout = await prepareBookingCheckout({
+            userId: req.user.userId,
+            eventId: req.body.eventId,
+            email: req.body.email,
+            ticketCountRaw: req.body.ticketCount,
+            attendeeNamesRaw: req.body.attendeeNames
+        });
+
+        if (checkout.totalAmount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'EMS Wallet is only required for paid bookings.'
+            });
+        }
+
+        const transactionUuid = `EWL-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+        const expiresAt = Date.now() + PAYMENT_CHECKOUT_TTL_MS;
+        const checkouts = getWalletPaymentCheckouts(req);
+        checkouts[transactionUuid] = {
+            transactionUuid,
+            paymentProvider: 'wallet',
+            bookingType: 'event',
+            purchaseOrderName: String(req.body.orderName || pickEventName(checkout.event)).trim() || 'EMS Event Booking',
+            eventId: checkout.event._id.toString(),
+            userId: checkout.user._id.toString(),
+            attendeeEmail: checkout.attendeeEmail,
+            attendeeNames: checkout.attendeeNames,
+            ticketCount: checkout.ticketCount,
+            unitPrice: checkout.unitPrice,
+            totalAmount: checkout.totalAmount,
+            status: 'Initiated',
+            createdAt: Date.now(),
+            expiresAt
+        };
+        req.session.walletPaymentCheckouts = checkouts;
+
+        return req.session.save(() => res.json({
+            success: true,
+            paymentProvider: 'wallet',
+            transaction_uuid: transactionUuid,
+            redirect_url: `/payments/wallet/${encodeURIComponent(transactionUuid)}?bookingType=event`,
+            expires_at: new Date(expiresAt).toISOString(),
+            expires_in: Math.max(Math.ceil((expiresAt - Date.now()) / 1000), 1)
+        }));
+    } catch (err) {
+        console.error('EMS Wallet Initiate Error:', err);
+        const statusCode = err.status || 500;
+        return res.status(statusCode).json({
+            success: false,
+            message: err.message || 'Unable to start EMS Wallet checkout.'
+        });
+    }
+};
+
+exports.getWalletPaymentPage = async (req, res) => {
+    const transactionUuid = String(req.params.transactionUuid || req.query.transaction_uuid || '').trim();
+    if (!transactionUuid) {
+        return res.redirect('/bookings');
+    }
+
+    const match = findWalletCheckout(req, transactionUuid);
+    if (!match) {
+        return res.redirect('/payments/success?provider=esewa&status=expired&eventName=EMS%20Wallet');
+    }
+
+    const { source, checkout } = match;
+    if (checkout.expiresAt && Date.now() > checkout.expiresAt) {
+        if (source === 'venue' && checkout.venueBookingId) {
+            await VenueBooking.findByIdAndUpdate(checkout.venueBookingId, {
+                $set: {
+                    status: 'cancelled',
+                    paymentStatus: 'unpaid'
+                }
+            });
+        }
+        removeWalletCheckout(req, source, transactionUuid);
+        return req.session.save(() => res.redirect('/payments/success?provider=esewa&status=expired&eventName=EMS%20Wallet'));
+    }
+
+    let targetName = source === 'event'
+        ? (checkout.purchaseOrderName || 'Event Booking')
+        : 'Venue Booking';
+    let paymentDetails = [];
+
+    if (source === 'event') {
+        const event = await Event.findById(checkout.eventId)
+            .select('eventName title name eventTitle startDate endDate startTime endTime location')
+            .lean();
+        if (event) {
+            targetName = pickEventName(event, targetName);
+            paymentDetails = [
+                { label: 'Booking Type', value: 'Event' },
+                { label: 'Tickets', value: String(checkout.ticketCount || 1) },
+                { label: 'Date', value: event.startDate ? new Date(event.startDate).toLocaleDateString('en-US') : 'N/A' },
+                { label: 'Time', value: (event.startTime && event.endTime) ? `${event.startTime} - ${event.endTime}` : (event.startTime || 'N/A') },
+                { label: 'Location', value: event.location || 'N/A' }
+            ];
+        } else {
+            paymentDetails = [
+                { label: 'Booking Type', value: 'Event' },
+                { label: 'Tickets', value: String(checkout.ticketCount || 1) }
+            ];
+        }
+    } else if (checkout.venueBookingId) {
+        const venueBooking = await VenueBooking.findById(checkout.venueBookingId).populate('venueId').lean();
+        if (venueBooking && venueBooking.venueId && venueBooking.venueId.name) {
+            targetName = venueBooking.venueId.name;
+        }
+        if (venueBooking) {
+            paymentDetails = [
+                { label: 'Booking Type', value: 'Venue' },
+                { label: 'Start Date', value: venueBooking.startDate ? new Date(venueBooking.startDate).toLocaleDateString('en-US') : 'N/A' },
+                { label: 'Start Time', value: venueBooking.startTime || 'N/A' },
+                { label: 'End Date', value: venueBooking.endDate ? new Date(venueBooking.endDate).toLocaleDateString('en-US') : 'N/A' },
+                { label: 'End Time', value: venueBooking.endTime || 'N/A' }
+            ];
+        }
+    }
+
+    return res.render('emsWallet', {
+        bookingType: source === 'venue' ? 'venue' : 'event',
+        transactionUuid,
+        paymentTargetName: targetName,
+        amount: Number(checkout.totalAmount || 0),
+        expiresAt: checkout.expiresAt || null,
+        paymentDetails
+    });
+};
+
+exports.precheckWalletCredentials = async (req, res) => {
+    try {
+        const transactionUuid = String(req.body.transaction_uuid || '').trim();
+        const phoneNumber = normalizeWalletPhone(req.body.phoneNumber);
+        const pin = String(req.body.pin || '').trim();
+
+        if (!transactionUuid) {
+            return res.status(400).json({ success: false, message: 'Missing EMS Wallet transaction identifier.' });
+        }
+        const match = findWalletCheckout(req, transactionUuid);
+        if (!match) {
+            return res.status(404).json({ success: false, message: 'EMS Wallet session expired. Please book again.' });
+        }
+        const { source, checkout } = match;
+        if (checkout.expiresAt && Date.now() > checkout.expiresAt) {
+            if (source === 'venue' && checkout.venueBookingId) {
+                await VenueBooking.findByIdAndUpdate(checkout.venueBookingId, {
+                    $set: {
+                        status: 'cancelled',
+                        paymentStatus: 'unpaid'
+                    }
+                });
+            }
+            removeWalletCheckout(req, source, transactionUuid);
+            return req.session.save(() => res.status(410).json({
+                success: false,
+                message: 'The EMS Wallet session expired. Please start booking again.'
+            }));
+        }
+
+        if (!phoneNumber || !pin) {
+            return res.status(400).json({ success: false, message: 'Please enter both phone number and PIN.' });
+        }
+        if (phoneNumber !== EMS_WALLET_TEST_PHONE || pin !== EMS_WALLET_TEST_PIN) {
+            return res.status(400).json({ success: false, message: 'Invalid wallet phone number or PIN.' });
+        }
+
+        return res.json({ success: true, message: 'Phone and PIN verified.' });
+    } catch (err) {
+        console.error('EMS Wallet Precheck Error:', err);
+        return res.status(err.status || 500).json({
+            success: false,
+            message: err.message || 'Unable to verify wallet credentials.'
+        });
+    }
+};
+
+exports.verifyWalletPayment = async (req, res) => {
+    try {
+        const transactionUuid = String(req.body.transaction_uuid || '').trim();
+        const phoneNumber = normalizeWalletPhone(req.body.phoneNumber);
+        const pin = String(req.body.pin || '').trim();
+        const otp = String(req.body.otp || '').trim();
+
+        if (!transactionUuid) {
+            return res.status(400).json({ success: false, message: 'Missing EMS Wallet transaction identifier.' });
+        }
+
+        const match = findWalletCheckout(req, transactionUuid);
+        if (!match) {
+            return res.status(404).json({ success: false, message: 'EMS Wallet session expired. Please book again.' });
+        }
+
+        const { source, checkout } = match;
+        if (checkout.expiresAt && Date.now() > checkout.expiresAt) {
+            if (source === 'venue' && checkout.venueBookingId) {
+                await VenueBooking.findByIdAndUpdate(checkout.venueBookingId, {
+                    $set: {
+                        status: 'cancelled',
+                        paymentStatus: 'unpaid'
+                    }
+                });
+            }
+            removeWalletCheckout(req, source, transactionUuid);
+            return req.session.save(() => res.status(410).json({
+                success: false,
+                message: 'The EMS Wallet session expired. Please start booking again.'
+            }));
+        }
+
+        if (!phoneNumber || !pin) {
+            return res.status(400).json({ success: false, message: 'Please enter both phone number and PIN.' });
+        }
+        if (phoneNumber !== EMS_WALLET_TEST_PHONE || pin !== EMS_WALLET_TEST_PIN) {
+            return res.status(400).json({ success: false, message: 'Invalid wallet phone number or PIN.' });
+        }
+        if (!otp) {
+            return res.status(400).json({ success: false, message: 'Please enter OTP to continue.' });
+        }
+        if (otp !== EMS_WALLET_TEST_OTP) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
+        }
+
+        if (source === 'event') {
+            let bookingId = checkout.bookingId || null;
+            let eventName = checkout.purchaseOrderName || 'Event Booking';
+
+            if (!bookingId) {
+                const [event, user] = await Promise.all([
+                    Event.findById(checkout.eventId),
+                    User.findById(checkout.userId)
+                ]);
+
+                if (!event || !user) {
+                    throw createHttpError(404, 'Booking details were not found for EMS Wallet payment.');
+                }
+                if (isEventDatePassed(event)) {
+                    throw createHttpError(400, 'Booking closed. This event date has passed.');
+                }
+                const capacityMessage = await ensureCapacityAvailable(event, checkout.ticketCount);
+                if (capacityMessage) {
+                    throw createHttpError(400, capacityMessage);
+                }
+
+                const { booking } = await createConfirmedBooking({
+                    event,
+                    user,
+                    attendeeEmail: checkout.attendeeEmail,
+                    ticketCount: checkout.ticketCount,
+                    attendeeNames: checkout.attendeeNames
+                });
+                bookingId = booking._id.toString();
+                eventName = pickEventName(event, eventName);
+            }
+
+            removeWalletCheckout(req, source, transactionUuid);
+            return req.session.save(() => res.json({
+                success: true,
+                message: 'EMS Wallet payment successful.',
+                redirectUrl: `/payments/success?provider=free&bookingType=event&bookingId=${encodeURIComponent(bookingId || '')}&eventName=${encodeURIComponent(eventName)}`
+            }));
+        }
+
+        const venueBooking = await VenueBooking.findById(checkout.venueBookingId).populate('venueId');
+        if (!venueBooking) {
+            removeWalletCheckout(req, source, transactionUuid);
+            return req.session.save(() => res.status(404).json({
+                success: false,
+                message: 'Venue booking was not found for this wallet payment.'
+            }));
+        }
+
+        venueBooking.status = 'confirmed';
+        venueBooking.paymentStatus = 'paid';
+        await venueBooking.save();
+
+        const venueName = encodeURIComponent(
+            (venueBooking.venueId && venueBooking.venueId.name)
+                ? venueBooking.venueId.name
+                : 'Venue Booking'
+        );
+        removeWalletCheckout(req, source, transactionUuid);
+        return req.session.save(() => res.json({
+            success: true,
+            message: 'EMS Wallet payment successful.',
+            redirectUrl: `/payments/success?provider=free&bookingType=venue&bookingId=${encodeURIComponent(venueBooking._id.toString())}&eventName=${venueName}`
+        }));
+    } catch (err) {
+        console.error('EMS Wallet Verify Error:', err);
+        return res.status(err.status || 500).json({
+            success: false,
+            message: err.message || 'Unable to verify EMS Wallet payment.'
         });
     }
 };

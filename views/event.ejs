@@ -396,6 +396,15 @@
           <p class="booking-countdown" id="paymentTimerNote" hidden>30:00</p>
           <button class="booking-submit" id="bookingSubmitBtn" type="button">Book Now</button>
         </form>
+
+        <div class="payment-method-picker" id="paymentMethodPicker" hidden>
+          <p class="booking-label">Choose payment method</p>
+          <div class="payment-method-actions">
+            <button class="payment-method-btn" id="payEsewaBtn" type="button">Pay with eSewa</button>
+            <button class="payment-method-btn wallet" id="payWalletBtn" type="button">Pay with EMS Wallet</button>
+          </div>
+          <button class="payment-method-cancel" id="cancelPaymentMethodBtn" type="button">Cancel</button>
+        </div>
       </div>
 
       <div class="booking-success-view" aria-live="polite">
@@ -478,16 +487,22 @@
     const attendeeNameFields = document.getElementById("attendeeNameFields");
     const bookingSubmitBtn = document.getElementById("bookingSubmitBtn");
     const paymentTimerNote = document.getElementById("paymentTimerNote");
+    const paymentMethodPicker = document.getElementById("paymentMethodPicker");
+    const payEsewaBtn = document.getElementById("payEsewaBtn");
+    const payWalletBtn = document.getElementById("payWalletBtn");
+    const cancelPaymentMethodBtn = document.getElementById("cancelPaymentMethodBtn");
     let lastBookingId = null;
     let bookingStep = "tickets";
     let bookingTimerRemainingMs = 30 * 60 * 1000;
     let bookingTimerInterval = null;
+    let bookingTimerDeadlineMs = null;
     const searchOverlay = document.getElementById("searchOverlay");
     const isAuthenticated = bookingModal?.dataset?.authenticated === "true";
     const bookingClosed = bookingModal?.dataset?.hasEnded === "true";
     const maxTicketsPerBooking = 5;
     const attendeeNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
     let esewaRequestInFlight = false;
+    let pendingPaidBooking = null;
 
     function formatAmount(amount, pricePerTicket) {
       if (pricePerTicket === 0) return "Free";
@@ -537,11 +552,29 @@
 
       if (bookingSubmitBtn) {
         bookingSubmitBtn.disabled = esewaRequestInFlight;
-        bookingSubmitBtn.textContent = requiresPayment ? "Pay with eSewa" : "Book Now";
+        bookingSubmitBtn.textContent = requiresPayment ? "Choose Payment Method" : "Book Now";
       }
       if (paymentTimerNote) {
+        const remainingMs = getTimerRemainingMs();
         paymentTimerNote.hidden = !requiresPayment;
-        paymentTimerNote.textContent = requiresPayment ? formatCountdown(bookingTimerRemainingMs) : "";
+        paymentTimerNote.textContent = requiresPayment ? formatCountdown(remainingMs) : "";
+      }
+    }
+
+    function getTimerRemainingMs() {
+      if (!bookingTimerDeadlineMs) return bookingTimerRemainingMs;
+      const remaining = Math.max(bookingTimerDeadlineMs - Date.now(), 0);
+      bookingTimerRemainingMs = remaining;
+      return remaining;
+    }
+
+    function renderBookingTimer() {
+      if (!paymentTimerNote || !bookingTimerDeadlineMs) return;
+      const remaining = getTimerRemainingMs();
+      paymentTimerNote.textContent = formatCountdown(remaining);
+      if (remaining <= 0) {
+        paymentTimerNote.textContent = "00:00";
+        stopBookingTimer();
       }
     }
 
@@ -555,23 +588,18 @@
     function resetBookingTimer() {
       stopBookingTimer();
       bookingTimerRemainingMs = 30 * 60 * 1000;
+      bookingTimerDeadlineMs = null;
     }
 
     function startBookingTimer() {
       if (!paymentTimerNote) return;
       resetBookingTimer();
       paymentTimerNote.hidden = false;
-      paymentTimerNote.textContent = formatCountdown(bookingTimerRemainingMs);
+      bookingTimerDeadlineMs = Date.now() + (30 * 60 * 1000);
+      renderBookingTimer();
 
       bookingTimerInterval = window.setInterval(() => {
-        bookingTimerRemainingMs -= 1000;
-        if (bookingTimerRemainingMs <= 0) {
-          bookingTimerRemainingMs = 0;
-          paymentTimerNote.textContent = "00:00";
-          stopBookingTimer();
-          return;
-        }
-        paymentTimerNote.textContent = formatCountdown(bookingTimerRemainingMs);
+        renderBookingTimer();
       }, 1000);
     }
 
@@ -585,8 +613,10 @@
     function resetBookingStep() {
       bookingStep = "tickets";
       esewaRequestInFlight = false;
+      pendingPaidBooking = null;
       if (attendeeStep) attendeeStep.hidden = true;
       if (attendeeNameFields) attendeeNameFields.innerHTML = "";
+      if (paymentMethodPicker) paymentMethodPicker.hidden = true;
       resetBookingTimer();
       if (paymentTimerNote) {
         paymentTimerNote.hidden = true;
@@ -693,6 +723,28 @@
       return body || { success: false, message: "Unable to start eSewa payment." };
     }
 
+    async function initiateWalletEventPayment(payload) {
+      const response = await fetch("/api/wallet/initiate/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+      if (response.redirected && response.url.includes("/login")) {
+        return { success: false, message: "Session expired. Please login again and retry payment." };
+      }
+      let body = null;
+      try {
+        body = await response.json();
+      } catch (error) {
+        body = null;
+      }
+      if (!response.ok) {
+        return body || { success: false, message: "Unable to start EMS Wallet payment." };
+      }
+      return body || { success: false, message: "Unable to start EMS Wallet payment." };
+    }
+
     function isValidEsewaPaymentUrl(url) {
       if (!url || typeof url !== "string") return false;
       try {
@@ -703,6 +755,86 @@
         return isKhaltiHost && isHttp;
       } catch (error) {
         return false;
+      }
+    }
+
+    function openPaymentMethodPicker(payload) {
+      pendingPaidBooking = payload;
+      if (paymentMethodPicker) paymentMethodPicker.hidden = false;
+    }
+
+    function closePaymentMethodPicker() {
+      if (esewaRequestInFlight) return;
+      if (paymentMethodPicker) paymentMethodPicker.hidden = true;
+      pendingPaidBooking = null;
+    }
+
+    async function processPaidBooking(method) {
+      if (esewaRequestInFlight || !pendingPaidBooking) return;
+      esewaRequestInFlight = true;
+      if (payEsewaBtn) payEsewaBtn.disabled = true;
+      if (payWalletBtn) payWalletBtn.disabled = true;
+      if (cancelPaymentMethodBtn) cancelPaymentMethodBtn.disabled = true;
+      updatePaymentActions();
+      bookingError.textContent = "";
+
+      try {
+        if (method === "wallet") {
+          const walletData = await initiateWalletEventPayment({
+            eventId: pendingPaidBooking.eventId,
+            email: pendingPaidBooking.email,
+            ticketCount: pendingPaidBooking.ticketCount,
+            attendeeNames: pendingPaidBooking.attendeeNames,
+            amount: pendingPaidBooking.totalAmount,
+            orderName: pendingPaidBooking.eventName,
+          });
+          if (!walletData?.success || !walletData?.redirect_url) {
+            bookingError.textContent = walletData?.message || "Unable to start EMS Wallet payment.";
+            return;
+          }
+          window.location.href = walletData.redirect_url;
+          return;
+        }
+
+        const esewaData = await initiateEsewaPayment({
+          eventId: pendingPaidBooking.eventId,
+          email: pendingPaidBooking.email,
+          ticketCount: pendingPaidBooking.ticketCount,
+          attendeeNames: pendingPaidBooking.attendeeNames,
+          amount: pendingPaidBooking.totalAmount,
+          orderId: `EMS-${pendingPaidBooking.eventId}-${Date.now()}`,
+          orderName: pendingPaidBooking.eventName,
+          customerName: pendingPaidBooking.attendeeNames[0],
+        });
+        if (!esewaData?.success || !esewaData?.payment_url) {
+          bookingError.textContent = esewaData?.message || "Unable to start eSewa payment.";
+          return;
+        }
+        if (!isValidEsewaPaymentUrl(esewaData.payment_url)) {
+          bookingError.textContent = "Invalid eSewa redirect URL received. Please verify sandbox key setup.";
+          return;
+        }
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = esewaData.payment_url;
+        form.style.display = "none";
+        const fields = esewaData.form_fields || {};
+        Object.entries(fields).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value ?? "");
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+      } finally {
+        esewaRequestInFlight = false;
+        if (payEsewaBtn) payEsewaBtn.disabled = false;
+        if (payWalletBtn) payWalletBtn.disabled = false;
+        if (cancelPaymentMethodBtn) cancelPaymentMethodBtn.disabled = false;
+        updatePaymentActions();
       }
     }
 
@@ -848,6 +980,10 @@
       const pricePerTicket = parseFloat(bookingModal.dataset.eventPrice || "0");
       const totalAmount = pricePerTicket * ticketCount;
       const requiresPayment = totalAmount > 0;
+      if (requiresPayment && getTimerRemainingMs() <= 0) {
+        bookingError.textContent = "Payment time expired. Please reopen booking and try again.";
+        return;
+      }
 
       if (!eventId) {
         bookingSuccessDetail.textContent = `${eventName} · ${eventDate} (${eventTime}) · ${eventLocation} · Attendees: ${attendeeNames.join(", ")} · Tickets: ${ticketCount} · Total: ${formatAmount(totalAmount, pricePerTicket)}`;
@@ -861,43 +997,14 @@
 
       try {
         if (requiresPayment) {
-          esewaRequestInFlight = true;
-          updatePaymentActions();
-          const khaltiData = await initiateEsewaPayment({
+          openPaymentMethodPicker({
             eventId,
             email,
             ticketCount,
             attendeeNames,
-            amount: totalAmount,
-            orderId: `EMS-${eventId}-${Date.now()}`,
-            orderName: eventName,
-            customerName: attendeeNames[0],
+            totalAmount,
+            eventName
           });
-          if (!khaltiData) {
-            return;
-          }
-          if (!khaltiData.success || !khaltiData.payment_url) {
-            bookingError.textContent = khaltiData.message || "Unable to start eSewa payment.";
-            return;
-          }
-          if (!isValidEsewaPaymentUrl(khaltiData.payment_url)) {
-            bookingError.textContent = "Invalid eSewa redirect URL received. Please verify sandbox key setup.";
-            return;
-          }
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = khaltiData.payment_url;
-          form.style.display = "none";
-          const fields = khaltiData.form_fields || {};
-          Object.entries(fields).forEach(([key, value]) => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = key;
-            input.value = String(value ?? "");
-            form.appendChild(input);
-          });
-          document.body.appendChild(form);
-          form.submit();
           return;
         }
 
@@ -935,6 +1042,9 @@
     // Prevent native form navigation and handle booking only via JS.
     bookingForm.addEventListener("submit", handleBookingSubmit);
     bookingSubmitBtn.addEventListener("click", handleBookingSubmit);
+    payEsewaBtn?.addEventListener("click", () => processPaidBooking("esewa"));
+    payWalletBtn?.addEventListener("click", () => processPaidBooking("wallet"));
+    cancelPaymentMethodBtn?.addEventListener("click", closePaymentMethodPicker);
 
     if (downloadTicketBtn) {
       downloadTicketBtn.addEventListener("click", () => {
@@ -952,6 +1062,18 @@
         if (searchOverlay) searchOverlay.style.display = "none";
         if (notifDropdown) notifDropdown.classList.remove("open");
         if (typeof closeSidebar === "function") closeSidebar();
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && bookingStep === "attendee" && bookingTimerDeadlineMs) {
+        renderBookingTimer();
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      if (bookingStep === "attendee" && bookingTimerDeadlineMs) {
+        renderBookingTimer();
       }
     });
   </script>

@@ -666,6 +666,53 @@ body {
   transform: none;
 }
 
+.payment-method-picker {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8f9fd;
+}
+
+.payment-method-picker[hidden] {
+  display: none !important;
+}
+
+.payment-method-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.payment-method-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 8px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.payment-method-btn.wallet {
+  background: #213159;
+}
+
+.payment-method-cancel {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px;
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .booking-secondary {
   padding: 12px 14px;
   border-radius: 10px;

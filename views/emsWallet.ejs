@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS Wallet Payment</title>
+  <link rel="stylesheet" href="/css/emsWallet.css" />
+</head>
+<body>
+  <main class="wallet-page">
+    <section class="wallet-card" role="dialog" aria-modal="true" aria-labelledby="walletTitle">
+      <aside class="wallet-summary">
+        <p class="wallet-eyebrow">PAYMENT DETAILS</p>
+        <h1 id="walletTitle">EMS Wallet Checkout</h1>
+        <p class="wallet-target"><%= bookingType === 'venue' ? 'Venue' : 'Event' %>: <strong><%= paymentTargetName %></strong></p>
+        <ul class="wallet-detail-list">
+          <% (paymentDetails || []).forEach(function(item) { %>
+            <li>
+              <span><%= item.label %></span>
+              <strong><%= item.value %></strong>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="wallet-total-box">
+          <span>Total Payment</span>
+          <strong>NPR. <%= Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2) %></strong>
+        </div>
+      </aside>
+
+      <section class="wallet-auth">
+        <a href="/bookings" class="wallet-link wallet-link-top"><span aria-hidden="true">←</span> Back to My Bookings</a>
+        <p class="wallet-eyebrow">EMS WALLET</p>
+        <h2 class="wallet-auth-title">Secure Verification</h2>
+
+        <form id="walletAuthForm" class="wallet-form" novalidate>
+          <label for="walletPhone">Phone Number</label>
+          <input id="walletPhone" type="tel" placeholder="98XXXXXXXX" inputmode="numeric" autocomplete="tel" required />
+
+          <label for="walletPin">PIN</label>
+          <input id="walletPin" type="password" maxlength="8" placeholder="Enter wallet PIN" autocomplete="off" required />
+
+          <button type="submit" class="wallet-btn">Continue</button>
+        </form>
+
+        <form id="walletOtpForm" class="wallet-form" novalidate hidden>
+          <label for="walletOtp">OTP</label>
+          <input id="walletOtp" type="text" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit OTP" autocomplete="one-time-code" required />
+
+          <button type="submit" class="wallet-btn">Confirm Payment</button>
+          <button type="button" class="wallet-btn wallet-btn-secondary" id="backToPhonePinBtn">Back to Phone & PIN</button>
+        </form>
+
+        <p class="wallet-error" id="walletError" aria-live="polite"></p>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const authForm = document.getElementById('walletAuthForm');
+    const otpForm = document.getElementById('walletOtpForm');
+    const phoneInput = document.getElementById('walletPhone');
+    const pinInput = document.getElementById('walletPin');
+    const otpInput = document.getElementById('walletOtp');
+    const backToPhonePinBtn = document.getElementById('backToPhonePinBtn');
+    const errorEl = document.getElementById('walletError');
+    const transactionUuid = <%- JSON.stringify(transactionUuid) %>;
+
+    let authStepReady = false;
+
+    authForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+
+      const phone = phoneInput.value.trim();
+      const pin = pinInput.value.trim();
+      if (!phone || !pin) {
+        errorEl.textContent = 'Please enter phone number and PIN.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/wallet/precheck', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            transaction_uuid: transactionUuid,
+            phoneNumber: phone,
+            pin
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          errorEl.textContent = data.message || 'Invalid wallet phone number or PIN.';
+          return;
+        }
+
+        authStepReady = true;
+        authForm.hidden = true;
+        otpForm.hidden = false;
+        otpInput.focus();
+      } catch (err) {
+        errorEl.textContent = 'Unable to validate wallet credentials right now.';
+      }
+    });
+
+    otpForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+      if (!authStepReady) {
+        errorEl.textContent = 'Please complete phone and PIN step first.';
+        return;
+      }
+
+      const otp = otpInput.value.trim();
+      if (!otp) {
+        errorEl.textContent = 'Please enter OTP.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/wallet/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            transaction_uuid: transactionUuid,
+            phoneNumber: phoneInput.value.trim(),
+            pin: pinInput.value.trim(),
+            otp
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          errorEl.textContent = data.message || 'Wallet payment failed. Please try again.';
+          return;
+        }
+
+        window.location.href = data.redirectUrl || '/bookings';
+      } catch (err) {
+        errorEl.textContent = 'Unable to verify wallet payment right now. Please try again.';
+      }
+    });
+
+    backToPhonePinBtn?.addEventListener('click', () => {
+      authStepReady = false;
+      otpInput.value = '';
+      errorEl.textContent = '';
+      otpForm.hidden = true;
+      authForm.hidden = false;
+      phoneInput.focus();
+    });
+  </script>
+</body>
+</html>
