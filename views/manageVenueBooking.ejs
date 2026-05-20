@@ -301,22 +301,44 @@
         <div class="print-ticket-header">
           <div class="print-ticket-qr-wrap">
             <img class="print-ticket-qr" src="<%= venueTicketQrUrl %>" alt="Venue booking QR code" />
-            <p class="print-ticket-scan">Scan QR code for full booking details</p>
+            <p class="print-ticket-scan">Scan to validate</p>
           </div>
           <div class="print-ticket-main">
-            <p class="print-ticket-label">VENUE BOOKING</p>
+            <p class="print-ticket-label">VENUE PASS</p>
             <h2 class="print-ticket-title"><%= venueName %></h2>
-            <p class="print-ticket-meta"><%= bookingDate %></p>
-            <p class="print-ticket-meta"><%= bookingTime %></p>
-            <p class="print-ticket-meta">Location: <%= venueLocation %></p>
+            <p class="print-ticket-meta"><%= bookingDate %> · <%= bookingTime %></p>
             <p class="print-ticket-meta">Phone: <%= phoneNumber %></p>
-            <p class="print-ticket-meta">Total: <%= totalDisplay %></p>
-            <p class="print-ticket-meta">Reference: <%= booking.referenceNumber || '-' %></p>
-            <p class="print-ticket-meta">Booked On: <%= bookedOnLabel %></p>
+            <p class="print-ticket-meta">Ref: <%= booking.referenceNumber || '-' %></p>
+          </div>
+          <div class="print-ticket-photo-wrap">
+            <img class="print-ticket-photo" src="<%= venueImage %>" alt="<%= venueName %> venue image" />
+          </div>
+          <div class="print-ticket-id">
+            <span>Venue Booking</span>
+            <strong><%= booking.referenceNumber || '-' %></strong>
           </div>
         </div>
-        <div class="print-ticket-banner">
-          <img src="<%= venueImage %>" alt="<%= venueName %> venue image" />
+        <div class="print-ticket-grid">
+          <div class="print-ticket-field">
+            <span class="print-ticket-field-label">Location</span>
+            <strong class="print-ticket-field-value"><%= venueLocation %></strong>
+          </div>
+          <div class="print-ticket-field">
+            <span class="print-ticket-field-label">Duration</span>
+            <strong class="print-ticket-field-value"><%= durationLabel %></strong>
+          </div>
+          <div class="print-ticket-field">
+            <span class="print-ticket-field-label">Total</span>
+            <strong class="print-ticket-field-value"><%= totalDisplay %></strong>
+          </div>
+          <div class="print-ticket-field">
+            <span class="print-ticket-field-label">Booked On</span>
+            <strong class="print-ticket-field-value"><%= bookedOnLabel %></strong>
+          </div>
+          <div class="print-ticket-field print-ticket-field-wide">
+            <span class="print-ticket-field-label">Validation URL</span>
+            <strong class="print-ticket-field-value print-ticket-code"><%= venueBookingDetailsUrl %></strong>
+          </div>
         </div>
       </section>
     </div>

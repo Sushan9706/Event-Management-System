@@ -370,29 +370,44 @@
             <div class="print-ticket-header">
               <div class="print-ticket-qr-wrap">
                 <img class="print-ticket-qr" src="<%= ticketQrUrl %>" alt="Ticket QR code" />
-                <p class="print-ticket-scan">Scan QR code for full ticket details</p>
+                <p class="print-ticket-scan">Scan to validate</p>
               </div>
               <div class="print-ticket-main">
-                <p class="print-ticket-label">TICKET</p>
-                <h2 class="print-ticket-title">
-                  <%= eventName %>
-                </h2>
-                <p class="print-ticket-meta">
-                  <%= eventDate %>
-                </p>
-                <p class="print-ticket-meta">
-                  <%= eventTime %>
-                </p>
-                <p class="print-ticket-meta">Attendee: <%= attendeeNames[index] || (index===0 ? booking.userName : '-' )
-                    || '-' %>
-                </p>
+                <p class="print-ticket-label">EVENT TICKET</p>
+                <h2 class="print-ticket-title"><%= eventName %></h2>
+                <p class="print-ticket-meta"><%= eventDate %> · <%= eventTime %></p>
+                <p class="print-ticket-meta">Attendee: <%= attendeeNames[index] || (index===0 ? booking.userName : '-' ) || '-' %></p>
+                <p class="print-ticket-meta">Ref: <%= booking.referenceNumber || '-' %></p>
+              </div>
+              <div class="print-ticket-photo-wrap">
+                <img class="print-ticket-photo" src="<%= eventImage %>" alt="<%= eventName %> event image" />
               </div>
               <div class="print-ticket-id">
                 <span>Ticket <%= index + 1 %> of <%= ticketList.length %></span>
+                <strong><%= ticketCode %></strong>
               </div>
             </div>
-            <div class="print-ticket-banner">
-              <img src="<%= eventImage %>" alt="<%= eventName %> event banner" />
+            <div class="print-ticket-grid">
+              <div class="print-ticket-field">
+                <span class="print-ticket-field-label">Location</span>
+                <strong class="print-ticket-field-value"><%= eventLocation %></strong>
+              </div>
+              <div class="print-ticket-field">
+                <span class="print-ticket-field-label">Booked On</span>
+                <strong class="print-ticket-field-value"><%= bookingDate %></strong>
+              </div>
+              <div class="print-ticket-field">
+                <span class="print-ticket-field-label">Price / Ticket</span>
+                <strong class="print-ticket-field-value"><%= unitPriceDisplay %></strong>
+              </div>
+              <div class="print-ticket-field">
+                <span class="print-ticket-field-label">Total</span>
+                <strong class="print-ticket-field-value"><%= totalDisplay %></strong>
+              </div>
+              <div class="print-ticket-field print-ticket-field-wide">
+                <span class="print-ticket-field-label">Validation URL</span>
+                <strong class="print-ticket-field-value print-ticket-code"><%= ticketDetailsUrl %></strong>
+              </div>
             </div>
           </section>
           <% }); %>
