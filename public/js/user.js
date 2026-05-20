@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             notifList.innerHTML = notifications.map(note => {
-                const isCancelled = note.type === 'booking_cancelled';
+                const isCancelled = ['booking_cancelled', 'venue_booking_cancelled'].includes(note.type);
                 const title = isCancelled ? 'Booking Cancelled' : 'Booking Confirmed';
                 const eventTitle = note.eventName || 'Event';
                 const countLabel = `${note.ticketCount || 1} ticket${note.ticketCount === 1 ? '' : 's'}`;

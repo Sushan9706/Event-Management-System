@@ -372,6 +372,25 @@ exports.handleVenueEsewaSuccess = async (req, res) => {
             venueBooking.paymentStatus = 'paid';
             await venueBooking.save();
             const venue = await Venue.findById(venueBooking.venueId).select('name').lean();
+
+            const user = await userModel.findById(venueBooking.userId);
+            if (user) {
+                if (!Array.isArray(user.notifications)) {
+                    user.notifications = [];
+                }
+                user.notifications.unshift({
+                    type: 'booking_confirmed',
+                    eventId: venueBooking.venueId,
+                    eventName: (venue && venue.name) ? venue.name : 'Venue Booking',
+                    ticketCount: 1,
+                    createdAt: new Date()
+                });
+                if (user.notifications.length > 20) {
+                    user.notifications = user.notifications.slice(0, 20);
+                }
+                await user.save();
+            }
+
             delete checkouts[transactionUuid];
             req.session.venuePaymentCheckouts = checkouts;
             const venueName = encodeURIComponent((venue && venue.name) ? venue.name : 'Venue Booking');

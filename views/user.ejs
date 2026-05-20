@@ -59,7 +59,7 @@
       <% if (notifications.length===0) { %>
         <p class="notif-empty">No new notifications</p>
         <% } else { %>
-          <% notifications.forEach(function(note) { const title=note.type==='booking_cancelled' ? 'Booking Cancelled'
+          <% notifications.forEach(function(note) { const title=['booking_cancelled', 'venue_booking_cancelled'].includes(note.type) ? 'Booking Cancelled'
             : 'Booking Confirmed' ; const eventTitle=note.eventName || 'Event' ; const
             countLabel=formatTicketCount(note.ticketCount || 1); const timeLabel=formatNotifTime(note.createdAt); %>
             <div class="notif-item">

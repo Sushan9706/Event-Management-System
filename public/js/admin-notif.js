@@ -125,11 +125,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
+                let title = `New Booking: ${n.userName}`;
+                let sub = `${n.name} · ${n.countLabel}`;
+                let clickAction = '';
+
+                if (n.type === 'contact') {
+                    title = `New Message: ${n.userName}`;
+                    sub = `Subject: ${n.name} · "${n.countLabel}"`;
+                    clickAction = `onclick="window.location.href='/admin/messages'"`;
+                } else if (n.type === 'venue') {
+                    clickAction = `onclick="window.location.href='/admin/venues'"`;
+                } else {
+                    clickAction = `onclick="window.location.href='/admin/dashboard'"`;
+                }
+
                 return `
-                    <div class="notif-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; gap: 12px;">
+                    <div class="notif-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; gap: 12px; cursor: pointer;" ${clickAction}>
                         <div style="flex-grow: 1; text-align: left;">
-                            <p class="notif-item-title" style="margin: 0 0 2px 0; font-size: 13px; font-weight: 600; color: #1e293b;">New Booking: ${n.userName}</p>
-                            <p class="notif-item-sub" style="margin: 0 0 4px 0; font-size: 12px; color: #64748b; font-weight: 500;">${n.name} · ${n.countLabel}</p>
+                            <p class="notif-item-title" style="margin: 0 0 2px 0; font-size: 13px; font-weight: 600; color: #1e293b;">${title}</p>
+                            <p class="notif-item-sub" style="margin: 0 0 4px 0; font-size: 12px; color: #64748b; font-weight: 500;">${sub}</p>
                             <p class="notif-time" style="margin: 0; font-size: 10px; color: #94a3b8;">${date}</p>
                         </div>
                     </div>

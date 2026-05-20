@@ -781,6 +781,24 @@ exports.verifyWalletPayment = async (req, res) => {
         venueBooking.paymentStatus = 'paid';
         await venueBooking.save();
 
+        const user = await User.findById(venueBooking.userId);
+        if (user) {
+            if (!Array.isArray(user.notifications)) {
+                user.notifications = [];
+            }
+            user.notifications.unshift({
+                type: 'booking_confirmed',
+                eventId: venueBooking.venueId ? venueBooking.venueId._id : null,
+                eventName: (venueBooking.venueId && venueBooking.venueId.name) ? venueBooking.venueId.name : 'Venue Booking',
+                ticketCount: 1,
+                createdAt: new Date()
+            });
+            if (user.notifications.length > 20) {
+                user.notifications = user.notifications.slice(0, 20);
+            }
+            await user.save();
+        }
+
         const venueName = encodeURIComponent(
             (venueBooking.venueId && venueBooking.venueId.name)
                 ? venueBooking.venueId.name

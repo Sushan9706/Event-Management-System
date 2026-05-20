@@ -550,6 +550,11 @@ exports.getNotifications = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(10);
 
+        // Fetch last 10 contact messages
+        const contacts = await Contact.find()
+            .sort({ createdAt: -1 })
+            .limit(10);
+
         // Normalize and merge
         const merged = [
             ...eventBookings.map(b => ({
@@ -567,6 +572,14 @@ exports.getNotifications = async (req, res) => {
                 name: b.venueId ? b.venueId.name : 'Venue',
                 countLabel: `Venue Booking`,
                 createdAt: b.createdAt
+            })),
+            ...contacts.map(c => ({
+                _id: c._id,
+                type: 'contact',
+                userName: c.name,
+                name: c.subject,
+                countLabel: c.message.length > 30 ? c.message.substring(0, 30) + '...' : c.message,
+                createdAt: c.createdAt
             }))
         ]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
