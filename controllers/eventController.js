@@ -1,6 +1,6 @@
 const Event = require('../models/event');
 const Booking = require('../models/bookingModel');
-const { ACTIVE_BOOKING_STATUSES, hasEventEnded } = require('../utils/bookingStatus');
+const { ACTIVE_BOOKING_STATUSES, hasEventEnded, syncDatabase } = require('../utils/bookingStatus');
 
 const getAllEvents = async (req, res) => {
     try {
@@ -14,6 +14,7 @@ const getAllEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
     try {
+        await syncDatabase();
         const event = await Event.findById(req.params.id).lean();
         if (!event) return res.status(404).render('404', { title: '404 - Not Found' });
 

@@ -130,12 +130,23 @@
         </div>
         <div class="cards-grid">
           <% if (locals.latestEvents && latestEvents.length> 0) { %>
-            <% latestEvents.forEach(function(event, i) { %>
+            <% latestEvents.forEach(function(event, i) { 
+              let catStr = (event.category || 'other').toLowerCase().trim().replace(/\s+/g, '-');
+              if(event.categoryId && event.categoryId.name) {
+                catStr = event.categoryId.name.toLowerCase().trim().replace(/\s+/g, '-');
+              }
+            %>
               <a href="/event/<%= event._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>"
-                style="text-decoration:none; color:inherit;">
-                <div class="ecard-img-wrap">
+                style="text-decoration:none; color:inherit; position: relative;">
+                <div class="ecard-img-wrap" style="position: relative;">
                   <img src="<%= event.image || event.imagePath || '/images/default-event.png' %>" class="ecard-img"
                     onerror="this.src='/images/default-event.png'" />
+                  <span class="card-tag tag-<%= catStr %>">
+                    <%= (event.categoryId && event.categoryId.name) ? event.categoryId.name : (event.category || 'Other' ) %>
+                  </span>
+                  <span class="status-tag status-<%= event.status === 'upcoming' ? 'live' : event.status === 'cancelled' ? 'sold' : event.status %>">
+                    <%= event.status %>
+                  </span>
                 </div>
                 <div class="ecard-body">
                   <h3 class="ecard-title" style="font-weight: bold; margin-bottom: 4px;">

@@ -546,3 +546,61 @@ svg {
   font-size: 11px;
   color: var(--text-mid);
 }
+
+/* Event Status Tags - Global Scope for User Dashboard */
+.status-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.status-tag.status-upcoming,
+.status-tag.status-live {
+  background: #ecfdf5 !important;
+  color: #10b981 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.status-tag.status-ongoing {
+  background: #eff6ff !important;
+  color: #3b82f6 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.status-tag.status-completed {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.status-tag.status-cancelled,
+.status-tag.status-sold {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  border: 1px solid #fecaca !important;
+}
+
+/* Category Card Tag styling for User Dashboard */
+.card-tag {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  letter-spacing: 0.05em;
+  color: #1a1a1a;
+  border: 1px solid #e6e6e3;
+}
