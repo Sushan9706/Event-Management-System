@@ -867,3 +867,8 @@ body {
 .time-input-group input:focus {
     border-color: #2c3e50;
 }
+
+.venue-status.status-maintenance {
+    background: #f59e0b !important;
+    color: #fff !important;
+}

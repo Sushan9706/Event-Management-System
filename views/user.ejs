@@ -183,19 +183,22 @@
           <% if (locals.latestVenues && latestVenues.length> 0) { %>
             <% latestVenues.forEach(function(venue, i) { %>
               <a href="/venue/<%= venue._id %>" class="ecard <%= i === 0 ? 'ecard--latest' : '' %>"
-                style="text-decoration:none; color:inherit;">
-                <div class="ecard-img-wrap">
+                style="text-decoration:none; color:inherit; position: relative;">
+                <div class="ecard-img-wrap" style="position: relative;">
                   <img src="<%= venue.image || venue.imagePath || '/images/default-venue.png' %>" class="ecard-img"
                     onerror="this.src='/images/default-venue.png'" />
+                  <span class="card-tag tag-venue">
+                    <%= venue.category %>
+                  </span>
+                  <span class="status-tag status-<%= venue.status === 'available' ? 'live' : 'maintenance' %>">
+                    <%= venue.status === 'available' ? 'available' : 'under maintenance' %>
+                  </span>
                 </div>
                 <div class="ecard-body">
                   <h3 class="ecard-title" style="font-weight: bold; margin-bottom: 4px;">
                     <%= venue.name %>
                   </h3>
                   <p class="ecard-meta" style="margin-top: 4px; margin-bottom: 4px;">
-                    Available
-                  </p>
-                  <p class="ecard-meta" style="margin-top: 0; margin-bottom: 4px;">
                     <%= venue.location || 'Location TBD' %>
                   </p>
                   <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%= venue.dailyRate || venue.hourlyRate || 0 %> / day</span>

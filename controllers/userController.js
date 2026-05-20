@@ -265,7 +265,7 @@ exports.getUserDashboard = async (req, res) => {
   
       const Venue = require("../models/venueModel");
       const latestVenues = await Venue
-        .find({ status: "available" })
+        .find({ status: { $in: ['available', 'maintenance'] } })
         .sort({ createdAt: -1 })
         .limit(3);
   
@@ -911,8 +911,8 @@ exports.getGuestDashboard = async (req, res) => {
         // Keep recently cancelled ones and events that haven't ended yet
         events = events.filter(event => event.status === 'cancelled' || !hasEventEnded(event)).slice(0, 6);
 
-        // Fetch active venues
-        const venues = await Venue.find({ status: 'available' }).sort({ createdAt: -1 }).limit(6).lean();
+        // Fetch active/maintenance venues
+        const venues = await Venue.find({ status: { $in: ['available', 'maintenance'] } }).sort({ createdAt: -1 }).limit(6).lean();
 
         res.render("index", { events, venues, user: null });
     } catch (err) {

@@ -51,7 +51,9 @@
     <div class="venue-hero" <% if (venue.imagePath || venue.image) { %>style="background-image: url('<%= venue.imagePath || venue.image %>')"<% } %>>
         <div class="hero-overlay">
             <div class="hero-content">
-                <span class="venue-status"><%= venue.status || 'Available' %></span>
+                <span class="venue-status <%= venue.status === 'maintenance' ? 'status-maintenance' : '' %>">
+                    <%= venue.status === 'available' ? 'Available' : 'Under Maintenance' %>
+                </span>
                 <h1><%= venue.name %></h1>
             </div>
         </div>
@@ -164,6 +166,8 @@
                         </div>
                     <% } else if (!user) { %>
                         <a href="/login" class="book-btn" style="text-align: center; text-decoration: none; display: block;">Login to Book</a>
+                    <% } else if (venue.status === 'maintenance') { %>
+                        <button class="book-btn unavailable" disabled style="background: #f59e0b !important; color: #fff !important; cursor: not-allowed; border-color: #d97706 !important;">Under Maintenance</button>
                     <% } else { %>
                         <button class="book-btn unavailable" disabled>Currently Unavailable</button>
                     <% } %>

@@ -162,6 +162,9 @@
                 <span class="card-tag tag-venue">
                   Capacity: <%= venue.capacity %>
                 </span>
+                <span class="status-tag status-<%= venue.status === 'available' ? 'live' : 'maintenance' %>">
+                  <%= venue.status === 'available' ? 'available' : 'under maintenance' %>
+                </span>
               </div>
               <div class="card-body">
                 <h3 class="card-name"><%= venue.name || 'Venue' %></h3>

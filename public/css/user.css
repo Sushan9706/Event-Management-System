@@ -588,10 +588,17 @@ svg {
   border: 1px solid #fecaca !important;
 }
 
+.status-tag.status-maintenance,
+.status-tag.status-under-maintenance {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+}
+
 /* Category Card Tag styling for User Dashboard */
 .card-tag {
   position: absolute;
-  bottom: 10px;
+  top: 10px;
   left: 10px;
   font-size: 9px;
   font-weight: 700;

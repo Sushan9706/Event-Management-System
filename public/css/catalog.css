@@ -696,6 +696,13 @@ button {
   border: 1px solid #fecaca !important;
 }
 
+.status-tag.status-maintenance,
+.status-tag.status-under-maintenance {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+}
+
 @media (max-width: 992px) {
   .events-grid {
     grid-template-columns: repeat(2, 1fr);

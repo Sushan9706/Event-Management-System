@@ -303,11 +303,14 @@
       <div class="events-grid">
         <% if (typeof venues !=='undefined' && venues && venues.length> 0) { %>
           <% venues.forEach(venue=> { %>
-            <div class="event-card" onclick="window.location.href='/login'" style="cursor:pointer; width:100%;">
-              <div class="card-img-wrap">
+            <div class="event-card" onclick="window.location.href='/login'" style="cursor:pointer; width:100%; position: relative;">
+              <div class="card-img-wrap" style="position: relative;">
                 <img src="<%= venue.imagePath || '/images/default-venue.png' %>" alt="<%= venue.name %>" />
                 <span class="card-tag">
                   <%= venue.category %>
+                </span>
+                <span class="status-tag status-<%= venue.status === 'available' ? 'live' : 'maintenance' %>">
+                  <%= venue.status === 'available' ? 'available' : 'under maintenance' %>
                 </span>
               </div>
               <div class="card-body">

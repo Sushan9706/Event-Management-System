@@ -119,7 +119,7 @@ const calculateVenueAmount = ({ venue, startDate, endDate, startTime, endTime })
 
 exports.getVenues = async (req, res) => {
     try {
-        const venues = await Venue.find({ status: 'available' }).lean();
+        const venues = await Venue.find({ status: { $in: ['available', 'maintenance'] } }).lean();
         
         let fullUser = null;
         if (req.user && req.user.userId) {
@@ -185,7 +185,7 @@ exports.getVenueById = async (req, res) => {
 exports.searchVenues = async (req, res) => {
     try {
         let { q, location, capacity } = req.query;
-        let queryObj = { status: 'available' };
+        let queryObj = { status: { $in: ['available', 'maintenance'] } };
 
         if (q) {
             queryObj.name = { $regex: q, $options: "i" };
@@ -216,6 +216,10 @@ exports.bookVenue = async (req, res) => {
 
         const venue = await Venue.findById(venueId);
         if (!venue) return res.status(404).json({ success: false, message: "Venue not found" });
+
+        if (venue.status === 'maintenance') {
+            return res.status(400).json({ success: false, message: "This venue is currently under maintenance and cannot be booked." });
+        }
 
         const dateValidationError = validateVenueDatesAndTimes({ startDate, endDate, startTime, endTime });
         if (dateValidationError) {
