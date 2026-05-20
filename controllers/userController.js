@@ -665,8 +665,8 @@ exports.cancelBookingById = async (req, res) => {
         user.notifications = [];
       }
       user.notifications.unshift({
-        type: "booking_cancelled",
-        eventId: venueBooking.venueId ? venueBooking.venueId._id : null,
+        type: "venue_booking_cancelled",
+        venueId: venueBooking.venueId ? venueBooking.venueId._id : null,
         eventName: venueBooking.venueId ? venueBooking.venueId.name : "Venue Booking",
         ticketCount: 1,
         createdAt: new Date(),

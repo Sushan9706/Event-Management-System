@@ -132,5 +132,30 @@
   <% } %>
 
   <script src="/js/user.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll(".premium-alert");
+      alerts.forEach(alert => {
+        // Set explicit max-height so CSS can transition height collapse smoothly
+        alert.style.maxHeight = alert.scrollHeight + "px";
+        alert.style.overflow = "hidden";
+        
+        setTimeout(() => {
+          // Configure smooth transitions for fading out and collapsing
+          alert.style.transition = "opacity 0.4s ease, transform 0.4s ease, max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding-top 0.4s ease, padding-bottom 0.4s ease, margin-bottom 0.4s ease, border-width 0.4s ease";
+          alert.style.opacity = "0";
+          alert.style.transform = "translateY(-8px) scale(0.98)";
+          alert.style.maxHeight = "0";
+          alert.style.paddingTop = "0";
+          alert.style.paddingBottom = "0";
+          alert.style.marginBottom = "0";
+          alert.style.borderWidth = "0";
+          
+          // Clean up DOM node after animation finishes
+          setTimeout(() => alert.remove(), 400);
+        }, 2000);
+      });
+    });
+  </script>
 </body>
 </html>

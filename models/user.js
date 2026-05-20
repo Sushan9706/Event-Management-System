@@ -31,12 +31,16 @@ const userSchema = new mongoose.Schema({
     notifications: [{
         type: {
             type: String,
-            enum: ["booking_confirmed", "booking_cancelled"],
+            enum: ["booking_confirmed", "booking_cancelled", "venue_booking_confirmed", "venue_booking_cancelled"],
             required: true
         },
         eventId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Event"
+        },
+        venueId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Venue"
         },
         eventName: {
             type: String,
