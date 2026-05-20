@@ -76,9 +76,10 @@ const validateVenueDatesAndTimes = ({ startDate, endDate, startTime, endTime }) 
     if (start < today) {
         return 'Cannot book a date in the past.';
     }
-    const minimumStart = new Date(Date.now() + (2 * 60 * 60 * 1000));
-    if (start < minimumStart) {
-        return 'Venue booking start time must be at least 2 hours from now.';
+    const now = new Date();
+    now.setSeconds(0, 0);
+    if (start < now) {
+        return 'Venue booking start time cannot be in the past.';
     }
     if (start > end) {
         return 'Start date cannot be after end date.';

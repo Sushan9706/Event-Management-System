@@ -326,9 +326,10 @@
                                 showNotification('Please select valid end date and end time.');
                                 return null;
                             }
-                            const minAllowedStart = new Date(Date.now() + (2 * 60 * 60 * 1000));
-                            if (startDateTime < minAllowedStart) {
-                                showNotification('Venue booking start time must be at least 2 hours from now.');
+                            const now = new Date();
+                            now.setSeconds(0, 0);
+                            if (startDateTime < now) {
+                                showNotification('Venue booking start time cannot be in the past.');
                                 return null;
                             }
                             const diffMs = endDateTime.getTime() - startDateTime.getTime();
