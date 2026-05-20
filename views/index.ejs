@@ -245,8 +245,7 @@
 
         <div class="events-grid">
           <% if (events && events.length> 0) { %> <% events.forEach(event=> { %>
-              <div class="event-card" onclick="window.location.href='/login'"
-                style="cursor:pointer; width:100%;">
+              <div class="event-card" onclick="window.location.href='/login'" style="cursor:pointer; width:100%;">
                 <div class="card-img-wrap">
                   <img src="<%= event.imagePath || event.image || '/images/default-event.png' %>"
                     alt="<%= event.title || event.eventName || 'Event' %>" />
@@ -262,12 +261,12 @@
                       <% } %>
                 </div>
                 <div class="card-body">
-                  <p class="card-date">
-                    <%= formatEventDate(event.startDate || event.date, event.endDate) %>
-                  </p>
-                  <h3 class="card-title">
+                  <h3 class="card-title" style="font-weight: bold; margin-bottom: 4px;">
                     <%= event.title || event.eventName || 'Untitled Event' %>
                   </h3>
+                  <p class="card-date" style="font-weight: normal; margin-bottom: 4px; text-align: left; background: none; border: none; padding: 0;">
+                    <%= formatEventDate(event.startDate || event.date, event.endDate) %>
+                  </p>
                   <p class="card-location">
                     <%= event.location || 'Location TBD' %>
                   </p>
@@ -301,8 +300,7 @@
       <div class="events-grid">
         <% if (typeof venues !=='undefined' && venues && venues.length> 0) { %>
           <% venues.forEach(venue=> { %>
-            <div class="event-card" onclick="window.location.href='/login'"
-              style="cursor:pointer; width:100%;">
+            <div class="event-card" onclick="window.location.href='/login'" style="cursor:pointer; width:100%;">
               <div class="card-img-wrap">
                 <img src="<%= venue.imagePath || '/images/default-venue.png' %>" alt="<%= venue.name %>" />
                 <span class="card-tag">
@@ -310,12 +308,12 @@
                 </span>
               </div>
               <div class="card-body">
-                <p class="card-date">
-                  <%= venue.location %>
-                </p>
-                <h3 class="card-title">
+                <h3 class="card-title" style="font-weight: bold; margin-bottom: 4px;">
                   <%= venue.name %>
                 </h3>
+                <p class="card-date" style="font-weight: normal; margin-bottom: 4px; text-align: left; background: none; border: none; padding: 0;">
+                  <%= venue.location %>
+                </p>
                 <p class="card-location">Capacity: <%= venue.capacity %> guests</p>
               </div>
             </div>

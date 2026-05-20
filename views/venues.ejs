@@ -114,11 +114,23 @@
       </div>
     </section>
 
-    <div class="filters" id="filters" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 30px;">
-      <button class="filter-tag active" data-filter="all">All Venues</button>
-      <button class="filter-tag" data-filter="large">Large (500+)</button>
-      <button class="filter-tag" data-filter="medium">Medium (100-500)</button>
-      <button class="filter-tag" data-filter="small">Small (&lt;100)</button>
+    <div style="max-width: 1200px; margin: 0 auto 30px auto; padding: 0 2rem;">
+      <div style="margin-bottom: 10px;">
+        <span style="font-family: var(--sans); font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase;">CATEGORY</span>
+      </div>
+      <div class="category-tags" id="filters">
+        <button class="filter-tag active" data-filter="all">All Venues</button>
+        <button class="filter-tag" data-filter="private estates">Private Estates</button>
+        <button class="filter-tag" data-filter="rooftop bars">Rooftop Bars</button>
+        <button class="filter-tag" data-filter="open air parks">Open Air Parks</button>
+        <button class="filter-tag" data-filter="lounges">Lounges</button>
+        <button class="filter-tag" data-filter="banquet halls">Banquet Halls</button>
+        <button class="filter-tag" data-filter="co-working hubs">Co-working Hubs</button>
+        <button class="filter-tag" data-filter="fern garden">Fern Garden</button>
+        <button class="filter-tag" data-filter="hotels">Hotels</button>
+        <button class="filter-tag" data-filter="outdoor space">Outdoor Space</button>
+        <button class="filter-tag" data-filter="others">Others</button>
+      </div>
     </div>
 
     <section class="events-section">
@@ -142,6 +154,7 @@
               data-name="<%= (venue.name || '').toLowerCase() %>"
               data-location="<%= (venue.location || '').toLowerCase() %>"
               data-capacity="<%= venue.capacity || 0 %>"
+              data-category="<%= (venue.category || '').toLowerCase() %>"
             >
               <div class="card-img">
                 <img src="<%= imgUrl %>" alt="<%= venue.name %>"
@@ -175,6 +188,14 @@
               No venues found. Check back later!
             </p>
           <% } %>
+      </div>
+      <div class="load-more-wrap" id="loadMoreWrap" style="display: none;">
+        <button class="btn-load" id="loadMoreBtn">
+          Load More Venues
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
       </div>
     </section>
 

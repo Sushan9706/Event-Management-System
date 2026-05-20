@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentFilter = "all";
     let searchText = "";
+    let showAllMatching = false;
+    const INITIAL_LIMIT = 9;
+
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    const loadMoreWrap = document.getElementById("loadMoreWrap");
 
     function applyFilters() {
         const cards = document.querySelectorAll(".event-card");
@@ -17,33 +22,48 @@ document.addEventListener("DOMContentLoaded", () => {
             const name = (card.dataset.name || "").toLowerCase();
             const location = (card.dataset.location || "").toLowerCase();
             const capacity = parseInt(card.dataset.capacity, 10) || 0;
+            const category = (card.dataset.category || "").toLowerCase();
 
             const matchesText = !searchText || name.includes(searchText) || location.includes(searchText);
             
             let matchesFilter = true;
-            if (currentFilter === "large") matchesFilter = capacity >= 500;
-            else if (currentFilter === "medium") matchesFilter = capacity >= 100 && capacity < 500;
-            else if (currentFilter === "small") matchesFilter = capacity < 100;
+            if (currentFilter !== "all") {
+                matchesFilter = category === currentFilter;
+            }
 
             if (matchesText && matchesFilter) {
-                card.style.display = "";
                 matchingCount++;
+                if (showAllMatching || matchingCount <= INITIAL_LIMIT) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
             } else {
                 card.style.display = "none";
             }
         });
 
         if (matchingCount === 0) {
-            venuesGrid.style.display = "none";
-            noResults.style.display = "block";
+            if (venuesGrid) venuesGrid.style.display = "none";
+            if (noResults) noResults.style.display = "block";
+            if (loadMoreWrap) loadMoreWrap.style.display = "none";
         } else {
-            venuesGrid.style.display = "grid";
-            noResults.style.display = "none";
+            if (venuesGrid) venuesGrid.style.display = "grid";
+            if (noResults) noResults.style.display = "none";
+
+            if (loadMoreWrap) {
+                if (matchingCount > INITIAL_LIMIT && !showAllMatching) {
+                    loadMoreWrap.style.display = "block";
+                } else {
+                    loadMoreWrap.style.display = "none";
+                }
+            }
         }
     }
 
     venueSearch?.addEventListener("input", (e) => {
         searchText = e.target.value.toLowerCase().trim();
+        showAllMatching = false;
         applyFilters();
     });
 
@@ -53,8 +73,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".filter-tag").forEach((t) => t.classList.remove("active"));
         e.target.classList.add("active");
 
-        currentFilter = e.target.dataset.filter;
+        currentFilter = e.target.dataset.filter.toLowerCase();
+        showAllMatching = false;
         applyFilters();
+    });
+
+    loadMoreBtn?.addEventListener("click", () => {
+        showAllMatching = true;
+        applyFilters();
+        window.scrollBy({ top: 300, behavior: "smooth" });
     });
 
     // Handle redirection to details page

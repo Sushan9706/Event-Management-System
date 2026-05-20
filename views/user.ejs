@@ -138,17 +138,17 @@
                     onerror="this.src='/images/default-event.png'" />
                 </div>
                 <div class="ecard-body">
-                  <h3 class="ecard-title">
+                  <h3 class="ecard-title" style="font-weight: bold; margin-bottom: 4px;">
                     <%= event.eventName || event.title %>
                   </h3>
-                  <p class="ecard-meta">
+                  <p class="ecard-meta" style="margin-top: 4px; margin-bottom: 4px;">
                     <%= new Date(event.startDate || event.date).toLocaleDateString('en-US', { month: 'short' ,
                       day: '2-digit' , year: 'numeric' }) %>
-                      <% if (event.location) { %> • <%= event.location %>
-                          <% } %>
-                            <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%=
-                                event.ticketPrice || 0 %></span>
                   </p>
+                  <p class="ecard-meta" style="margin-top: 0; margin-bottom: 4px;">
+                    <%= event.location || 'Location TBD' %>
+                  </p>
+                  <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%= event.ticketPrice || 0 %></span>
                 </div>
               </a>
               <% }) %>
@@ -178,16 +178,16 @@
                     onerror="this.src='/images/default-venue.png'" />
                 </div>
                 <div class="ecard-body">
-                  <h3 class="ecard-title">
+                  <h3 class="ecard-title" style="font-weight: bold; margin-bottom: 4px;">
                     <%= venue.name %>
                   </h3>
-                  <p class="ecard-meta">
+                  <p class="ecard-meta" style="margin-top: 4px; margin-bottom: 4px;">
                     Available
-                    <% if (venue.location) { %> • <%= venue.location %>
-                        <% } %>
-                          <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%=
-                              venue.dailyRate || venue.hourlyRate || 0 %> / day</span>
                   </p>
+                  <p class="ecard-meta" style="margin-top: 0; margin-bottom: 4px;">
+                    <%= venue.location || 'Location TBD' %>
+                  </p>
+                  <span style="display: block; margin-top: 6px; font-weight: 600; color: #111;">Rs. <%= venue.dailyRate || venue.hourlyRate || 0 %> / day</span>
                 </div>
               </a>
               <% }) %>
